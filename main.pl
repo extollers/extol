@@ -85,14 +85,23 @@ read_file(Path, Bytes) :-
 
 main :-
     undo(halt),
-    write(hi), nl,
-    read_file('test.c', Bytes), !, 
+    write('Running tests'), nl,
+    test((Name :- Goals)),
+    write(Name), write('...'),
+    (call(Goals)
+     -> write(success)
+      ; write(failure)),
+    fail.
+
+:- op(1200, fy, test).
+
+test 'parse test.c' :-
+    read_file('test.c', Bytes), !,
     length(Bytes, Count), t(read_bytes(Count)),
     c_pp([], Tokens, Bytes, []), !,
     write(tokens(Tokens)), nl,
     tc c_top_level(Decls, Tokens, []),
-    write(decls(Decls)), nl,
-    halt.
+    write(decls(Decls)), nl.
 
 %% Parsing
 
@@ -102,6 +111,8 @@ many(_, [], R, R).
 eof([], []).
 
 peek(Rest, Rest, Rest).
+
+push(X, Rest, [X | Rest]).
 
 alpha(C) --> [C], { member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ") }.
 
@@ -198,3 +209,123 @@ c_type(Type) --> [symbol(Type)].
 
 c_value(variable(Name)) --> [symbol(Name)].
 c_value(integer(N)) --> [integer(N)].
+
+%% Extol
+
+e_token(N) --> phrase(N), e_skipwhite, !.
+
+e_top_level(Decls) --> many(e_declaration, Decls).
+
+e_declaration(Decl) --> e_expression(Decl), e_token(".").
+
+e_atom_char(C) -->
+    [C], !,
+    member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789").
+
+e_atom(Atom) -->
+    "'",
+    e_quoted_atom_chars(Cs),
+    atom_codes(Atom, Cs).
+e_atom(Atom) -->
+    many(e_atom_char, Cs), !,
+    atom_codes(Atom, Cs).
+
+e_quoted_atom_chars([]) --> "'", !.
+e_quoted_atom_chars([C | Cs]) -->
+    "\\", [Quoted],
+    member(Quoted : C, [
+               0'n : 10,
+               0'r : 13,
+               0't : 9,
+               0'e : 127,
+               AsIs : AsIs
+    ]), !,
+    e_quoted_atom_chars(Cs).
+e_quoted_atom_chars([C | Cs]) -->
+    [C],
+    e_quoted_atom_chars(Cs).
+
+e_expression(Expr) -->
+    many(e_op_or_term, Flat),
+    e_apply_ops(Flat, Expr).
+
+e_regular_term(Integer) -->
+    many(digit, Ds), !,
+    { Ds = [_|_],
+      foldl(add_digit, 0, Ds, Integer) },
+    e_skipwhite.
+e_regular_term(Term) -->
+    e_atom(Atom),
+    ( e_token("("), !,
+      e_comma_separated(Args),
+      e_token(")"),
+      Term =.. [Atom | Args]
+    ; Term = Atom).
+e_regular_term(Term) -->
+    e_token("("),
+    e_expression(Term),
+    e_token(")").
+e_regular_term('{}'(Term)) -->
+    e_token("{"),
+    e_expression(Term),
+    e_token("}").
+e_regular_term(Term) -->
+    e_token("["),
+    e_comma_separated(Heads),
+    ( e_token("|"),
+      e_expression(Tail),
+      append(Heads, Tail, Term)
+    ; Term = Heads ),
+    e_token("]").
+
+e_comma_separated([A | As]) -->
+    e_expression(A), !,
+    e_token(","),
+    e_comma_separated(As).
+e_comma_separated([]).
+
+e_op_or_term(X) --> e_term(X), !.
+e_op_or_term(X) -->
+    e_token(e_op_chars(Cs)),
+    atom_codes(X, Cs).
+
+e_op_chars([C | Cs]) -->
+    [C], member(C, "`~!@#$%^&*,<>?/;:-_=+"), !,
+    e_op_chars(Cs).
+
+e_apply_ops(Flat, Term) :- e_apply_ops(Term, Flat, []).
+
+e_apply_ops(_, Term) --> [term(Term)], !.
+e_apply_ops(Prec, Term) -->
+    [Op], atom(Op),
+    e_op(NewPrec, Assoc, Op),
+    NewPrec =< Prec,
+    member(Assoc-N, [fx-1, fy-0]),
+    !,
+    RightPrec is NewPrec - N,
+    e_apply_op(RightPrec, Right),
+    Combined =.. [Op, Right],
+    push(Combined),
+    e_apply_ops(Prec, Term).
+e_apply_ops(Prec, Term) -->
+    [Left, Op], atom(Op),
+    e_op(NewPrec, Assoc, Op),
+    member(Assoc-N, [xf-1, yf-0]),
+    LeftPrec is NewPrec - N,
+    LeftPrec =< Prec,
+    !,
+    Combined =.. [Op, Left],
+    push(Combined),
+    e_apply_ops(Prec, Term).
+e_apply_ops(Prec, Term) -->
+    [Left, Op], atom(Op),
+    e_op(NewPrec, Assoc, Op),
+    member(Assoc-N-M, [xfx-1-1, xfy-1-0, yfx-0-1]),
+    LeftPrec is NewPrec - N,
+    LeftPrec =< Prec,
+    !,
+    RightPrec is NewPrec - M,
+    e_apply_op(RightPrec, Right),
+    Combined =.. [Op, Left, Right],
+    push(Combined),
+    e_apply_ops(Prec, Term).
