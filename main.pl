@@ -8,7 +8,9 @@ t(X, A, A) :-
     write('trace: '), ti, write(X), write(', at: '),
     copy_term(A, AA),
     (length(B, 10), append(B, _, AA) ; B = AA),
-    prep_chars(B, Q, []), atom_codes(C, Q), write(C), nl, ! .
+    prep_chars(B, Q, []), atom_codes(C, Q), write(C),
+    length(Q, N), N < 10 -> write('<eof>'),
+    nl, ! .
 
 prep_chars([]) --> [].
 prep_chars([X | Xs]) --> prep_char(X), prep_chars(Xs).
@@ -56,7 +58,7 @@ ticall(G, A, B) :-
     g_read(tindent, I),
     II is I + 1,
     g_assignb(tindent, II),
-    phrase(G, A, B),
+    dcg_call(G, A, B),
     g_assignb(tindent, I).
 
 % Call on undo
@@ -88,20 +90,26 @@ main :-
     write('Running tests'), nl,
     test((Name :- Goals)),
     write(Name), write('...'),
-    (call(Goals)
-     -> write(success)
-      ; write(failure)),
+    once(run_test(Goals)),
     fail.
 
+once(G) :- call(G), !.
+
+run_test(done) :- write(success), nl.
+run_test((A, B)) :-
+    call(A)
+    -> run_test(B)
+    ; nl, write('  failed: '), write(A), nl.
+run_test(B) :-
+    run_test((B, done)).
+
 :- op(1200, fy, test).
+:- discontiguous('/'(test, 1)).
 
 test 'parse test.c' :-
     read_file('test.c', Bytes), !,
-    length(Bytes, Count), t(read_bytes(Count)),
     c_pp([], Tokens, Bytes, []), !,
-    write(tokens(Tokens)), nl,
-    tc c_top_level(Decls, Tokens, []),
-    write(decls(Decls)), nl.
+    c_top_level(_Decls, Tokens, []).
 
 %% Parsing
 
@@ -119,6 +127,12 @@ alpha(C) --> [C], { member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW
 digit(D) -->
     [C],
     { member(C - D, [0'0 - 0, 0'1 - 1, 0'2 - 2, 0'3 - 3, 0'4 - 4, 0'5 - 5, 0'6 - 6, 0'7 - 7, 0'8 - 8, 0'9 - 9]) }.
+
+dcg_call([]) --> !, [].
+dcg_call([X | Xs]) --> !, [X], dcg_call(Xs).
+dcg_call((A, B)) --> !, dcg_call(A), dcg_call(B).
+dcg_call((A ; B)) --> !, dcg_call(A); dcg_call(B).
+dcg_call(G, In, Rest) :- !, call(G, In, Rest).
 
 %% Lists
 
@@ -185,11 +199,10 @@ c_pp_eval(EnvA, [Line | Lines]) -->
     c_pp_eval_line(EnvA, EnvB, Line), !,
     c_pp_eval(EnvB, Lines).
 
-c_pp_eval_line(Env, [Name = Value | Env], [operator('#'), symbol('define'), symbol(Name) | Value]) --> t(define(Name=Value)), !.
+c_pp_eval_line(Env, [Name = Value | Env], [operator('#'), symbol('define'), symbol(Name) | Value]) --> !.
 c_pp_eval_line(Env, Env, []) --> !.
 c_pp_eval_line(Env, Env, [symbol(X) | Xs]) -->
     { member(X = Ys, Env), !, append(Ys, Xs, Zs) },
-    t(expand(X=Ys)),
     c_pp_eval_line(Env, Env, Zs).
 c_pp_eval_line(Env, Env, [X | Xs]) -->
     [X],
@@ -212,7 +225,29 @@ c_value(integer(N)) --> [integer(N)].
 
 %% Extol
 
-e_token(N) --> phrase(N), e_skipwhite, !.
+e_token(N) --> dcg_call(N), e_skipwhite, !.
+
+test e_token :-
+    e_token("x", "x  ", ""),
+    e_token("x", "x # comment", ""),
+    e_token("x", "x # comment\n  \t", "").
+
+e_skipwhite --> e_white, !.
+e_skipwhite --> [].
+
+test e_skipwhite :-
+    e_skipwhite("", "").
+
+e_white --> "#", !, e_line_comment_, e_skipwhite.
+e_white --> (" "; "\t"; "\r" ; "\n" ), !, e_skipwhite.
+
+test e_white :-
+    e_white(" ", ""),
+    e_white("#", ""),
+    e_white("# comment \n\t  ", "").
+
+e_line_comment_ --> ("\n" ; eof), !.
+e_line_comment_ --> [_], e_line_comment_.
 
 e_top_level(Decls) --> many(e_declaration, Decls).
 
@@ -220,47 +255,53 @@ e_declaration(Decl) --> e_expression(Decl), e_token(".").
 
 e_atom_char(C) -->
     [C], !,
-    member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789").
+    { member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789") }.
 
 e_atom(Atom) -->
     "'",
-    e_quoted_atom_chars(Cs),
-    atom_codes(Atom, Cs).
+    e_quoted_atom_chars_(Cs),
+    { atom_codes(Atom, Cs) }.
 e_atom(Atom) -->
     many(e_atom_char, Cs), !,
-    atom_codes(Atom, Cs).
+    { atom_codes(Atom, Cs) }.
 
-e_quoted_atom_chars([]) --> "'", !.
-e_quoted_atom_chars([C | Cs]) -->
-    "\\", [Quoted],
-    member(Quoted : C, [
+test e_atom :-
+    e_atom(a, "'a'", ""),
+    e_atom('+', "'+'", ""),
+    e_atom('9', "'\\9'", ""),
+    e_atom(ab, "ab", "").
+
+e_quoted_atom_chars_([]) --> "'", !.
+e_quoted_atom_chars_([C | Cs]) -->
+    "\\", !, [Quoted],
+    { member(Quoted : C, [
                0'n : 10,
                0'r : 13,
                0't : 9,
                0'e : 127,
                AsIs : AsIs
-    ]), !,
-    e_quoted_atom_chars(Cs).
-e_quoted_atom_chars([C | Cs]) -->
+    ]) }, !,
+    e_quoted_atom_chars_(Cs).
+e_quoted_atom_chars_([C | Cs]) -->
     [C],
-    e_quoted_atom_chars(Cs).
+    e_quoted_atom_chars_(Cs).
 
 e_expression(Expr) -->
     many(e_op_or_term, Flat),
     e_apply_ops(Flat, Expr).
 
 e_regular_term(Integer) -->
-    many(digit, Ds), !,
-    { Ds = [_|_],
-      foldl(add_digit, 0, Ds, Integer) },
-    e_skipwhite.
+    tc many(digit, Ds),
+    { Ds = [_|_], !,
+      tc foldl(add_digit, 0, Ds, Integer) },
+    tc e_skipwhite.
 e_regular_term(Term) -->
-    e_atom(Atom),
-    ( e_token("("), !,
-      e_comma_separated(Args),
-      e_token(")"),
-      Term =.. [Atom | Args]
-    ; Term = Atom).
+    tc e_atom(Atom),
+    ( tc e_token("("), !,
+      tc e_comma_separated(Args),
+      tc e_token(")"),
+      { Term =.. [Atom | Args] }
+    ; { Term = Atom }).
 e_regular_term(Term) -->
     e_token("("),
     e_expression(Term),
@@ -274,9 +315,20 @@ e_regular_term(Term) -->
     e_comma_separated(Heads),
     ( e_token("|"),
       e_expression(Tail),
-      append(Heads, Tail, Term)
-    ; Term = Heads ),
+      { append(Heads, Tail, Term) }
+    ; { Term = Heads } ),
     e_token("]").
+
+test e_regular_term :-
+    e_regular_term(123, "123", ""),
+    tc e_regular_term(hi, "hi", ""),
+    e_regular_term(hi(1), "hi(1)", ""),
+    e_regular_term(hi(b, 4), "hi(b, 4)", ""),
+    e_regular_term(6, "(6)", ""),
+    e_regular_term('{}'(x), "{x}", ""),
+    e_regular_term([], "[]", ""),
+    e_regular_term([1,2,3], "[1,2,3]", "").
+
 
 e_comma_separated([A | As]) -->
     e_expression(A), !,
@@ -284,13 +336,13 @@ e_comma_separated([A | As]) -->
     e_comma_separated(As).
 e_comma_separated([]).
 
-e_op_or_term(X) --> e_term(X), !.
+e_op_or_term(X) --> e_regular_term(X), !.
 e_op_or_term(X) -->
     e_token(e_op_chars(Cs)),
     atom_codes(X, Cs).
 
 e_op_chars([C | Cs]) -->
-    [C], member(C, "`~!@#$%^&*,<>?/;:-_=+"), !,
+    [C], { member(C, "`~!@#$%^&*,<>?/;:-_=+") }, !,
     e_op_chars(Cs).
 
 e_apply_ops(Flat, Term) :- e_apply_ops(Term, Flat, []).
