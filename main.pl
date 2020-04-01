@@ -86,14 +86,14 @@ read_file(Path, Bytes) :-
 :- initialization(main).
 
 main :-
+    current_prolog_flag(argv, [_ | Args]),
     undo(halt),
     write('Running tests'), nl,
     test((Name :- Goals)),
+    ([Name] = Args ; Args = []),
     write(Name), write('...'),
     once(run_test(Goals)),
     fail.
-
-once(G) :- call(G), !.
 
 run_test(done) :- write(success), nl.
 run_test((A, B)) :-
@@ -113,8 +113,10 @@ test 'parse test.c' :-
 
 %% Parsing
 
-many(P, [X | Xs], R, RRR) :- call(P, X, R, RR), many(P, Xs, RR, RRR).
-many(_, [], R, R).
+many(P, [X | Xs]) --> call(P, X), many(P, Xs), !.
+many(_, []) --> [].
+
+many1(P, [X | Xs]) --> call(P, X), !, many(P, Xs).
 
 eof([], []).
 
@@ -190,9 +192,8 @@ add_digit(N, D, R) :-
     R is N * 10 + D.
 
 c_pp_integer(integer(N)) -->
-    many(digit, Ds), !,
-    { Ds = [_|_],
-      foldl(add_digit, 0, Ds, N) }.
+    many1(digit, Ds), !,
+    { foldl(add_digit, 0, Ds, N) }.
 
 c_pp_eval(_, []) --> eof, !.
 c_pp_eval(EnvA, [Line | Lines]) -->
@@ -262,7 +263,7 @@ e_atom(Atom) -->
     e_quoted_atom_chars_(Cs),
     { atom_codes(Atom, Cs) }.
 e_atom(Atom) -->
-    many(e_atom_char, Cs), !,
+    many1(e_atom_char, Cs), !,
     { atom_codes(Atom, Cs) }.
 
 test e_atom :-
@@ -287,21 +288,31 @@ e_quoted_atom_chars_([C | Cs]) -->
     e_quoted_atom_chars_(Cs).
 
 e_expression(Expr) -->
-    many(e_op_or_term, Flat),
-    e_apply_ops(Flat, Expr).
+    many(e_op_or_term, Flat), !,
+    { e_apply_ops(Flat, Expr) }.
+
+test e_expression :-
+    e_expression(1, "1", []),
+    e_expression(a, "a", []),
+    tc e_expression(a + b, "a + b", []),
+    e_expression(a + (b * c), "a + b * c", []),
+    e_expression((a * b) + c, "a * b + c", []),
+    e_expression((-a) * b, "-a * b", []),
+    e_expression((:- (a * b)), ":- a * b", []).
 
 e_regular_term(Integer) -->
-    tc many(digit, Ds),
+    many(digit, Ds),
     { Ds = [_|_], !,
-      tc foldl(add_digit, 0, Ds, Integer) },
-    tc e_skipwhite.
+      foldl(add_digit, 0, Ds, Integer) },
+    e_skipwhite.
 e_regular_term(Term) -->
-    tc e_atom(Atom),
-    ( tc e_token("("), !,
-      tc e_comma_separated(Args),
-      tc e_token(")"),
+    e_atom(Atom), !,
+    ( e_token("("), !,
+      e_comma_separated(Args),
+      e_token(")"),
       { Term =.. [Atom | Args] }
-    ; { Term = Atom }).
+    ; e_skipwhite,
+      { Term = Atom }).
 e_regular_term(Term) -->
     e_token("("),
     e_expression(Term),
@@ -321,7 +332,7 @@ e_regular_term(Term) -->
 
 test e_regular_term :-
     e_regular_term(123, "123", ""),
-    tc e_regular_term(hi, "hi", ""),
+    e_regular_term(hi, "hi", ""),
     e_regular_term(hi(1), "hi(1)", ""),
     e_regular_term(hi(b, 4), "hi(b, 4)", ""),
     e_regular_term(6, "(6)", ""),
@@ -332,52 +343,90 @@ test e_regular_term :-
 
 e_comma_separated([A | As]) -->
     e_expression(A), !,
-    e_token(","),
-    e_comma_separated(As).
-e_comma_separated([]).
+    ( e_token(","), !,
+      e_comma_separated(As)
+    ; { As = [] }).
+e_comma_separated([]) --> [].
 
-e_op_or_term(X) --> e_regular_term(X), !.
+e_op_or_term(X) --> tc e_regular_term(X), !.
 e_op_or_term(X) -->
-    e_token(e_op_chars(Cs)),
-    atom_codes(X, Cs).
+    tc many1(e_op_char, Cs), !,
+    e_skipwhite,
+    { atom_codes(X, Cs) }.
 
-e_op_chars([C | Cs]) -->
-    [C], { member(C, "`~!@#$%^&*,<>?/;:-_=+") }, !,
-    e_op_chars(Cs).
+e_op_char(C) -->
+    [C], { member(C, "`~!@#$%^&*<>?/;:-_=+") }, !.
 
-e_apply_ops(Flat, Term) :- e_apply_ops(Term, Flat, []).
+e_apply_ops(Flat, Term) :- tc e_apply_ops(1200, Term, Flat, []).
 
-e_apply_ops(_, Term) --> [term(Term)], !.
+e_apply_ops(_, Term) --> [Term], !.
 e_apply_ops(Prec, Term) -->
-    [Op], atom(Op),
-    e_op(NewPrec, Assoc, Op),
-    NewPrec =< Prec,
-    member(Assoc-N, [fx-1, fy-0]),
-    !,
-    RightPrec is NewPrec - N,
-    e_apply_op(RightPrec, Right),
-    Combined =.. [Op, Right],
+    [Op],
+    { atom(Op),
+      e_op(NewPrec, Assoc, Op),
+      NewPrec =< Prec,
+      member(Assoc-N, [fx-1, fy-0]),
+      !,
+      RightPrec is NewPrec - N },
+    tc e_apply_op(RightPrec, Right),
+    { Combined =.. [Op, Right] },
     push(Combined),
-    e_apply_ops(Prec, Term).
+    tc e_apply_ops(Prec, Term).
 e_apply_ops(Prec, Term) -->
-    [Left, Op], atom(Op),
-    e_op(NewPrec, Assoc, Op),
-    member(Assoc-N, [xf-1, yf-0]),
-    LeftPrec is NewPrec - N,
-    LeftPrec =< Prec,
-    !,
-    Combined =.. [Op, Left],
+    [Left, Op],
+    { atom(Op),
+      e_op(NewPrec, Assoc, Op),
+      member(Assoc-N, [xf-1, yf-0]),
+      LeftPrec is NewPrec - N,
+      LeftPrec =< Prec,
+      !,
+      Combined =.. [Op, Left] },
     push(Combined),
-    e_apply_ops(Prec, Term).
+    tc e_apply_ops(Prec, Term).
 e_apply_ops(Prec, Term) -->
-    [Left, Op], atom(Op),
-    e_op(NewPrec, Assoc, Op),
-    member(Assoc-N-M, [xfx-1-1, xfy-1-0, yfx-0-1]),
-    LeftPrec is NewPrec - N,
-    LeftPrec =< Prec,
-    !,
-    RightPrec is NewPrec - M,
-    e_apply_op(RightPrec, Right),
-    Combined =.. [Op, Left, Right],
+    [Left, Op],
+    { atom(Op),
+      e_op(NewPrec, Assoc, Op),
+      member(Assoc-N-M, [xfx-1-1, xfy-1-0, yfx-0-1]),
+      LeftPrec is NewPrec - N,
+      LeftPrec =< Prec,
+      !,
+      RightPrec is NewPrec - M },
+    tc e_apply_op(RightPrec, Right),
+    { Combined =.. [Op, Left, Right] },
     push(Combined),
-    e_apply_ops(Prec, Term).
+    tc e_apply_ops(Prec, Term).
+
+e_op(1200, xfx, ':-').
+e_op(1200, xfx, '-->').
+e_op(1200, fx, ':-').
+e_op(1105, xfy, '|').
+e_op(1100, xfy, ';').
+e_op(1050, xfy, '->').
+e_op(1000, xfy, ',').
+e_op(900, fy, '\\+').
+e_op(700, xfx, '=').
+e_op(700, xfx, '\\=').
+e_op(700, xfx, '=..').
+e_op(700, xfx, '==').
+e_op(700, xfx, '\\==').
+e_op(700, xfx, 'is').
+e_op(700, xfx, '<').
+e_op(700, xfx, '>').
+e_op(700, xfx, '=<').
+e_op(700, xfx, '>=').
+e_op(700, xfx, '=\\=').
+e_op(600, xfy, ':').
+e_op(500, yfx, '+').
+e_op(500, yfx, '-').
+e_op(400, yfx, '*').
+e_op(400, yfx, '/').
+e_op(400, yfx, 'rem').
+e_op(400, yfx, 'mod').
+e_op(400, yfx, 'div').
+e_op(400, yfx, '<<').
+e_op(400, yfx, '>>').
+e_op(200, xfx, '**').
+e_op(200, xfx, '^').
+e_op(200, fy, '+').
+e_op(200, fy, '-').
