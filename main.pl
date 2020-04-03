@@ -2,14 +2,17 @@
 
 %% Debugging
 
+:- op(999, fx, tc).
+
 % Trace
 t(X) :- write('trace: '), ti, write(X), nl.
 t(X, A, A) :-
     write('trace: '), ti, write(X), write(', at: '),
     copy_term(A, AA),
     (length(B, 10), append(B, _, AA) ; B = AA),
-    prep_chars(B, Q, []), atom_codes(C, Q), write(C),
-    length(Q, N), N < 10 -> write('<eof>'),
+    prep_chars(B, Q, []),
+    atom_codes(C, Q), write(C),
+    length(Q, N), (N < 10 -> write('<eof>') ; true),
     nl, ! .
 
 prep_chars([]) --> [].
@@ -20,6 +23,12 @@ prep_char(0'\n) --> !, "<nl>".
 prep_char(0'\r) --> !, "<cr>".
 prep_char(0'\t) --> !, "<tab>".
 prep_char(0'<) --> !, "<lt>".
+prep_char(X) -->
+    { \+integer(X), !,
+      open_output_codes_stream(S),
+      write(S, X),
+      close_output_codes_stream(S, C) },
+    "<", dcg_call(C), ">", !.
 prep_char(X) --> [X].
 
 % Trace and fail
@@ -40,8 +49,6 @@ tc(F) -->
     ticall(F),
     undo(t(redo(F))),
     t(exit(F)).
-
-:- op(999, fx, tc).
 
 % Trace indent
 
@@ -294,16 +301,15 @@ e_expression(Expr) -->
 test e_expression :-
     e_expression(1, "1", []),
     e_expression(a, "a", []),
-    tc e_expression(a + b, "a + b", []),
+    e_expression(a + b, "a + b", []),
     e_expression(a + (b * c), "a + b * c", []),
     e_expression((a * b) + c, "a * b + c", []),
     e_expression((-a) * b, "-a * b", []),
     e_expression((:- (a * b)), ":- a * b", []).
 
 e_regular_term(Integer) -->
-    many(digit, Ds),
-    { Ds = [_|_], !,
-      foldl(add_digit, 0, Ds, Integer) },
+    many1(digit, Ds), !,
+    { foldl(add_digit, 0, Ds, Integer) },
     e_skipwhite.
 e_regular_term(Term) -->
     e_atom(Atom), !,
@@ -348,18 +354,17 @@ e_comma_separated([A | As]) -->
     ; { As = [] }).
 e_comma_separated([]) --> [].
 
-e_op_or_term(X) --> tc e_regular_term(X), !.
+e_op_or_term(X) --> e_regular_term(X), !.
 e_op_or_term(X) -->
-    tc many1(e_op_char, Cs), !,
+    many1(e_op_char, Cs), !,
     e_skipwhite,
     { atom_codes(X, Cs) }.
 
 e_op_char(C) -->
     [C], { member(C, "`~!@#$%^&*<>?/;:-_=+") }, !.
 
-e_apply_ops(Flat, Term) :- tc e_apply_ops(1200, Term, Flat, []).
+e_apply_ops(Flat, Term) :- e_apply_ops(1200, Term, Flat, []).
 
-e_apply_ops(_, Term) --> [Term], !.
 e_apply_ops(Prec, Term) -->
     [Op],
     { atom(Op),
@@ -368,10 +373,10 @@ e_apply_ops(Prec, Term) -->
       member(Assoc-N, [fx-1, fy-0]),
       !,
       RightPrec is NewPrec - N },
-    tc e_apply_op(RightPrec, Right),
+    e_apply_ops(RightPrec, Right),
     { Combined =.. [Op, Right] },
     push(Combined),
-    tc e_apply_ops(Prec, Term).
+    e_apply_ops(Prec, Term).
 e_apply_ops(Prec, Term) -->
     [Left, Op],
     { atom(Op),
@@ -382,7 +387,7 @@ e_apply_ops(Prec, Term) -->
       !,
       Combined =.. [Op, Left] },
     push(Combined),
-    tc e_apply_ops(Prec, Term).
+    e_apply_ops(Prec, Term).
 e_apply_ops(Prec, Term) -->
     [Left, Op],
     { atom(Op),
@@ -392,10 +397,11 @@ e_apply_ops(Prec, Term) -->
       LeftPrec =< Prec,
       !,
       RightPrec is NewPrec - M },
-    tc e_apply_op(RightPrec, Right),
+    e_apply_ops(RightPrec, Right),
     { Combined =.. [Op, Left, Right] },
     push(Combined),
-    tc e_apply_ops(Prec, Term).
+    e_apply_ops(Prec, Term).
+e_apply_ops(_, Term) --> [Term], !.
 
 e_op(1200, xfx, ':-').
 e_op(1200, xfx, '-->').
