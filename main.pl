@@ -5,11 +5,11 @@
 :- op(999, fx, tc).
 
 % Trace
-t(X) :- write('trace: '), ti, write(X), nl.
+t(X) :- write('trace: '), ti, writeq(X), nl.
 t(X, A, A) :-
-    write('trace: '), ti, write(X), write(', at: '),
+    write('trace: '), ti, writeq(X), write(', at: '),
     copy_term(A, AA),
-    (length(B, 10), append(B, _, AA) ; B = AA),
+    (length(B, 10), append(B, _, AA) ; B = AA), !,
     prep_chars(B, Q, []),
     atom_codes(C, Q), write(C),
     length(Q, N), (N < 10 -> write('<eof>') ; true),
@@ -24,7 +24,7 @@ prep_char(0'\r) --> !, "<cr>".
 prep_char(0'\t) --> !, "<tab>".
 prep_char(0'<) --> !, "<lt>".
 prep_char(X) -->
-    { \+integer(X), !,
+    { ( \+integer(X) ; X < 32 ; X > 126), !,
       open_output_codes_stream(S),
       write(S, X),
       close_output_codes_stream(S, C) },
@@ -50,6 +50,13 @@ tc(F) -->
     undo(t(redo(F))),
     t(exit(F)).
 
+tc(F, X) -->
+    undo(t(failed(F))),
+    t(enter(F)),
+    ticall(F, X),
+    undo(t(redo(F))),
+    t(exit(F)).
+
 % Trace indent
 
 ti :- g_read(tindent, I), II is I * 2, length(L, II), maplist('='(0' ), L), atom_codes(S, L), write(S).
@@ -66,6 +73,16 @@ ticall(G, A, B) :-
     II is I + 1,
     g_assignb(tindent, II),
     dcg_call(G, A, B),
+    g_assignb(tindent, I).
+
+ticall(G, X, A, B) :-
+    g_read(tindent, I),
+    II is I + 1,
+    g_assignb(tindent, II),
+    G =.. L,
+    append(L, [X], LL),
+    GX =.. LL,
+    dcg_call(GX, A, B),
     g_assignb(tindent, I).
 
 % Call on undo
@@ -102,8 +119,8 @@ main :-
     once(run_test(Goals)),
     fail.
 
-run_test(done) :- write(success), nl.
-run_test((A, B)) :-
+run_test(done) :- !, write(success), nl.
+run_test((A, B)) :- !,
     call(A)
     -> run_test(B)
     ; nl, write('  failed: '), write(A), nl.
@@ -237,8 +254,8 @@ e_token(N) --> dcg_call(N), e_skipwhite, !.
 
 test e_token :-
     e_token("x", "x  ", ""),
-    e_token("x", "x # comment", ""),
-    e_token("x", "x # comment\n  \t", "").
+    e_token("x", "x % comment", ""),
+    e_token("x", "x % comment\n  \t", "").
 
 e_skipwhite --> e_white, !.
 e_skipwhite --> [].
@@ -246,20 +263,23 @@ e_skipwhite --> [].
 test e_skipwhite :-
     e_skipwhite("", "").
 
-e_white --> "#", !, e_line_comment_, e_skipwhite.
+e_white --> "%", !, e_line_comment_, e_skipwhite.
 e_white --> (" "; "\t"; "\r" ; "\n" ), !, e_skipwhite.
 
 test e_white :-
     e_white(" ", ""),
-    e_white("#", ""),
-    e_white("# comment \n\t  ", "").
+    e_white("%", ""),
+    e_white("% comment \n\t  ", "").
 
 e_line_comment_ --> ("\n" ; eof), !.
 e_line_comment_ --> [_], e_line_comment_.
 
-e_top_level(Decls) --> many(e_declaration, Decls).
+e_top_level(Decls) -->
+    ( "#!", !, e_line_comment_; true),
+    e_skipwhite,
+    many(e_declaration, Decls).
 
-e_declaration(Decl) --> e_expression(Decl), e_token(".").
+e_declaration(Decl) --> e_expression(1200, Decl), e_token(".").
 
 e_atom_char(C) -->
     [C], !,
@@ -294,18 +314,21 @@ e_quoted_atom_chars_([C | Cs]) -->
     [C],
     e_quoted_atom_chars_(Cs).
 
-e_expression(Expr) -->
+e_expression(Prec, Expr) -->
     many(e_op_or_term, Flat), !,
-    { e_apply_ops(Flat, Expr) }.
+    { e_apply_ops(Prec, Flat, Expr), ! }.
 
 test e_expression :-
-    e_expression(1, "1", []),
-    e_expression(a, "a", []),
-    e_expression(a + b, "a + b", []),
-    e_expression(a + (b * c), "a + b * c", []),
-    e_expression((a * b) + c, "a * b + c", []),
-    e_expression((-a) * b, "-a * b", []),
-    e_expression((:- (a * b)), ":- a * b", []).
+    e_expression(1200, 1, "1", []),
+    e_expression(1200, a, "a", []),
+    e_expression(1200, a + b, "a + b", []),
+    e_expression(1200, a + (b * c), "a + b * c", []),
+    e_expression(1200, (a * b) + c, "a * b + c", []),
+    e_expression(1200, (-a) * b, "-a * b", []),
+    e_expression(1200, (:- (a * b)), ":- a * b", []).
+
+test comma_expr :-
+    e_expression(1200, (p :- (a, b)), "p :- a, b", []).
 
 e_regular_term(Integer) -->
     many1(digit, Ds), !,
@@ -321,17 +344,17 @@ e_regular_term(Term) -->
       { Term = Atom }).
 e_regular_term(Term) -->
     e_token("("),
-    e_expression(Term),
+    e_expression(1200, Term),
     e_token(")").
 e_regular_term('{}'(Term)) -->
     e_token("{"),
-    e_expression(Term),
+    e_expression(1200, Term),
     e_token("}").
 e_regular_term(Term) -->
     e_token("["),
     e_comma_separated(Heads),
     ( e_token("|"),
-      e_expression(Tail),
+      e_expression(1200, Tail),
       { append(Heads, Tail, Term) }
     ; { Term = Heads } ),
     e_token("]").
@@ -348,7 +371,7 @@ test e_regular_term :-
 
 
 e_comma_separated([A | As]) -->
-    e_expression(A), !,
+    e_expression(1000, A), !,
     ( e_token(","), !,
       e_comma_separated(As)
     ; { As = [] }).
@@ -361,9 +384,9 @@ e_op_or_term(X) -->
     { atom_codes(X, Cs) }.
 
 e_op_char(C) -->
-    [C], { member(C, "`~!@#$%^&*<>?/;:-_=+") }, !.
+    [C], { member(C, "`~!@#$%^&*<>?/;:-_=+,|") }, !.
 
-e_apply_ops(Flat, Term) :- e_apply_ops(1200, Term, Flat, []).
+e_apply_ops(Prec, Flat, Term) :- e_apply_ops(Prec, Term, Flat, []).
 
 e_apply_ops(Prec, Term) -->
     [Op],
@@ -436,3 +459,7 @@ e_op(200, xfx, '**').
 e_op(200, xfx, '^').
 e_op(200, fy, '+').
 e_op(200, fy, '-').
+
+test parse_self :-
+    read_file('main.pl', Bytes), !,
+    e_top_level(_Decls, Bytes, []).
