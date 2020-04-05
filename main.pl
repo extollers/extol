@@ -318,7 +318,7 @@ pl_expression(Expr) -->
     pl_expression(1201, Expr).
 
 pl_expression(Prec, Expr) -->
-    tc pl_expression(none, Prec, Expr).
+    pl_expression(none, Prec, Expr).
 
 test pl_expression :-
     pl_expression(1, "1", []),
@@ -346,17 +346,17 @@ pl_regular_term(Term) -->
       { Term = Atom }).
 pl_regular_term(Term) -->
     pl_token("("),
-    tc pl_expression(Term),
+    pl_expression(Term),
     pl_token(")").
 pl_regular_term('{}'(Term)) -->
     pl_token("{"),
-    tc pl_expression(Term),
+    pl_expression(Term),
     pl_token("}").
 pl_regular_term(Term) -->
     pl_token("["),
     pl_comma_separated(Heads),
     ( pl_token("|"),
-      tc pl_expression(Tail),
+      pl_expression(Tail),
       { append(Heads, Tail, Term) }
     ; { Term = Heads } ),
     pl_token("]").
@@ -372,9 +372,9 @@ test pl_regular_term :-
     pl_regular_term([1,2,3], "[1,2,3]", "").
 
 pl_comma_separated([A | As]) -->
-    tc pl_expression(1000, A), !,
-    ( tc pl_token(","), !,
-      tc pl_comma_separated(As)
+    pl_expression(1000, A), !,
+    ( pl_token(","), !,
+      pl_comma_separated(As)
     ; { As = [] }).
 pl_comma_separated([]) --> [].
 
@@ -388,47 +388,41 @@ pl_op_char(C) -->
     [C], { member(C, "`~!@#$%^&*<>?/;:-_=+,|") }, !.
 
 pl_expression(none, Prec, Term) -->
-    t(fz),
-    tc pl_op_or_term(Op),
-    { tc atom(Op),
-      tc pl_op(OpPrec, Assoc, Op),
-      tc member(Assoc-N, [fx-0, fy-1]),
+    pl_op_or_term(Op),
+    { atom(Op),
+      pl_op(OpPrec, Assoc, Op),
+      member(Assoc-N, [fx-0, fy-1]),
       !,
       RightPrec is OpPrec + N },
-    tc pl_expression(none, RightPrec, Right),
+    pl_expression(none, RightPrec, Right),
     { Combined =.. [Op, Right] },
-    tc pl_expression(just(Combined), Prec, Term).
+    pl_expression(just(Combined), Prec, Term).
 pl_expression(none, Prec, Term) --> !,
-    t(z),
-    tc pl_op_or_term(Left), !,
-    tc pl_expression(just(Left), Prec, Term).
+    pl_op_or_term(Left), !,
+    pl_expression(just(Left), Prec, Term).
 pl_expression(just(Left), Prec, Term) -->
-    t(zf),
-    tc pl_op_or_term(Op),
+    pl_op_or_term(Op),
     { atom(Op),
       pl_op(OpPrec, Assoc, Op),
       member(Assoc-N, [xf-0, yf-1]),
       LeftPrec is OpPrec + N,
-      tc LeftPrec < Prec,
+      LeftPrec < Prec,
       !,
       Combined =.. [Op, Left] },
-    tc pl_expression(just(Combined), Prec, Term).
+    pl_expression(just(Combined), Prec, Term).
 pl_expression(just(Left), Prec, Term) -->
-    t(zfz),
-    tc pl_op_or_term(Op),
+    pl_op_or_term(Op),
     { atom(Op),
       pl_op(OpPrec, Assoc, Op),
       member(Assoc-N-M, [xfx-0-0, xfy-0-1, yfx-1-0]),
       LeftPrec is OpPrec + N,
-      tc LeftPrec < Prec,
+      LeftPrec < Prec,
       !,
       RightPrec is OpPrec + M },
-    tc pl_expression(none, RightPrec, Right),
+    pl_expression(none, RightPrec, Right),
     { Combined =.. [Op, Left, Right] },
-    tc pl_expression(just(Combined), Prec, Term).
-pl_expression(just(Term), _, Term) -->
-    !,
-    t(just(z)).
+    pl_expression(just(Combined), Prec, Term).
+pl_expression(just(Term), _, Term) --> !.
 
 pl_op(1200, xfx, ':-').
 pl_op(1200, xfx, '-->').
@@ -468,7 +462,5 @@ pl_op(200, fy, '-').
 %    read_file('main.pl', Bytes), !,
 %    pl_top_level(_Decls, Bytes, []).
 
-test wip :-
-    %tc pl_expression(just(b), 1000 , _, ",", _).
-    tc pl_regular_term(_, "hi(b, 4)", "").
+test wip :- true.
 
