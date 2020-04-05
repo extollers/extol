@@ -250,57 +250,57 @@ c_value(integer(N)) --> [integer(N)].
 
 %% Extol
 
-e_token(N) --> dcg_call(N), e_skipwhite, !.
+pl_token(N) --> dcg_call(N), pl_skipwhite, !.
 
-test e_token :-
-    e_token("x", "x  ", ""),
-    e_token("x", "x % comment", ""),
-    e_token("x", "x % comment\n  \t", "").
+test pl_token :-
+    pl_token("x", "x  ", ""),
+    pl_token("x", "x % comment", ""),
+    pl_token("x", "x % comment\n  \t", "").
 
-e_skipwhite --> e_white, !.
-e_skipwhite --> [].
+pl_skipwhite --> pl_white, !.
+pl_skipwhite --> [].
 
-test e_skipwhite :-
-    e_skipwhite("", "").
+test pl_skipwhite :-
+    pl_skipwhite("", "").
 
-e_white --> "%", !, e_line_comment_, e_skipwhite.
-e_white --> (" "; "\t"; "\r" ; "\n" ), !, e_skipwhite.
+pl_white --> "%", !, pl_line_comment_, pl_skipwhite.
+pl_white --> (" "; "\t"; "\r" ; "\n" ), !, pl_skipwhite.
 
-test e_white :-
-    e_white(" ", ""),
-    e_white("%", ""),
-    e_white("% comment \n\t  ", "").
+test pl_white :-
+    pl_white(" ", ""),
+    pl_white("%", ""),
+    pl_white("% comment \n\t  ", "").
 
-e_line_comment_ --> ("\n" ; eof), !.
-e_line_comment_ --> [_], e_line_comment_.
+pl_line_comment_ --> ("\n" ; eof), !.
+pl_line_comment_ --> [_], pl_line_comment_.
 
-e_top_level(Decls) -->
-    ( "#!", !, e_line_comment_; true),
-    e_skipwhite,
-    many(e_declaration, Decls).
+pl_top_level(Decls) -->
+    ( "#!", !, pl_line_comment_; true),
+    pl_skipwhite,
+    many(pl_declaration, Decls).
 
-e_declaration(Decl) --> e_expression(1200, Decl), e_token(".").
+pl_declaration(Decl) --> pl_expression(Decl), pl_token(".").
 
-e_atom_char(C) -->
+pl_atom_char(C) -->
     [C], !,
     { member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789") }.
 
-e_atom(Atom) -->
+pl_atom(Atom) -->
     "'",
-    e_quoted_atom_chars_(Cs),
+    pl_quoted_atom_chars_(Cs),
     { atom_codes(Atom, Cs) }.
-e_atom(Atom) -->
-    many1(e_atom_char, Cs), !,
+pl_atom(Atom) -->
+    many1(pl_atom_char, Cs), !,
     { atom_codes(Atom, Cs) }.
 
-test e_atom :-
-    e_atom(a, "'a'", ""),
-    e_atom('+', "'+'", ""),
-    e_atom('9', "'\\9'", ""),
-    e_atom(ab, "ab", "").
+test pl_atom :-
+    pl_atom(a, "'a'", ""),
+    pl_atom('+', "'+'", ""),
+    pl_atom('9', "'\\9'", ""),
+    pl_atom(ab, "ab", "").
 
-e_quoted_atom_chars_([]) --> "'", !.
-e_quoted_atom_chars_([C | Cs]) -->
+pl_quoted_atom_chars_([]) --> "'", !.
+pl_quoted_atom_chars_([C | Cs]) -->
     "\\", !, [Quoted],
     { member(Quoted : C, [
                0'n : 10,
@@ -309,157 +309,166 @@ e_quoted_atom_chars_([C | Cs]) -->
                0'e : 127,
                AsIs : AsIs
     ]) }, !,
-    e_quoted_atom_chars_(Cs).
-e_quoted_atom_chars_([C | Cs]) -->
+    pl_quoted_atom_chars_(Cs).
+pl_quoted_atom_chars_([C | Cs]) -->
     [C],
-    e_quoted_atom_chars_(Cs).
+    pl_quoted_atom_chars_(Cs).
 
-e_expression(Prec, Expr) -->
-    many(e_op_or_term, Flat), !,
-    { e_apply_ops(Prec, Flat, Expr), ! }.
+pl_expression(Expr) -->
+    pl_expression(1201, Expr).
 
-test e_expression :-
-    e_expression(1200, 1, "1", []),
-    e_expression(1200, a, "a", []),
-    e_expression(1200, a + b, "a + b", []),
-    e_expression(1200, a + (b * c), "a + b * c", []),
-    e_expression(1200, (a * b) + c, "a * b + c", []),
-    e_expression(1200, (-a) * b, "-a * b", []),
-    e_expression(1200, (:- (a * b)), ":- a * b", []).
+pl_expression(Prec, Expr) -->
+    tc pl_expression(none, Prec, Expr).
+
+test pl_expression :-
+    pl_expression(1, "1", []),
+    pl_expression(a, "a", []),
+    pl_expression(a + b, "a + b", []),
+    pl_expression(a + (b * c), "a + b * c", []),
+    pl_expression((a * b) + c, "a * b + c", []),
+    pl_expression((-a) * b, "-a * b", []),
+    pl_expression((:- (a * b)), ":- a * b", []).
 
 test comma_expr :-
-    e_expression(1200, (p :- (a, b)), "p :- a, b", []).
+    pl_expression((p :- (a, b)), "p :- a, b", []).
 
-e_regular_term(Integer) -->
+pl_regular_term(Integer) -->
     many1(digit, Ds), !,
     { foldl(add_digit, 0, Ds, Integer) },
-    e_skipwhite.
-e_regular_term(Term) -->
-    e_atom(Atom), !,
-    ( e_token("("), !,
-      e_comma_separated(Args),
-      e_token(")"),
+    pl_skipwhite.
+pl_regular_term(Term) -->
+    pl_atom(Atom), !,
+    ( pl_token("("), !,
+      pl_comma_separated(Args),
+      pl_token(")"),
       { Term =.. [Atom | Args] }
-    ; e_skipwhite,
+    ; pl_skipwhite,
       { Term = Atom }).
-e_regular_term(Term) -->
-    e_token("("),
-    e_expression(1200, Term),
-    e_token(")").
-e_regular_term('{}'(Term)) -->
-    e_token("{"),
-    e_expression(1200, Term),
-    e_token("}").
-e_regular_term(Term) -->
-    e_token("["),
-    e_comma_separated(Heads),
-    ( e_token("|"),
-      e_expression(1200, Tail),
+pl_regular_term(Term) -->
+    pl_token("("),
+    tc pl_expression(Term),
+    pl_token(")").
+pl_regular_term('{}'(Term)) -->
+    pl_token("{"),
+    tc pl_expression(Term),
+    pl_token("}").
+pl_regular_term(Term) -->
+    pl_token("["),
+    pl_comma_separated(Heads),
+    ( pl_token("|"),
+      tc pl_expression(Tail),
       { append(Heads, Tail, Term) }
     ; { Term = Heads } ),
-    e_token("]").
+    pl_token("]").
 
-test e_regular_term :-
-    e_regular_term(123, "123", ""),
-    e_regular_term(hi, "hi", ""),
-    e_regular_term(hi(1), "hi(1)", ""),
-    e_regular_term(hi(b, 4), "hi(b, 4)", ""),
-    e_regular_term(6, "(6)", ""),
-    e_regular_term('{}'(x), "{x}", ""),
-    e_regular_term([], "[]", ""),
-    e_regular_term([1,2,3], "[1,2,3]", "").
+test pl_regular_term :-
+    pl_regular_term(123, "123", ""),
+    pl_regular_term(hi, "hi", ""),
+    pl_regular_term(hi(1), "hi(1)", ""),
+    pl_regular_term(hi(b, 4), "hi(b, 4)", ""),
+    pl_regular_term(6, "(6)", ""),
+    pl_regular_term('{}'(x), "{x}", ""),
+    pl_regular_term([], "[]", ""),
+    pl_regular_term([1,2,3], "[1,2,3]", "").
 
-
-e_comma_separated([A | As]) -->
-    e_expression(1000, A), !,
-    ( e_token(","), !,
-      e_comma_separated(As)
+pl_comma_separated([A | As]) -->
+    tc pl_expression(1000, A), !,
+    ( tc pl_token(","), !,
+      tc pl_comma_separated(As)
     ; { As = [] }).
-e_comma_separated([]) --> [].
+pl_comma_separated([]) --> [].
 
-e_op_or_term(X) --> e_regular_term(X), !.
-e_op_or_term(X) -->
-    many1(e_op_char, Cs), !,
-    e_skipwhite,
-    { atom_codes(X, Cs) }.
+pl_op_or_term(X) --> pl_regular_term(X), !.
+pl_op_or_term(X) -->
+    many1(pl_op_char, Cs), !,
+    pl_skipwhite,
+    { atom_codes(X, Cs) }, !.
 
-e_op_char(C) -->
+pl_op_char(C) -->
     [C], { member(C, "`~!@#$%^&*<>?/;:-_=+,|") }, !.
 
-e_apply_ops(Prec, Flat, Term) :- e_apply_ops(Prec, Term, Flat, []).
-
-e_apply_ops(Prec, Term) -->
-    [Op],
-    { atom(Op),
-      e_op(NewPrec, Assoc, Op),
-      NewPrec =< Prec,
-      member(Assoc-N, [fx-1, fy-0]),
+pl_expression(none, Prec, Term) -->
+    t(fz),
+    tc pl_op_or_term(Op),
+    { tc atom(Op),
+      tc pl_op(OpPrec, Assoc, Op),
+      tc member(Assoc-N, [fx-0, fy-1]),
       !,
-      RightPrec is NewPrec - N },
-    e_apply_ops(RightPrec, Right),
+      RightPrec is OpPrec + N },
+    tc pl_expression(none, RightPrec, Right),
     { Combined =.. [Op, Right] },
-    push(Combined),
-    e_apply_ops(Prec, Term).
-e_apply_ops(Prec, Term) -->
-    [Left, Op],
+    tc pl_expression(just(Combined), Prec, Term).
+pl_expression(none, Prec, Term) --> !,
+    t(z),
+    tc pl_op_or_term(Left), !,
+    tc pl_expression(just(Left), Prec, Term).
+pl_expression(just(Left), Prec, Term) -->
+    t(zf),
+    tc pl_op_or_term(Op),
     { atom(Op),
-      e_op(NewPrec, Assoc, Op),
-      member(Assoc-N, [xf-1, yf-0]),
-      LeftPrec is NewPrec - N,
-      LeftPrec =< Prec,
+      pl_op(OpPrec, Assoc, Op),
+      member(Assoc-N, [xf-0, yf-1]),
+      LeftPrec is OpPrec + N,
+      tc LeftPrec < Prec,
       !,
       Combined =.. [Op, Left] },
-    push(Combined),
-    e_apply_ops(Prec, Term).
-e_apply_ops(Prec, Term) -->
-    [Left, Op],
+    tc pl_expression(just(Combined), Prec, Term).
+pl_expression(just(Left), Prec, Term) -->
+    t(zfz),
+    tc pl_op_or_term(Op),
     { atom(Op),
-      e_op(NewPrec, Assoc, Op),
-      member(Assoc-N-M, [xfx-1-1, xfy-1-0, yfx-0-1]),
-      LeftPrec is NewPrec - N,
-      LeftPrec =< Prec,
+      pl_op(OpPrec, Assoc, Op),
+      member(Assoc-N-M, [xfx-0-0, xfy-0-1, yfx-1-0]),
+      LeftPrec is OpPrec + N,
+      tc LeftPrec < Prec,
       !,
-      RightPrec is NewPrec - M },
-    e_apply_ops(RightPrec, Right),
+      RightPrec is OpPrec + M },
+    tc pl_expression(none, RightPrec, Right),
     { Combined =.. [Op, Left, Right] },
-    push(Combined),
-    e_apply_ops(Prec, Term).
-e_apply_ops(_, Term) --> [Term], !.
+    tc pl_expression(just(Combined), Prec, Term).
+pl_expression(just(Term), _, Term) -->
+    !,
+    t(just(z)).
 
-e_op(1200, xfx, ':-').
-e_op(1200, xfx, '-->').
-e_op(1200, fx, ':-').
-e_op(1105, xfy, '|').
-e_op(1100, xfy, ';').
-e_op(1050, xfy, '->').
-e_op(1000, xfy, ',').
-e_op(900, fy, '\\+').
-e_op(700, xfx, '=').
-e_op(700, xfx, '\\=').
-e_op(700, xfx, '=..').
-e_op(700, xfx, '==').
-e_op(700, xfx, '\\==').
-e_op(700, xfx, 'is').
-e_op(700, xfx, '<').
-e_op(700, xfx, '>').
-e_op(700, xfx, '=<').
-e_op(700, xfx, '>=').
-e_op(700, xfx, '=\\=').
-e_op(600, xfy, ':').
-e_op(500, yfx, '+').
-e_op(500, yfx, '-').
-e_op(400, yfx, '*').
-e_op(400, yfx, '/').
-e_op(400, yfx, 'rem').
-e_op(400, yfx, 'mod').
-e_op(400, yfx, 'div').
-e_op(400, yfx, '<<').
-e_op(400, yfx, '>>').
-e_op(200, xfx, '**').
-e_op(200, xfx, '^').
-e_op(200, fy, '+').
-e_op(200, fy, '-').
+pl_op(1200, xfx, ':-').
+pl_op(1200, xfx, '-->').
+pl_op(1200, fx, ':-').
+pl_op(1105, xfy, '|').
+pl_op(1100, xfy, ';').
+pl_op(1050, xfy, '->').
+pl_op(1000, xfy, ',').
+pl_op(900, fy, '\\+').
+pl_op(700, xfx, '=').
+pl_op(700, xfx, '\\=').
+pl_op(700, xfx, '=..').
+pl_op(700, xfx, '==').
+pl_op(700, xfx, '\\==').
+pl_op(700, xfx, 'is').
+pl_op(700, xfx, '<').
+pl_op(700, xfx, '>').
+pl_op(700, xfx, '=<').
+pl_op(700, xfx, '>=').
+pl_op(700, xfx, '=\\=').
+pl_op(600, xfy, ':').
+pl_op(500, yfx, '+').
+pl_op(500, yfx, '-').
+pl_op(400, yfx, '*').
+pl_op(400, yfx, '/').
+pl_op(400, yfx, 'rem').
+pl_op(400, yfx, 'mod').
+pl_op(400, yfx, 'div').
+pl_op(400, yfx, '<<').
+pl_op(400, yfx, '>>').
+pl_op(200, xfx, '**').
+pl_op(200, xfx, '^').
+pl_op(200, fy, '+').
+pl_op(200, fy, '-').
 
-test parse_self :-
-    read_file('main.pl', Bytes), !,
-    e_top_level(_Decls, Bytes, []).
+%test parse_self :-
+%    read_file('main.pl', Bytes), !,
+%    pl_top_level(_Decls, Bytes, []).
+
+test wip :-
+    %tc pl_expression(just(b), 1000 , _, ",", _).
+    tc pl_regular_term(_, "hi(b, 4)", "").
+
