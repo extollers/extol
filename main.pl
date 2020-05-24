@@ -8,12 +8,16 @@
 t(X) :- write('trace: '), ti, writeq(X), nl.
 t(X, A, A) :-
     write('trace: '), ti, writeq(X), write(', at: '),
-    copy_term(A, AA),
-    (length(B, 10), append(B, _, AA) ; B = AA), !,
-    prep_chars(B, Q, []),
-    atom_codes(C, Q), write(C),
-    length(Q, N), (N < 10 -> write('<eof>') ; true),
+    pretty_init(A, C), write(C),
     nl, ! .
+
+pretty_init(A, C) :-
+    copy_term(A, AA),
+    (length(B, 32), append(B, _, AA) ; B = AA), !,
+    prep_chars(B, Q, []),
+    length(Q, N),
+    (N < 10 -> append(Q, "<eof>", QQ) ; QQ = Q),
+    atom_codes(C, QQ).
 
 prep_chars([]) --> [].
 prep_chars([X | Xs]) --> prep_char(X), prep_chars(Xs).
@@ -59,7 +63,14 @@ tc(F, X) -->
 
 % Trace indent
 
-ti :- g_read(tindent, I), II is I * 2, length(L, II), maplist('='(0' ), L), atom_codes(S, L), write(S).
+ti :-
+    Pat = [0'|, 0' , 0'., 0' , 0'., 0'  | Pat],
+    g_read(tindent, I),
+    II is I * 2,
+    length(L, II),
+    append(L, _, Pat),
+    atom_codes(S, L),
+    write(S).
 
 ticall(G) :-
     g_read(tindent, I),
@@ -128,7 +139,7 @@ run_test(B) :-
     run_test((B, done)).
 
 :- op(1200, fy, test).
-:- discontiguous('/'(test, 1)).
+:- discontiguous('/'('test', 1)).
 
 test 'parse test.c' :-
     read_file('test.c', Bytes), !,
@@ -146,19 +157,26 @@ eof([], []).
 
 peek(Rest, Rest, Rest).
 
-push(X, Rest, [X | Rest]).
-
 alpha(C) --> [C], { member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ") }.
 
 digit(D) -->
     [C],
     { member(C - D, [0'0 - 0, 0'1 - 1, 0'2 - 2, 0'3 - 3, 0'4 - 4, 0'5 - 5, 0'6 - 6, 0'7 - 7, 0'8 - 8, 0'9 - 9]) }.
 
+dcg_call(Var) --> { var(Var), !, fail }.
 dcg_call([]) --> !, [].
 dcg_call([X | Xs]) --> !, [X], dcg_call(Xs).
 dcg_call((A, B)) --> !, dcg_call(A), dcg_call(B).
-dcg_call((A ; B)) --> !, dcg_call(A); dcg_call(B).
+dcg_call((A ; _)) --> dcg_call(A).
+dcg_call((_ ; B)) --> !, dcg_call(B).
+dcg_call({A}) --> !, { call(A) }.
 dcg_call(G, In, Rest) :- !, call(G, In, Rest).
+
+require(N, Xs, Rest) :-
+    ( dcg_call(N, Xs, Rest), !
+    ; pretty_init(Xs, C), throw(parse_failed(N, C)) ).
+
+try(N, Xs, Rest) :- catch(dcg_call(N, Xs, Rest), parse_failed(_, _), Failed=true), !, Failed=false.
 
 %% Lists
 
@@ -239,9 +257,9 @@ c_top_level(Decls) --> many(c_declaration, Decls), eof.
 
 c_declaration(declare(Name, Type, Value)) -->
     c_type(Type), [symbol(Name)],
-    ( [operator(=)], c_value(Assign), { Value = value(Assign) }
+    ( [operator('=')], c_value(Assign), { Value = value(Assign) }
     ; { Value = none } ),
-    [operator(;)].
+    [operator(';')].
 
 c_type(Type) --> [symbol(Type)].
 
@@ -277,9 +295,10 @@ pl_line_comment_ --> [_], pl_line_comment_.
 pl_top_level(Decls) -->
     ( "#!", !, pl_line_comment_; true),
     pl_skipwhite,
-    many(pl_declaration, Decls).
+    many(pl_declaration, Decls),
+    require(eof).
 
-pl_declaration(Decl) --> pl_expression(Decl), pl_token(".").
+pl_declaration(Decl) --> pl_expression(Decl), require(pl_token(".")).
 
 pl_atom_char(C) -->
     [C], !,
@@ -299,16 +318,20 @@ test pl_atom :-
     pl_atom('9', "'\\9'", ""),
     pl_atom(ab, "ab", "").
 
+pl_quoted_char(C) -->
+    "\\", !,
+    require([Quoted]),
+    { member(Quoted : C, [
+                 0'n : 10,
+                 0'r : 13,
+                 0't : 9,
+                 0'e : 127,
+                 AsIs : AsIs
+    ]) }, !.
+
 pl_quoted_atom_chars_([]) --> "'", !.
 pl_quoted_atom_chars_([C | Cs]) -->
-    "\\", !, [Quoted],
-    { member(Quoted : C, [
-               0'n : 10,
-               0'r : 13,
-               0't : 9,
-               0'e : 127,
-               AsIs : AsIs
-    ]) }, !,
+    pl_quoted_char(C), !,
     pl_quoted_atom_chars_(Cs).
 pl_quoted_atom_chars_([C | Cs]) -->
     [C],
@@ -332,34 +355,36 @@ test pl_expression :-
 test comma_expr :-
     pl_expression((p :- (a, b)), "p :- a, b", []).
 
+pl_regular_term(Char) --> "0'", !, require(pl_string_char(Char)), pl_skipwhite.
 pl_regular_term(Integer) -->
     many1(digit, Ds), !,
     { foldl(add_digit, 0, Ds, Integer) },
     pl_skipwhite.
+pl_regular_term(String) --> "\"", !, require(many(pl_string_char, String)), require("\""), pl_skipwhite.
 pl_regular_term(Term) -->
     pl_atom(Atom), !,
     ( pl_token("("), !,
-      pl_comma_separated(Args),
-      pl_token(")"),
+      pl_comma_separated(Args, [], pl_token(")")),
       { Term =.. [Atom | Args] }
     ; pl_skipwhite,
       { Term = Atom }).
 pl_regular_term(Term) -->
     pl_token("("),
-    pl_expression(Term),
-    pl_token(")").
+    tc pl_expression(Term),
+    require(pl_token(")")).
 pl_regular_term('{}'(Term)) -->
     pl_token("{"),
     pl_expression(Term),
-    pl_token("}").
+    require(pl_token("}")).
 pl_regular_term(Term) -->
     pl_token("["),
-    pl_comma_separated(Heads),
-    ( pl_token("|"),
-      pl_expression(Tail),
-      { append(Heads, Tail, Term) }
-    ; { Term = Heads } ),
-    pl_token("]").
+    pl_comma_separated(Term, Tail,
+                       ( pl_token("]"), {Tail=[]}
+                       ; pl_token("|"), pl_expression(Tail), pl_token("]"))), !.
+
+pl_string_char(_) --> "\"", !, { false }.
+pl_string_char(C) --> pl_quoted_char(C), !.
+pl_string_char(C) --> [C].
 
 test pl_regular_term :-
     pl_regular_term(123, "123", ""),
@@ -371,55 +396,68 @@ test pl_regular_term :-
     pl_regular_term([], "[]", ""),
     pl_regular_term([1,2,3], "[1,2,3]", "").
 
-pl_comma_separated([A | As]) -->
-    pl_expression(1000, A), !,
-    ( pl_token(","), !,
-      pl_comma_separated(As)
-    ; { As = [] }).
-pl_comma_separated([]) --> [].
+pl_comma_separated(As, Tail, End) -->
+    pl_comma_seperated_first(As, Tail, End).
 
-pl_op_or_term(X) --> pl_regular_term(X), !.
-pl_op_or_term(X) -->
-    many1(pl_op_char, Cs), !,
-    pl_skipwhite,
-    { atom_codes(X, Cs) }, !.
+pl_comma_seperated_first(Tail, Tail, End) -->
+    dcg_call(End), !.
+pl_comma_seperated_first([A | As], Tail, End) -->
+    pl_expression(1000, A), !,
+    pl_comma_separated_next(As, Tail, End).
+
+pl_comma_separated_next(Tail, Tail, End) -->
+    dcg_call(End), !.
+pl_comma_separated_next([A | As], Tail, End) -->
+    require(pl_token(",")), !,
+    pl_expression(1000, A), !,
+    pl_comma_separated_next(As, Tail, End).
+
+pl_op_or_term('!', term) --> "!", pl_skipwhite.
+pl_op_or_term(X, Info) -->
+    pl_regular_term(X), !,
+    ( { pl_op(Prec, Assoc, X), Info = op(Prec, Assoc) }
+    ; { Info = term } ).
+pl_op_or_term(X, Info) -->
+    many1(pl_op_char, Cs),
+    ( pl_known_op(Cs, X, Prec, Assoc),
+      { Info = op(Prec, Assoc) }
+    % ; { atom_codes(X, Cs),
+    %     Info = term }
+    ),
+    pl_skipwhite.
+
+pl_known_op(Cs, Op, Prec, Assoc) --> { atom_codes(Op, Cs), pl_op(_, _, Op), !, pl_op(Prec, Assoc, Op) }.
+pl_known_op(Cs, Op, Prec, Assoc) --> { append(Shorter, [C], Cs) }, append([C]), pl_known_op(Shorter, Op, Prec, Assoc).
 
 pl_op_char(C) -->
-    [C], { member(C, "`~!@#$%^&*<>?/;:-_=+,|") }, !.
+    [C], { member(C, "`~!@#$%^&*<>?/;:-_=+,|\\.") }, !.
 
 pl_expression(none, Prec, Term) -->
-    pl_op_or_term(Op),
-    { atom(Op),
-      pl_op(OpPrec, Assoc, Op),
-      member(Assoc-N, [fx-0, fy-1]),
-      !,
+    pl_op_or_term(Op, op(OpPrec, Assoc)),
+    { member(Assoc-N, [fx-0, fy-1]),
       RightPrec is OpPrec + N },
-    pl_expression(none, RightPrec, Right),
+    try(pl_expression(none, RightPrec, Right)),
     { Combined =.. [Op, Right] },
     pl_expression(just(Combined), Prec, Term).
 pl_expression(none, Prec, Term) --> !,
-    pl_op_or_term(Left), !,
+    require(pl_op_or_term(Left, term)),
     pl_expression(just(Left), Prec, Term).
 pl_expression(just(Left), Prec, Term) -->
-    pl_op_or_term(Op),
-    { atom(Op),
-      pl_op(OpPrec, Assoc, Op),
-      member(Assoc-N, [xf-0, yf-1]),
+    pl_op_or_term(Op, op(OpPrec, Assoc)),
+    { member(Assoc-N, [xf-0, yf-1]),
       LeftPrec is OpPrec + N,
       LeftPrec < Prec,
       !,
       Combined =.. [Op, Left] },
     pl_expression(just(Combined), Prec, Term).
 pl_expression(just(Left), Prec, Term) -->
-    pl_op_or_term(Op),
-    { atom(Op),
-      pl_op(OpPrec, Assoc, Op),
-      member(Assoc-N-M, [xfx-0-0, xfy-0-1, yfx-1-0]),
+    pl_op_or_term(Op, op(OpPrec, Assoc)),
+    { member(Assoc-N-M, [xfx-0-0, xfy-0-1, yfx-1-0]),
       LeftPrec is OpPrec + N,
       LeftPrec < Prec,
       !,
       RightPrec is OpPrec + M },
-    pl_expression(none, RightPrec, Right),
+    require(pl_expression(none, RightPrec, Right)),
     { Combined =.. [Op, Left, Right] },
     pl_expression(just(Combined), Prec, Term).
 pl_expression(just(Term), _, Term) --> !.
@@ -458,9 +496,14 @@ pl_op(200, xfx, '^').
 pl_op(200, fy, '+').
 pl_op(200, fy, '-').
 
-%test parse_self :-
-%    read_file('main.pl', Bytes), !,
-%    pl_top_level(_Decls, Bytes, []).
+pl_op(1200, fy, test).
+pl_op(999, fx, tc).
 
-test wip :- true.
+
+test parse_self :-
+    read_file('main.pl', Bytes), !,
+    pl_top_level(_Decls, Bytes, []).
+
+test wip :-
+    pl_declaration(Decl, ":- discontiguous('/'(test, 1)).", "").
 
