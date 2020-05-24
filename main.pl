@@ -121,7 +121,10 @@ read_file(Path, Bytes) :-
 :- initialization(main).
 
 main :-
-    current_prolog_flag(argv, [_ | Args]),
+    current_prolog_flag(argv, [_, Command | Args]),
+    command(Command, Args).
+
+command(test, Args) :-
     undo(halt),
     write('Running tests'), nl,
     test((Name :- Goals)),
@@ -298,6 +301,7 @@ pl_top_level(Decls) -->
     many(pl_declaration, Decls),
     require(eof).
 
+pl_declaration(_) --> eof, !, {fail}.
 pl_declaration(Decl) --> pl_expression(Decl), require(pl_token(".")).
 
 pl_atom_char(C) -->
@@ -370,7 +374,7 @@ pl_regular_term(Term) -->
       { Term = Atom }).
 pl_regular_term(Term) -->
     pl_token("("),
-    tc pl_expression(Term),
+    pl_expression(Term),
     require(pl_token(")")).
 pl_regular_term('{}'(Term)) -->
     pl_token("{"),
@@ -499,11 +503,10 @@ pl_op(200, fy, '-').
 pl_op(1200, fy, test).
 pl_op(999, fx, tc).
 
-
 test parse_self :-
     read_file('main.pl', Bytes), !,
     pl_top_level(_Decls, Bytes, []).
 
-test wip :-
+test regression :-
     pl_declaration(Decl, ":- discontiguous('/'(test, 1)).", "").
 

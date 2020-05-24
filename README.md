@@ -1,6 +1,11 @@
 # Plan
 
-- bootstrapped high-level declarative language (code name Extol)
+- a bootstrapped high-level declarative language (code name Extol)
+  - [x] a Prolog parser in Prolog that can parse itself
+  - [ ] a Prolog generator for the parsed AST
+  - [ ] functions and expresisons similar to Ciao's fsyntax
+  - [ ] anonymous predicates similar to Mercury
+  - [ ] first-class predicates and functions, get rid of call
 
 # Further ideas
 
@@ -24,3 +29,5 @@
 - Convert C++ to C-ish: instantiate all templates, explicit construct, destroy, copy, move, convert and return
 - theorem proving
 - SMT
+- make replacement
+- parallelism
