@@ -11,5 +11,5 @@ trampoline.pl: main.xtl
 	$(pl) boot.pl extol2prolog main.xtl trampoline.pl
 
 boot.pl: main.xtl
-	$(pl) oldboot.pl extol2prolog main.xtl newboot.pl
+	$(pl) boot.pl extol2prolog main.xtl newboot.pl
 	mv newboot.pl boot.pl
