@@ -1,15 +1,23 @@
-pl = echo -n | GLOBALSZ=$$((1024*1024)) gprolog --consult-file
+pl = echo -n | GLOBALSZ=1048576 gprolog --consult-file
+
+.PHONY: test clean
 
 test: main.pl trampoline.pl
 	diff main.pl trampoline.pl
 	$(pl) main.pl test < /dev/null
 
 main.pl: trampoline.pl main.xtl
-	$(pl) trampoline.pl extol2prolog main.xtl main.pl
+	rm -f main.pl
+	$(pl) trampoline.pl extoltoprolog main.xtl main.pl
 
 trampoline.pl: main.xtl
-	$(pl) boot.pl extol2prolog main.xtl trampoline.pl
+	rm -f trampoline.pl
+	$(pl) boot.pl extoltoprolog main.xtl trampoline.pl
 
 boot.pl: main.xtl
-	$(pl) boot.pl extol2prolog main.xtl newboot.pl
+	rm -f newboot.pl
+	$(pl) boot.pl extoltoprolog main.xtl newboot.pl
 	mv newboot.pl boot.pl
+
+clean:
+	rm -f main.pl trampoline.pl
