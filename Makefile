@@ -1,46 +1,29 @@
 pl = echo -n | GLOBALSZ=1048576 gprolog --consult-file
 
-.PHONY: test fasttest fulltest difftest clean
+fulltest: test1 test2 diff23 test3
 
-fulltest: test2 difftest test3
+define make_stage
 
-diff12: stage2.pl
-	diff -U2  stage1.pl stage2.pl
+diff$(2)$(1): stage$(2).pl stage$(1).pl
+	diff -U2 $$^
 
-diff23: stage2.pl stage3.pl
-	diff -U2  stage2.pl stage3.pl
+test$(1): stage$(1).pl
+	$(pl) stage$(1).pl test
 
-diff13: stage3.pl
-	diff -U2  stage1.pl stage3.pl
+test$(1)-%: stage$(1).pl
+	$(pl) stage$(1).pl test $$*
 
-test3: stage3.pl
-	$(pl) stage3.pl test
+stage$(1).pl: stage$(2).pl main.xtl
+	rm -f $$@
+	$(pl) $$< extoltoprolog main.xtl $$@
+endef
 
-test3-%: stage3.pl
-	$(pl) stage3.pl test $*
+$(eval $(call make_stage,1,0))
+$(eval $(call make_stage,2,1))
+$(eval $(call make_stage,3,2))
 
-test2: stage2.pl
-	$(pl) stage2.pl test
-
-test2-%: stage2.pl
-	$(pl) stage2.pl test $*
-
-test1:
-	$(pl) stage1.pl test
-
-test1-%: stage1.pl
-	$(pl) stage1.pl test $*
-
-stage3.pl: stage2.pl main.xtl
-	rm -f stage3.pl
-	$(pl) stage2.pl extoltoprolog main.xtl stage3.pl
-
-stage2.pl: main.xtl
-	rm -f stage2.pl
-	$(pl) stage1.pl extoltoprolog main.xtl stage2.pl
-
-stage1.pl: stage3.pl
-	cp stage3.pl stage1.pl
+reboot:
+	cp stage3.pl stage0.pl
 
 clean:
-	rm -f stage2.pl stage3.pl
+	rm -f stage1.pl stage2.pl stage3.pl
