@@ -23,7 +23,7 @@ main.pl: trampoline.pl main.xtl
 	rm -f main.pl
 	$(pl) trampoline.pl extoltoprolog main.xtl main.pl
 
-trampoline.pl: boot.pl main.xtl
+trampoline.pl: main.xtl
 	rm -f trampoline.pl
 	$(pl) boot.pl extoltoprolog main.xtl trampoline.pl
 

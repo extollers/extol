@@ -179,7 +179,7 @@ run_test(B) :-
 
 :- discontiguous('/'('test', 1)).
 
-test 'parse test.c' :-
+test 'test_c' :-
     read_file('test.c', Bytes), !,
     c_pp([], Tokens, Bytes, []), !,
     c_top_level(_Decls, Tokens, []).
