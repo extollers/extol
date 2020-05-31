@@ -8,20 +8,20 @@
 t(A):-write('trace: '),ti,writeq(A),nl.
 t(A,B,B):-write('trace: '),ti,writeq(A),write(', at: '),pretty_init(B,C),write(C),nl,!.
 pretty_init(A,B):-copy_term(A,C),(length(D,32),append(D,E,C);D=C),!,prep_chars(D,F,[]),length(F,G),(G<10->append(F,[60,101,111,102,62],H);H=F),atom_codes(B,H).
-prep_chars([])-->[].
-prep_chars([A|B])-->prep_char(A),prep_chars(B).
-prep_char(A)-->{var(A)},!,[60,63,62].
-prep_char(10)-->!,[60,110,108,62].
-prep_char(13)-->!,[60,99,114,62].
-prep_char(9)-->!,[60,116,97,98,62].
-prep_char(60)-->!,[60,108,116,62].
-prep_char(A)-->{(\+integer(A);A<32;A>126),!,open_output_codes_stream(B),write(B,A),close_output_codes_stream(B,C)},[60],dcg_call(C),[62],!.
-prep_char(A)-->[A].
+prep_chars([],A,B):-A=B.
+prep_chars([A|B],C,D):-prep_char(A,C,E),prep_chars(B,E,D).
+prep_char(A,B,C):-(var(A),B=D),(!,D=E),append([60,63,62],C,E).
+prep_char(10,A,B):-(!,A=C),append([60,110,108,62],B,C).
+prep_char(13,A,B):-(!,A=C),append([60,99,114,62],B,C).
+prep_char(9,A,B):-(!,A=C),append([60,116,97,98,62],B,C).
+prep_char(60,A,B):-(!,A=C),append([60,108,116,62],B,C).
+prep_char(A,B,C):-(((\+integer(A);A<32;A>126),!,open_output_codes_stream(D),write(D,A),close_output_codes_stream(D,E)),B=F),append([60],G,F),dcg_call(E,G,H),append([62],I,H),!,I=C.
+prep_char(A,B,C):-append([A],C,B).
 tf(A):-t(A),fail.
 tf(A,B,C):-tf(A,B,C),fail.
 tc A:-undo(t(failed(A))),t(enter(A)),ticall(A),undo(t(redo(A))),t(exit(A)).
-tc A-->undo(t(failed(A))),t(enter(A)),ticall(A),undo(t(redo(A))),t(exit(A)).
-tc(A,B)-->undo(t(failed(A))),t(enter(A)),ticall(A,B),undo(t(redo(A))),t(exit(A)).
+tc(A,B,C):-undo(t(failed(A)),B,D),t(enter(A),D,E),ticall(A,E,F),undo(t(redo(A)),F,G),t(exit(A),G,C).
+tc(A,B,C,D):-undo(t(failed(A)),C,E),t(enter(A),E,F),ticall(A,B,F,G),undo(t(redo(A)),G,H),t(exit(A),H,D).
 ti:-A=[124,32,46,32,46,32|A],g_read(tindent,B),C is B*2,length(D,C),append(D,E,A),atom_codes(F,D),write(F).
 ticall(A):-g_read(tindent,B),C is B+1,g_assignb(tindent,C),call(A),g_assignb(tindent,B).
 ticall(A,B,C):-g_read(tindent,D),E is D+1,g_assignb(tindent,E),dcg_call(A,B,C),g_assignb(tindent,D).
@@ -56,26 +56,26 @@ run_test(A):-run_test((A,done)).
 :-discontiguous((test)/1).
 test test_c:-read_file('test.c',A),!,c_pp([],B,A,[]),!,c_top_level(C,B,[]).
 typed(many(+predicate(A),-list(A),+bytes,-bytes)).
-many(A,[B|C])-->call(A,B),many(A,C),!.
-many(A,[])-->[].
+many(A,[B|C],D,E):-call(A,B,D,F),many(A,C,F,G),!,G=E.
+many(A,[],B,C):-B=C.
 typed(many1(+predicate(A),-list(A),+bytes,-bytes)).
-many1(A,[B|C])-->call(A,B),!,many(A,C).
+many1(A,[B|C],D,E):-call(A,B,D,F),(!,F=G),many(A,C,G,E).
 typed(eof(+bytes,-bytes)).
 eof([],[]).
 typed(peek(-bytes,+bytes,-bytes)).
 peek(A,A,A).
 typed(alpha(-byte,+bytes,-bytes)).
-alpha(A)-->[A],{member(A,[97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90])}.
+alpha(A,B,C):-append([A],D,B),member(A,[97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90]),D=C.
 typed(digit(-byte,+bytes,-bytes)).
-digit(A)-->[B],{member(B-A,[48-0,49-1,50-2,51-3,52-4,53-5,54-6,55-7,56-8,57-9])}.
+digit(A,B,C):-append([D],E,B),member(D-A,[48-0,49-1,50-2,51-3,52-4,53-5,54-6,55-7,56-8,57-9]),E=C.
 typed(dcg_call(+sentence,+bytes,-bytes)).
-dcg_call(A)-->{var(A),!,fail}.
-dcg_call([])-->!,[].
-dcg_call([A|B])-->!,[A],dcg_call(B).
-dcg_call((A,B))-->!,dcg_call(A),dcg_call(B).
-dcg_call((A;B))-->dcg_call(A).
-dcg_call((A;B))-->!,dcg_call(B).
-dcg_call({A})-->!,{call(A)}.
+dcg_call(A,B,C):-(var(A),!,fail),B=C.
+dcg_call([],A,B):-(!,A=C),C=B.
+dcg_call([A|B],C,D):-(!,C=E),append([A],F,E),dcg_call(B,F,D).
+dcg_call((A,B),C,D):-(!,C=E),dcg_call(A,E,F),dcg_call(B,F,D).
+dcg_call((A;B),C,D):-dcg_call(A,C,D).
+dcg_call((A;B),C,D):-(!,C=E),dcg_call(B,E,D).
+dcg_call({A},B,C):-(!,B=D),call(A),D=C.
 dcg_call(A,B,C):-!,call(A,B,C).
 typed(require(+sentence,+bytes,-bytes)).
 require(A,B,C):-dcg_call(A,B,C),!;pretty_init(B,D),throw(parse_failed(A,D)).
@@ -84,96 +84,96 @@ try(A,B,C):-catch(dcg_call(A,B,C),parse_failed(D,E),F=true),!,F=false.
 typed(foldl(+predicate(A,B,C),?(A),+list(B),?(C))).
 foldl(A,B,[],B).
 foldl(A,B,[C|D],E):-call(A,B,C,F),foldl(A,F,D,E).
-c_pp(A,B)-->c_pp_lines(C),eof,!,{c_pp_eval(A,C,B,[])}.
-c_pp_lines([])-->eof,!.
-c_pp_lines([A|B])-->c_pp_line(A),!,c_pp_lines(B).
-c_pp_line([])-->c_pp_skipwhite,([10],!;eof),!.
-c_pp_line([A|B])-->c_pp_skipwhite,!,c_pp_token(A),!,c_pp_line(B).
-c_pp_skipwhite-->c_pp_white,!.
-c_pp_skipwhite-->[].
-c_pp_white-->[47,47],!,c_pp_line_comment_.
-c_pp_white-->[47,42],!,c_pp_block_comment_,c_pp_skipwhite.
-c_pp_white-->([32];[9];[13];[92,13,10];[92,10]),!,c_pp_skipwhite.
-c_pp_line_comment_-->(peek([10|A]);eof),!.
-c_pp_line_comment_-->c_pp_white,!,c_pp_line_comment_.
-c_pp_line_comment_-->[A],!,c_pp_line_comment_.
-c_pp_block_comment_-->[42,47],!.
-c_pp_block_comment_-->[A],c_pp_block_comment_.
-c_pp_token(A)-->(c_pp_operator(A);c_pp_symbol(A);c_pp_integer(A)),!.
+c_pp(A,B,C,D):-c_pp_lines(E,C,F),eof(F,G),(!,G=H),c_pp_eval(A,E,B,[]),H=D.
+c_pp_lines([],A,B):-eof(A,C),!,C=B.
+c_pp_lines([A|B],C,D):-c_pp_line(A,C,E),(!,E=F),c_pp_lines(B,F,D).
+c_pp_line([],A,B):-c_pp_skipwhite(A,C),(append([10],D,C),!,D=E;eof(C,E)),!,E=B.
+c_pp_line([A|B],C,D):-c_pp_skipwhite(C,E),(!,E=F),c_pp_token(A,F,G),(!,G=H),c_pp_line(B,H,D).
+c_pp_skipwhite(A,B):-c_pp_white(A,C),!,C=B.
+c_pp_skipwhite(A,B):-A=B.
+c_pp_white(A,B):-append([47,47],C,A),(!,C=D),c_pp_line_comment_(D,B).
+c_pp_white(A,B):-append([47,42],C,A),(!,C=D),c_pp_block_comment_(D,E),c_pp_skipwhite(E,B).
+c_pp_white(A,B):-(append([32],C,A);append([9],C,A);append([13],C,A);append([92,13,10],C,A);append([92,10],C,A)),(!,C=D),c_pp_skipwhite(D,B).
+c_pp_line_comment_(A,B):-(peek([10|C],A,D);eof(A,D)),!,D=B.
+c_pp_line_comment_(A,B):-c_pp_white(A,C),(!,C=D),c_pp_line_comment_(D,B).
+c_pp_line_comment_(A,B):-append([C],D,A),(!,D=E),c_pp_line_comment_(E,B).
+c_pp_block_comment_(A,B):-append([42,47],C,A),!,C=B.
+c_pp_block_comment_(A,B):-append([C],D,A),c_pp_block_comment_(D,B).
+c_pp_token(A,B,C):-(c_pp_operator(A,B,D);c_pp_symbol(A,B,D);c_pp_integer(A,B,D)),!,D=C.
 c_pp_operator(operator(A),B,C):-member(D,[[61],[35],[59]]),append(D,C,B),atom_codes(A,D).
-c_pp_symbol(symbol(A))-->c_pp_symbol_chars(B),{atom_codes(A,B)}.
-c_pp_symbol_chars([A|B])-->c_pp_symbol_first(A),!,many(c_pp_symbol_char,B).
-c_pp_symbol_first(A)-->alpha(A),!.
-c_pp_symbol_first(95)-->[95].
-c_pp_symbol_char(A)-->c_pp_symbol_first(A);[A],{member(A,[48,49,50,51,52,53,54,55,56,57])}.
+c_pp_symbol(symbol(A),B,C):-c_pp_symbol_chars(D,B,E),atom_codes(A,D),E=C.
+c_pp_symbol_chars([A|B],C,D):-c_pp_symbol_first(A,C,E),(!,E=F),many(c_pp_symbol_char,B,F,D).
+c_pp_symbol_first(A,B,C):-alpha(A,B,D),!,D=C.
+c_pp_symbol_first(95,A,B):-append([95],B,A).
+c_pp_symbol_char(A,B,C):-c_pp_symbol_first(A,B,C);append([A],D,B),member(A,[48,49,50,51,52,53,54,55,56,57]),D=C.
 add_digit(A,B,C):-member(B,[0,1,2,3,4,5,6,7,8,9]),(var(A),A is C div B;true),C is A*10+B.
-c_pp_integer(integer(A))-->many1(digit,B),!,{foldl(add_digit,0,B,A)}.
-c_pp_eval(A,[])-->eof,!.
-c_pp_eval(A,[B|C])-->c_pp_eval_line(A,D,B),!,c_pp_eval(D,C).
-c_pp_eval_line(A,[B=C|A],[operator(#),symbol(define),symbol(B)|C])-->!.
-c_pp_eval_line(A,A,[])-->!.
-c_pp_eval_line(A,A,[symbol(B)|C])-->{member(B=D,A),!,append(D,C,E)},c_pp_eval_line(A,A,E).
-c_pp_eval_line(A,A,[B|C])-->[B],c_pp_eval_line(A,A,C).
-c_top_level(A)-->many(c_declaration,A),eof.
-c_declaration(declare(A,B,C))-->c_type(B),[symbol(A)],([operator(=)],c_value(D),{C=value(D)};{C=none}),[operator(;)].
-c_type(A)-->[symbol(A)].
-c_value(variable(A))-->[symbol(A)].
-c_value(integer(A))-->[integer(A)].
-pl_token(A)-->dcg_call(A),pl_skipwhite,!.
+c_pp_integer(integer(A),B,C):-many1(digit,D,B,E),(!,E=F),foldl(add_digit,0,D,A),F=C.
+c_pp_eval(A,[],B,C):-eof(B,D),!,D=C.
+c_pp_eval(A,[B|C],D,E):-c_pp_eval_line(A,F,B,D,G),(!,G=H),c_pp_eval(F,C,H,E).
+c_pp_eval_line(A,[B=C|A],[operator(#),symbol(define),symbol(B)|C],D,E):-!,D=E.
+c_pp_eval_line(A,A,[],B,C):-!,B=C.
+c_pp_eval_line(A,A,[symbol(B)|C],D,E):-((member(B=F,A),!,append(F,C,G)),D=H),c_pp_eval_line(A,A,G,H,E).
+c_pp_eval_line(A,A,[B|C],D,E):-append([B],F,D),c_pp_eval_line(A,A,C,F,E).
+c_top_level(A,B,C):-many(c_declaration,A,B,D),eof(D,C).
+c_declaration(declare(A,B,C),D,E):-c_type(B,D,F),append([symbol(A)],G,F),(append([operator(=)],H,G),c_value(I,H,J),(!,J=K),C=value(I),K=L;C=none,G=L),append([operator(;)],E,L).
+c_type(A,B,C):-append([symbol(A)],C,B).
+c_value(variable(A),B,C):-append([symbol(A)],C,B).
+c_value(integer(A),B,C):-append([integer(A)],C,B).
+pl_token(A,B,C):-dcg_call(A,B,D),pl_skipwhite(D,E),!,E=C.
 test pl_token:-pl_token([120],[120,32,32],[]),pl_token([120],[120,32,37,32,99,111,109,109,101,110,116],[]),pl_token([120],[120,32,37,32,99,111,109,109,101,110,116,10,32,32,9],[]).
-pl_skipwhite-->pl_white,!.
-pl_skipwhite-->[].
+pl_skipwhite(A,B):-pl_white(A,C),!,C=B.
+pl_skipwhite(A,B):-A=B.
 test pl_skipwhite:-pl_skipwhite([],[]).
-pl_white-->[37],!,pl_line_comment_,pl_skipwhite.
-pl_white-->([32];[9];[13];[10]),!,pl_skipwhite.
+pl_white(A,B):-append([37],C,A),(!,C=D),pl_line_comment_(D,E),pl_skipwhite(E,B).
+pl_white(A,B):-(append([32],C,A);append([9],C,A);append([13],C,A);append([10],C,A)),(!,C=D),pl_skipwhite(D,B).
 test pl_white:-pl_white([32],[]),pl_white([37],[]),pl_white([37,32,99,111,109,109,101,110,116,32,10,9,32,32],[]).
-pl_line_comment_-->([10];eof),!.
-pl_line_comment_-->[A],pl_line_comment_.
-pl_top_level(A)-->([35,33],!,pl_line_comment_;{true}),pl_skipwhite,many(pl_declaration,A),require(eof).
-pl_write_top_level([])-->[].
-pl_write_top_level([A|B])-->pl_write_term(A),[46,10],pl_write_top_level(B).
-pl_write_term(A)-->{open_output_codes_stream(B),write_term(B,A,[quoted(true),namevars(true),numbervars(true)]),close_output_codes_stream(B,C)},dcg_call(C).
-pl_declaration(A)-->eof,!,{fail}.
-pl_declaration(A)-->pl_expression(A),require(pl_token([46])).
-pl_atom_char(A)-->[A],!,{member(A,[97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,95,48,49,50,51,52,53,54,55,56,57])}.
-pl_atom(A)-->[39],pl_quoted_atom_chars_(B),{atom_codes(A,B)}.
-pl_atom(A)-->many1(pl_atom_char,B),!,{atom_codes(C,B),(B=[D|E],member(D,[95,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90]),!,A=..['$VARNAME',C];A=C)}.
+pl_line_comment_(A,B):-(append([10],C,A);eof(A,C)),!,C=B.
+pl_line_comment_(A,B):-append([C],D,A),pl_line_comment_(D,B).
+pl_top_level(A,B,C):-(append([35,33],D,B),(!,D=E),pl_line_comment_(E,F);true,B=F),pl_skipwhite(F,G),many(pl_declaration,A,G,H),require(eof,H,C).
+pl_write_top_level([],A,B):-A=B.
+pl_write_top_level([A|B],C,D):-pl_write_term(A,C,E),append([46,10],F,E),pl_write_top_level(B,F,D).
+pl_write_term(A,B,C):-((open_output_codes_stream(D),write_term(D,A,[quoted(true),namevars(true),numbervars(true)]),close_output_codes_stream(D,E)),B=F),dcg_call(E,F,C).
+pl_declaration(A,B,C):-eof(B,D),(!,D=E),fail,E=C.
+pl_declaration(A,B,C):-pl_expression(A,B,D),require(pl_token([46]),D,C).
+pl_atom_char(A,B,C):-append([A],D,B),(!,D=E),member(A,[97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,95,48,49,50,51,52,53,54,55,56,57]),E=C.
+pl_atom(A,B,C):-append([39],D,B),pl_quoted_atom_chars_(E,D,F),atom_codes(A,E),F=C.
+pl_atom(A,B,C):-many1(pl_atom_char,D,B,E),(!,E=F),(atom_codes(G,D),(D=[H|I],member(H,[95,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90]),!,A=..['$VARNAME',G];A=G)),F=C.
 test pl_atom:-pl_atom(a,[39,97,39],[]),pl_atom(+,[39,43,39],[]),pl_atom('9',[39,92,57,39],[]),pl_atom(ab,[97,98],[]).
-pl_quoted_char(A)-->[92],!,require([B]),{member(B:A,[110:10,114:13,116:9,101:127,C:C])},!.
-pl_quoted_atom_chars_([])-->[39],!.
-pl_quoted_atom_chars_([A|B])-->pl_quoted_char(A),!,pl_quoted_atom_chars_(B).
-pl_quoted_atom_chars_([A|B])-->[A],pl_quoted_atom_chars_(B).
-pl_expression(A)-->pl_expression(1201,A).
-pl_expression(A,B)-->pl_expression(none,A,B).
+pl_quoted_char(A,B,C):-append([92],D,B),(!,D=E),require([F],E,G),(member(F:A,[110:10,114:13,116:9,101:127,H:H]),G=I),!,I=C.
+pl_quoted_atom_chars_([],A,B):-append([39],C,A),!,C=B.
+pl_quoted_atom_chars_([A|B],C,D):-pl_quoted_char(A,C,E),(!,E=F),pl_quoted_atom_chars_(B,F,D).
+pl_quoted_atom_chars_([A|B],C,D):-append([A],E,C),pl_quoted_atom_chars_(B,E,D).
+pl_expression(A,B,C):-pl_expression(1201,A,B,C).
+pl_expression(A,B,C,D):-pl_expression(none,A,B,C,D).
 test pl_expression:-pl_expression(1,[49],[]),pl_expression(a,[97],[]),pl_expression(a+b,[97,32,43,32,98],[]),pl_expression(a+b*c,[97,32,43,32,98,32,42,32,99],[]),pl_expression(a*b+c,[97,32,42,32,98,32,43,32,99],[]),pl_expression(-a*b,[45,97,32,42,32,98],[]),pl_expression((:-a*b),[58,45,32,97,32,42,32,98],[]).
 test pl_comma_expr:-pl_expression((p:-a,b),[112,32,58,45,32,97,44,32,98],[]).
-pl_regular_term(A)-->[48,39],!,require(pl_string_char(A)),pl_skipwhite.
-pl_regular_term(A)-->many1(digit,B),!,{foldl(add_digit,0,B,A)},pl_skipwhite.
-pl_regular_term(A)-->[34],!,require(many(pl_string_char,A)),require([34]),pl_skipwhite.
-pl_regular_term(A)-->pl_atom(B),!,(pl_token([40]),!,pl_comma_separated(C,[],pl_token([41])),{A=..[B|C]};pl_skipwhite,{A=B}).
-pl_regular_term(A)-->pl_token([40]),pl_expression(A),require(pl_token([41])).
-pl_regular_term({A})-->pl_token([123]),pl_expression(A),require(pl_token([125])).
-pl_regular_term(A)-->pl_token([91]),pl_comma_separated(A,B,(pl_token([93]),{B=[]};pl_token([124]),pl_expression(B),pl_token([93]))),!.
-pl_string_char(A)-->[34],!,{false}.
-pl_string_char(A)-->pl_quoted_char(A),!.
-pl_string_char(A)-->[A].
+pl_regular_term(A,B,C):-append([48,39],D,B),(!,D=E),require(pl_string_char(A),E,F),pl_skipwhite(F,C).
+pl_regular_term(A,B,C):-many1(digit,D,B,E),(!,E=F),(foldl(add_digit,0,D,A),F=G),pl_skipwhite(G,C).
+pl_regular_term(A,B,C):-append([34],D,B),(!,D=E),require(many(pl_string_char,A),E,F),require([34],F,G),pl_skipwhite(G,C).
+pl_regular_term(A,B,C):-pl_atom(D,B,E),(!,E=F),(pl_token([40],F,G),(!,G=H),pl_comma_separated(I,[],pl_token([41]),H,J),A=..[D|I],J=C;pl_skipwhite(F,K),A=D,K=C).
+pl_regular_term(A,B,C):-pl_token([40],B,D),pl_expression(A,D,E),require(pl_token([41]),E,C).
+pl_regular_term({A},B,C):-pl_token([123],B,D),pl_expression(A,D,E),require(pl_token([125]),E,C).
+pl_regular_term(A,B,C):-pl_token([91],B,D),pl_comma_separated(A,E,(pl_token([93]),{E=[]};pl_token([124]),pl_expression(E),pl_token([93])),D,F),!,F=C.
+pl_string_char(A,B,C):-append([34],D,B),(!,D=E),false,E=C.
+pl_string_char(A,B,C):-pl_quoted_char(A,B,D),!,D=C.
+pl_string_char(A,B,C):-append([A],C,B).
 test pl_regular_term:-pl_regular_term(123,[49,50,51],[]),pl_regular_term(hi,[104,105],[]),pl_regular_term(hi(1),[104,105,40,49,41],[]),pl_regular_term(hi(b,4),[104,105,40,98,44,32,52,41],[]),pl_regular_term(6,[40,54,41],[]),pl_regular_term({x},[123,120,125],[]),pl_regular_term([],[91,93],[]),pl_regular_term([1,2,3],[91,49,44,50,44,51,93],[]).
-pl_comma_separated(A,B,C)-->pl_comma_seperated_first(A,B,C).
-pl_comma_seperated_first(A,A,B)-->dcg_call(B),!.
-pl_comma_seperated_first([A|B],C,D)-->pl_expression(1000,A),!,pl_comma_separated_next(B,C,D).
-pl_comma_separated_next(A,A,B)-->dcg_call(B),!.
-pl_comma_separated_next([A|B],C,D)-->require(pl_token([44])),!,pl_expression(1000,A),!,pl_comma_separated_next(B,C,D).
-pl_op_or_term(!,term)-->[33],pl_skipwhite.
-pl_op_or_term(A,B)-->pl_regular_term(A),!,({pl_op(C,D,A),B=op(C,D)};{B=term}).
-pl_op_or_term(A,B)-->many1(pl_op_char,C),(pl_known_op(C,A,D,E),{B=op(D,E)}),pl_skipwhite.
-pl_known_op(A,B,C,D)-->{atom_codes(B,A),pl_op(E,F,B),!,pl_op(C,D,B)}.
-pl_known_op(A,B,C,D)-->{append(E,[F],A)},append([F]),pl_known_op(E,B,C,D).
-pl_op_char(A)-->[A],{member(A,[96,126,33,64,35,36,37,94,38,42,60,62,63,47,59,58,45,95,61,43,44,124,92,46])},!.
-pl_expression(none,A,B)-->pl_op_or_term(C,op(D,E)),{member(E-F,[fx-0,fy-1]),G is D+F},try(pl_expression(none,G,H)),{I=..[C,H]},pl_expression(just(I),A,B).
-pl_expression(none,A,B)-->!,require(pl_op_or_term(C,term)),pl_expression(just(C),A,B).
-pl_expression(just(A),B,C)-->pl_op_or_term(D,op(E,F)),{member(F-G,[xf-0,yf-1]),H is E+G,H<B,!,I=..[D,A]},pl_expression(just(I),B,C).
-pl_expression(just(A),B,C)-->pl_op_or_term(D,op(E,F)),{member(F-G-H,[xfx-0-0,xfy-0-1,yfx-1-0]),I is E+G,I<B,!,J is E+H},require(pl_expression(none,J,K)),{L=..[D,A,K]},pl_expression(just(L),B,C).
-pl_expression(just(A),B,A)-->!.
+pl_comma_separated(A,B,C,D,E):-pl_comma_seperated_first(A,B,C,D,E).
+pl_comma_seperated_first(A,A,B,C,D):-dcg_call(B,C,E),!,E=D.
+pl_comma_seperated_first([A|B],C,D,E,F):-pl_expression(1000,A,E,G),(!,G=H),pl_comma_separated_next(B,C,D,H,F).
+pl_comma_separated_next(A,A,B,C,D):-dcg_call(B,C,E),!,E=D.
+pl_comma_separated_next([A|B],C,D,E,F):-require(pl_token([44]),E,G),(!,G=H),pl_expression(1000,A,H,I),(!,I=J),pl_comma_separated_next(B,C,D,J,F).
+pl_op_or_term(!,term,A,B):-append([33],C,A),pl_skipwhite(C,B).
+pl_op_or_term(A,B,C,D):-pl_regular_term(A,C,E),(!,E=F),((pl_op(G,H,A),B=op(G,H)),F=D;B=term,F=D).
+pl_op_or_term(A,B,C,D):-many1(pl_op_char,E,C,F),(pl_known_op(E,A,G,H,F,I),B=op(G,H),I=J),pl_skipwhite(J,D).
+pl_known_op(A,B,C,D,E,F):-(atom_codes(B,A),pl_op(G,H,B),!,pl_op(C,D,B)),E=F.
+pl_known_op(A,B,C,D,E,F):-(append(G,[H],A),E=I),append([H],I,J),pl_known_op(G,B,C,D,J,F).
+pl_op_char(A,B,C):-append([A],D,B),(member(A,[96,126,33,64,35,36,37,94,38,42,60,62,63,47,59,58,45,95,61,43,44,124,92,46]),D=E),!,E=C.
+pl_expression(none,A,B,C,D):-pl_op_or_term(E,op(F,G),C,H),((member(G-I,[fx-0,fy-1]),J is F+I),H=K),try(pl_expression(none,J,L),K,M),(N=..[E,L],M=O),pl_expression(just(N),A,B,O,D).
+pl_expression(none,A,B,C,D):-(!,C=E),require(pl_op_or_term(F,term),E,G),pl_expression(just(F),A,B,G,D).
+pl_expression(just(A),B,C,D,E):-pl_op_or_term(F,op(G,H),D,I),((member(H-J,[xf-0,yf-1]),K is G+J,K<B,!,L=..[F,A]),I=M),pl_expression(just(L),B,C,M,E).
+pl_expression(just(A),B,C,D,E):-pl_op_or_term(F,op(G,H),D,I),((member(H-J-K,[xfx-0-0,xfy-0-1,yfx-1-0]),L is G+J,L<B,!,M is G+K),I=N),require(pl_expression(none,M,O),N,P),(Q=..[F,A,O],P=R),pl_expression(just(Q),B,C,R,E).
+pl_expression(just(A),B,A,C,D):-!,C=D.
 pl_op(1200,xfx,:-).
 pl_op(1200,xfx,-->).
 pl_op(1200,fx,:-).
@@ -208,23 +208,23 @@ pl_op(200,xfx,^).
 pl_op(200,fy,+).
 pl_op(200,fy,-).
 typed(xtl_token(+sentence),+bytes,-bytes).
-xtl_token(A)-->dcg_call(A),xtl_skipwhite,!.
+xtl_token(A,B,C):-dcg_call(A,B,D),xtl_skipwhite(D,E),!,E=C.
 test xtl_token:-xtl_token([120],[120,32,32],[]),xtl_token([120],[120,32,37,32,99,111,109,109,101,110,116],[]),xtl_token([120],[120,32,37,32,99,111,109,109,101,110,116,10,32,32,9],[]).
 typed(xtl_skipwhite(+bytes,-bytes)).
-xtl_skipwhite-->xtl_white,!.
-xtl_skipwhite-->[].
+xtl_skipwhite(A,B):-xtl_white(A,C),!,C=B.
+xtl_skipwhite(A,B):-A=B.
 test xtl_skipwhite:-xtl_skipwhite([],[]).
 typed(xtl_white(+bytes,-bytes)).
-xtl_white-->[37],!,xtl_line_comment_,xtl_skipwhite.
-xtl_white-->([32];[9];[13];[10]),!,xtl_skipwhite.
+xtl_white(A,B):-append([37],C,A),(!,C=D),xtl_line_comment_(D,E),xtl_skipwhite(E,B).
+xtl_white(A,B):-(append([32],C,A);append([9],C,A);append([13],C,A);append([10],C,A)),(!,C=D),xtl_skipwhite(D,B).
 test xtl_white:-xtl_white([32],[]),xtl_white([37],[]),xtl_white([37,32,99,111,109,109,101,110,116,32,10,9,32,32],[]).
-xtl_line_comment_-->([10];eof),!.
-xtl_line_comment_-->[A],xtl_line_comment_.
+xtl_line_comment_(A,B):-(append([10],C,A);eof(A,C)),!,C=B.
+xtl_line_comment_(A,B):-append([C],D,A),xtl_line_comment_(D,B).
 typed(xtl_top_level(-list(declaration),+bytes,-bytes)).
-xtl_top_level(A)-->([35,33],!,xtl_line_comment_;{true}),xtl_skipwhite,many(xtl_declaration,A),require(eof).
+xtl_top_level(A,B,C):-(append([35,33],D,B),(!,D=E),xtl_line_comment_(E,F);true,B=F),xtl_skipwhite(F,G),many(xtl_declaration,A,G,H),require(eof,H,C).
 typed(xtl_declaration(-declaration,+bytes,-bytes)).
-xtl_declaration(A)-->eof,!,{fail}.
-xtl_declaration(A)-->xtl_expression(B),{xtl_makevars(B,A,C)},require(xtl_token([46])).
+xtl_declaration(A,B,C):-eof(B,D),(!,D=E),fail,E=C.
+xtl_declaration(A,B,C):-xtl_expression(D,B,E),(xtl_makevars(D,A,F),E=G),require(xtl_token([46]),G,C).
 xtl_makevars(A,B,C):-A=..['XTL$VARNAME','_'],!.
 xtl_makevars(A,B,C):-A=..['XTL$VARNAME',D],!,member(D-B,C),!.
 xtl_makevars(A,A,B):-atomic(A),!.
@@ -232,55 +232,55 @@ xtl_makevars([A|B],[C|D],E):-!,xtl_makevars(A,C,E),xtl_makevars(B,D,E).
 xtl_makevars(A,B,C):-A=..D,!,xtl_makevars(D,E,C),B=..E.
 test xtl_makevars:-A=..['XTL$VARNAME','A'],xtl_makevars(foo(A,A),foo(1,B),C),atomic(B),B=1.
 typed(xtl_atom_char(-byte,+bytes,-bytes)).
-xtl_atom_char(A)-->[A],!,{member(A,[97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,95,48,49,50,51,52,53,54,55,56,57])}.
+xtl_atom_char(A,B,C):-append([A],D,B),(!,D=E),member(A,[97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,95,48,49,50,51,52,53,54,55,56,57]),E=C.
 typed(xtl_atom(-atom,+bytes,-bytes)).
-xtl_atom(A)-->[39],xtl_quoted_atom_chars_(B),{atom_codes(A,B)}.
-xtl_atom(A)-->many1(xtl_atom_char,B),!,{atom_codes(C,B),B=[D|E],(D=95,!,A=..['XTL$VARNAME','_'];member(D,[65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90]),!,A=..['XTL$VARNAME',C];A=C)}.
+xtl_atom(A,B,C):-append([39],D,B),xtl_quoted_atom_chars_(E,D,F),atom_codes(A,E),F=C.
+xtl_atom(A,B,C):-many1(xtl_atom_char,D,B,E),(!,E=F),(atom_codes(G,D),D=[H|I],(H=95,!,A=..['XTL$VARNAME','_'];member(H,[65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90]),!,A=..['XTL$VARNAME',G];A=G)),F=C.
 test xtl_atom:-xtl_atom(a,[39,97,39],[]),xtl_atom(+,[39,43,39],[]),xtl_atom('9',[39,92,57,39],[]),xtl_atom(ab,[97,98],[]).
 typed(xtl_quoted_char(-byte,+bytes,-bytes)).
-xtl_quoted_char(A)-->[92],!,require([B]),{member(B:A,[110:10,114:13,116:9,101:127,C:C])},!.
+xtl_quoted_char(A,B,C):-append([92],D,B),(!,D=E),require([F],E,G),(member(F:A,[110:10,114:13,116:9,101:127,H:H]),G=I),!,I=C.
 typed(xtl_quoted_atom_chars_(-list(bytes),+bytes,-bytes)).
-xtl_quoted_atom_chars_([])-->[39],!.
-xtl_quoted_atom_chars_([A|B])-->xtl_quoted_char(A),!,xtl_quoted_atom_chars_(B).
-xtl_quoted_atom_chars_([A|B])-->[A],xtl_quoted_atom_chars_(B).
+xtl_quoted_atom_chars_([],A,B):-append([39],C,A),!,C=B.
+xtl_quoted_atom_chars_([A|B],C,D):-xtl_quoted_char(A,C,E),(!,E=F),xtl_quoted_atom_chars_(B,F,D).
+xtl_quoted_atom_chars_([A|B],C,D):-append([A],E,C),xtl_quoted_atom_chars_(B,E,D).
 typed(xtl_expression(-term,+bytes,-bytes)).
-xtl_expression(A)-->xtl_expression(1201,A).
+xtl_expression(A,B,C):-xtl_expression(1201,A,B,C).
 typed(xtl_expression(+precedence,-term,+bytes,-bytes)).
-xtl_expression(A,B)-->xtl_expression(none,A,B).
+xtl_expression(A,B,C,D):-xtl_expression(none,A,B,C,D).
 test xtl_expression:-xtl_expression(1,[49],[]),xtl_expression(a,[97],[]),xtl_expression(a+b,[97,32,43,32,98],[]),xtl_expression(a+b*c,[97,32,43,32,98,32,42,32,99],[]),xtl_expression(a*b+c,[97,32,42,32,98,32,43,32,99],[]),xtl_expression(-a*b,[45,97,32,42,32,98],[]),xtl_expression((:-a*b),[58,45,32,97,32,42,32,98],[]).
 test comma_expr:-xtl_expression((p:-a,b),[112,32,58,45,32,97,44,32,98],[]).
 typed(xtl_regular_term(-term,+bytes,-bytes)).
-xtl_regular_term(A)-->[48,39],!,require(xtl_string_char(A)),xtl_skipwhite.
-xtl_regular_term(A)-->many1(digit,B),!,{foldl(add_digit,0,B,A)},xtl_skipwhite.
-xtl_regular_term(A)-->[34],!,require(many(xtl_string_char,A)),require([34]),xtl_skipwhite.
-xtl_regular_term(A)-->xtl_atom(B),!,(xtl_token([40]),!,xtl_comma_separated(C,[],xtl_token([41])),{A=..[B|C]};xtl_skipwhite,{A=B}).
-xtl_regular_term(A)-->xtl_token([40]),xtl_expression(A),require(xtl_token([41])).
-xtl_regular_term({A})-->xtl_token([123]),xtl_expression(A),require(xtl_token([125])).
-xtl_regular_term(A)-->xtl_token([91]),xtl_comma_separated(A,B,(xtl_token([93]),{B=[]};xtl_token([124]),xtl_expression(B),xtl_token([93]))),!.
+xtl_regular_term(A,B,C):-append([48,39],D,B),(!,D=E),require(xtl_string_char(A),E,F),xtl_skipwhite(F,C).
+xtl_regular_term(A,B,C):-many1(digit,D,B,E),(!,E=F),(foldl(add_digit,0,D,A),F=G),xtl_skipwhite(G,C).
+xtl_regular_term(A,B,C):-append([34],D,B),(!,D=E),require(many(xtl_string_char,A),E,F),require([34],F,G),xtl_skipwhite(G,C).
+xtl_regular_term(A,B,C):-xtl_atom(D,B,E),(!,E=F),(xtl_token([40],F,G),(!,G=H),xtl_comma_separated(I,[],xtl_token([41]),H,J),A=..[D|I],J=C;xtl_skipwhite(F,K),A=D,K=C).
+xtl_regular_term(A,B,C):-xtl_token([40],B,D),xtl_expression(A,D,E),require(xtl_token([41]),E,C).
+xtl_regular_term({A},B,C):-xtl_token([123],B,D),xtl_expression(A,D,E),require(xtl_token([125]),E,C).
+xtl_regular_term(A,B,C):-xtl_token([91],B,D),xtl_comma_separated(A,E,(xtl_token([93]),{E=[]};xtl_token([124]),xtl_expression(E),xtl_token([93])),D,F),!,F=C.
 typed(xtl_string_char(-byte,+bytes,-bytes)).
-xtl_string_char(A)-->[34],!,{false}.
-xtl_string_char(A)-->xtl_quoted_char(A),!.
-xtl_string_char(A)-->[A].
+xtl_string_char(A,B,C):-append([34],D,B),(!,D=E),false,E=C.
+xtl_string_char(A,B,C):-xtl_quoted_char(A,B,D),!,D=C.
+xtl_string_char(A,B,C):-append([A],C,B).
 test xtl_regular_term:-xtl_regular_term(123,[49,50,51],[]),xtl_regular_term(hi,[104,105],[]),xtl_regular_term(hi(1),[104,105,40,49,41],[]),xtl_regular_term(hi(b,4),[104,105,40,98,44,32,52,41],[]),xtl_regular_term(6,[40,54,41],[]),xtl_regular_term({x},[123,120,125],[]),xtl_regular_term([],[91,93],[]),xtl_regular_term([1,2,3],[91,49,44,50,44,51,93],[]).
 typed(xtl_comma_separated(-list(term),+list(term),+sentence,+bytes,-bytes)).
-xtl_comma_separated(A,B,C)-->xtl_comma_seperated_first(A,B,C).
-xtl_comma_seperated_first(A,A,B)-->dcg_call(B),!.
-xtl_comma_seperated_first([A|B],C,D)-->xtl_expression(1000,A),!,xtl_comma_separated_next(B,C,D).
-xtl_comma_separated_next(A,A,B)-->dcg_call(B),!.
-xtl_comma_separated_next([A|B],C,D)-->require(xtl_token([44])),!,xtl_expression(1000,A),!,xtl_comma_separated_next(B,C,D).
+xtl_comma_separated(A,B,C,D,E):-xtl_comma_seperated_first(A,B,C,D,E).
+xtl_comma_seperated_first(A,A,B,C,D):-dcg_call(B,C,E),!,E=D.
+xtl_comma_seperated_first([A|B],C,D,E,F):-xtl_expression(1000,A,E,G),(!,G=H),xtl_comma_separated_next(B,C,D,H,F).
+xtl_comma_separated_next(A,A,B,C,D):-dcg_call(B,C,E),!,E=D.
+xtl_comma_separated_next([A|B],C,D,E,F):-require(xtl_token([44]),E,G),(!,G=H),xtl_expression(1000,A,H,I),(!,I=J),xtl_comma_separated_next(B,C,D,J,F).
 typed(xtl_op_or_term(-term,-op_info,+bytes,-bytes)).
-xtl_op_or_term(!,term)-->[33],xtl_skipwhite.
-xtl_op_or_term(A,B)-->xtl_regular_term(A),!,({xtl_op(C,D,A),B=op(C,D)};{B=term}).
-xtl_op_or_term(A,B)-->many1(xtl_op_char,C),(xtl_known_op(C,A,D,E),{B=op(D,E)}),xtl_skipwhite.
-xtl_known_op(A,B,C,D)-->{atom_codes(B,A),xtl_op(E,F,B),!,xtl_op(C,D,B)}.
-xtl_known_op(A,B,C,D)-->{append(E,[F],A)},append([F]),xtl_known_op(E,B,C,D).
-xtl_op_char(A)-->[A],{member(A,[96,126,33,64,35,36,37,94,38,42,60,62,63,47,59,58,45,95,61,43,44,124,92,46])},!.
+xtl_op_or_term(!,term,A,B):-append([33],C,A),xtl_skipwhite(C,B).
+xtl_op_or_term(A,B,C,D):-xtl_regular_term(A,C,E),(!,E=F),((xtl_op(G,H,A),B=op(G,H)),F=D;B=term,F=D).
+xtl_op_or_term(A,B,C,D):-many1(xtl_op_char,E,C,F),(xtl_known_op(E,A,G,H,F,I),B=op(G,H),I=J),xtl_skipwhite(J,D).
+xtl_known_op(A,B,C,D,E,F):-(atom_codes(B,A),xtl_op(G,H,B),!,xtl_op(C,D,B)),E=F.
+xtl_known_op(A,B,C,D,E,F):-(append(G,[H],A),E=I),append([H],I,J),xtl_known_op(G,B,C,D,J,F).
+xtl_op_char(A,B,C):-append([A],D,B),(member(A,[96,126,33,64,35,36,37,94,38,42,60,62,63,47,59,58,45,95,61,43,44,124,92,46]),D=E),!,E=C.
 typed(xtl_expression(+maybe(term),+precedence,-term,+bytes,-bytes)).
-xtl_expression(none,A,B)-->xtl_op_or_term(C,op(D,E)),{member(E-F,[fx-0,fy-1]),G is D+F},try(xtl_expression(none,G,H)),{I=..[C,H]},xtl_expression(just(I),A,B).
-xtl_expression(none,A,B)-->!,require(xtl_op_or_term(C,term)),xtl_expression(just(C),A,B).
-xtl_expression(just(A),B,C)-->xtl_op_or_term(D,op(E,F)),{member(F-G,[xf-0,yf-1]),H is E+G,H<B,!,I=..[D,A]},xtl_expression(just(I),B,C).
-xtl_expression(just(A),B,C)-->xtl_op_or_term(D,op(E,F)),{member(F-G-H,[xfx-0-0,xfy-0-1,yfx-1-0]),I is E+G,I<B,!,J is E+H},require(xtl_expression(none,J,K)),{L=..[D,A,K]},xtl_expression(just(L),B,C).
-xtl_expression(just(A),B,A)-->!.
+xtl_expression(none,A,B,C,D):-xtl_op_or_term(E,op(F,G),C,H),((member(G-I,[fx-0,fy-1]),J is F+I),H=K),try(xtl_expression(none,J,L),K,M),(N=..[E,L],M=O),xtl_expression(just(N),A,B,O,D).
+xtl_expression(none,A,B,C,D):-(!,C=E),require(xtl_op_or_term(F,term),E,G),xtl_expression(just(F),A,B,G,D).
+xtl_expression(just(A),B,C,D,E):-xtl_op_or_term(F,op(G,H),D,I),((member(H-J,[xf-0,yf-1]),K is G+J,K<B,!,L=..[F,A]),I=M),xtl_expression(just(L),B,C,M,E).
+xtl_expression(just(A),B,C,D,E):-xtl_op_or_term(F,op(G,H),D,I),((member(H-J-K,[xfx-0-0,xfy-0-1,yfx-1-0]),L is G+J,L<B,!,M is G+K),I=N),require(xtl_expression(none,M,O),N,P),(Q=..[F,A,O],P=R),xtl_expression(just(Q),B,C,R,E).
+xtl_expression(just(A),B,A,C,D):-!,C=D.
 typed(xtl_op(-precedence,-associativity,-atom)).
 xtl_op(1200,xfx,:-).
 xtl_op(1200,xfx,-->).
@@ -323,12 +323,15 @@ xtl_to_pl_toplevel(A,B):-maplist(xtl_to_pl_declaration,A,C),append([(:-set_prolo
 xtl_to_pl_declaration((A:-B),(A:-B)):-!,numbervars(A-B).
 xtl_to_pl_declaration((:-A),(:-A)):-!,numbervars(A).
 xtl_to_pl_declaration((test A),(test A)):-!,numbervars(A).
+xtl_to_pl_declaration((A-->B),(C:-D)):-!,A=..[E|F],append(F,[G,H],I),C=..[E|I],xtl_to_pl_dcg(B,D,G,H),numbervars(C-D).
 xtl_to_pl_declaration(A,A):-!,numbervars(A).
 xtl_to_pl_dcg((A,B),(C,D),E,F):-!,xtl_to_pl_dcg(A,C,E,G),xtl_to_pl_dcg(B,D,G,F).
 xtl_to_pl_dcg((A;B),(C;D),E,F):-!,xtl_to_pl_dcg(A,C,E,F),xtl_to_pl_dcg(B,D,E,F).
-xtl_to_pl_dcg(!,!,A,A):-!.
-xtl_to_pl_dcg([],true,A,A):-!.
+xtl_to_pl_dcg(!,(!,A=B),A,B):-!.
+xtl_to_pl_dcg([],A=B,A,B):-!.
 xtl_to_pl_dcg([A|B],append([A|B],C,D),D,C):-!.
-xtl_to_pl_dcg({A},A,B,B):-!.
+xtl_to_pl_dcg({A},(A,B=C),B,C):-!.
 xtl_to_pl_dcg(A,B,C,D):-!,A=..E,append(E,[C,D],F),B=..F.
 xtl_to_pl_dcg(A,B,C,D):-throw(error(xtl_to_pl_dcg,A)).
+test xtl_to_pl_dcg:-xtl_to_pl_dcg(((f;g),h),((f(a,b);g(a,b)),h(b,c)),a,c),xtl_to_pl_dcg((e,(f,i;g),h),(e(a,b),(f(b,c),i(c,d);g(b,d)),h(d,e)),a,e).
+test xtl_to_pl_dcg_regression:-A=(c_declaration(declare(B,C,D))-->c_type(C),[symbol(B)],([operator(=)],c_value(E),!,{D=value(E)};{D=none}),[operator(;)]),xtl_to_pl_declaration(A,F),F=(c_declaration(declare(G,H,I),J,K):-c_type(H,J,L),append([symbol(G)],M,L),(append([operator(=)],N,M),c_value(O,N,P),(!,P=Q),I=value(O),Q=R;I=none,M=R),append([operator(;)],S,R)).

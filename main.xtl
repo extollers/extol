@@ -304,8 +304,11 @@ c_pp_eval_line(Env, Env, [X | Xs]) -->
 c_top_level(Decls) --> many(c_declaration, Decls), eof.
 
 c_declaration(declare(Name, Type, Value)) -->
-    c_type(Type), [symbol(Name)],
-    ( [operator('=')], c_value(Assign), { Value = value(Assign) }
+    c_type(Type),
+    [symbol(Name)],
+    ( [operator('=')],
+      c_value(Assign), !,
+      { Value = value(Assign) }
     ; { Value = none } ),
     [operator(';')].
 
@@ -861,27 +864,66 @@ xtl_to_pl_toplevel(XTL, PL) :-
 xtl_to_pl_declaration((P :- R), (P :- R)) :- !, numbervars(P-R).
 xtl_to_pl_declaration((:- Q), (:- Q)) :- !, numbervars(Q).
 xtl_to_pl_declaration((test T), (test T)) :- !, numbervars(T).
-%% xtl_to_pl_declaration((N --> L), (NPL :- LPL)) :- !,
-%%     N =.. [F|A],
-%%     append(A, [I, O], AIO),
-%%     NPL =.. [F|AIO],
-%%     xtl_to_pl_dcg(L, LPL, I, O),
-%%     numbervars(NPL-LPL).
+xtl_to_pl_declaration((N --> L), (NPL :- LPL)) :- !,
+     N =.. [F|A],
+     append(A, [I, O], AIO),
+     NPL =.. [F|AIO],
+     xtl_to_pl_dcg(L, LPL, I, O),
+     numbervars(NPL-LPL).
 xtl_to_pl_declaration(X, X) :- !, numbervars(X).
 
+%xtl_to_pl_dcg(F, _, I, O) :- t(F:(I->O)), fail.
 xtl_to_pl_dcg((A, B), (APL, BPL), I, O) :- !,
     xtl_to_pl_dcg(A, APL, I, IO),
     xtl_to_pl_dcg(B, BPL, IO, O).
 xtl_to_pl_dcg((A; B), (APL; BPL), I, O) :- !,
     xtl_to_pl_dcg(A, APL, I, O),
     xtl_to_pl_dcg(B, BPL, I, O).
-xtl_to_pl_dcg((!), (!), I, I) :- !.
-xtl_to_pl_dcg([], true, I, I) :- !.
+xtl_to_pl_dcg((!), (!, I=O), I, O) :- !.
+xtl_to_pl_dcg([], (I=O), I, O) :- !.
 xtl_to_pl_dcg([X|XS], append([X|XS], O, I), I, O) :- !.
-xtl_to_pl_dcg({G}, G, I, I) :- !.
+xtl_to_pl_dcg({G}, (G, I=O), I, O) :- !.
 xtl_to_pl_dcg(F, C, I, O) :- !,
     F =.. L,
     append(L, [I,O], LL),
     C =.. LL.
 xtl_to_pl_dcg(D,_,_,_) :-
     throw(error(xtl_to_pl_dcg, D)).
+
+test xtl_to_pl_dcg :-
+    xtl_to_pl_dcg(((f; g), h), ((f(a, b); g(a, b)), h(b, c)), a, c),
+    xtl_to_pl_dcg((e, (f, i; g), h), (e(a, b), (f(b, c), i(c, d); g(b, d)), h(d, e)), a, e).
+
+
+test xtl_to_pl_dcg_regression :-
+    XTL = (
+        c_declaration(declare(Name, Type, Value)) -->
+            c_type(Type),
+            [symbol(Name)],
+            ( [operator('=')],
+              c_value(Assign),
+              !,
+              { Value = value(Assign) }
+            ; { Value = none } ),
+            [operator(';')]),
+    xtl_to_pl_declaration(XTL, PL),
+    PL = (c_declaration(declare(A,B,C),D,E) :-
+              c_type(B,D,F),
+              append([symbol(A)],G,F),
+              ( append([operator('=')], H, G),
+                c_value(I,H,J),
+                (!, J = K),
+                (C = value(I), K = L)
+              ; C = none,
+                G = L),
+              append([operator(';')], M, L)).
+
+%% (c_declaration(declare(A,B,C),D,E):-
+%%      c_type(B,D,F),
+%%      append([symbol(A)],G,F),
+%%      (append([operator(=)],H,G),
+%%       c_value(I,H,J),
+%%       (!,J=K),
+%%       C=value(I),K=L;
+%%       C=none,G=L),
+%%      append([operator(;)],E,L))
