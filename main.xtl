@@ -561,8 +561,8 @@ pl_op(200, xfx, '^').
 pl_op(200, fy, '+').
 pl_op(200, fy, '-').
 
-%test parse_boot :-
-%    read_file('boot.pl', Bytes), !,
+%test parse_stage1 :-
+%    read_file('stage1.pl', Bytes), !,
 %    pl_top_level(_Decls, Bytes, []).
 
 %% Extol

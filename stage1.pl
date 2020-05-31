@@ -54,7 +54,7 @@ run_test(done):-!,write(success),nl.
 run_test((A,B)):-!,call(A)->run_test(B);nl,write('  failed: '),write(A),nl.
 run_test(A):-run_test((A,done)).
 :-discontiguous((test)/1).
-test'parse test.c':-read_file('test.c',A),!,c_pp([],B,A,[]),!,c_top_level(C,B,[]).
+test test_c:-read_file('test.c',A),!,c_pp([],B,A,[]),!,c_top_level(C,B,[]).
 typed(many(+predicate(A),-list(A),+bytes,-bytes)).
 many(A,[B|C])-->call(A,B),many(A,C),!.
 many(A,[])-->[].

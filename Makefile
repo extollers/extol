@@ -2,35 +2,33 @@ pl = echo -n | GLOBALSZ=1048576 gprolog --consult-file
 
 .PHONY: test fasttest fulltest difftest clean
 
-fulltest: fasttest difftest test
+fulltest: test2 difftest test3
 
-difftest: main.pl trampoline.pl
-	diff -U2  trampoline.pl main.pl
+difftest: stage2.pl stage3.pl
+	diff -U2  stage2.pl stage3.pl
 
-test: main.pl
-	$(pl) main.pl test
+test3: stage3.pl
+	$(pl) stage3.pl test
 
-test-%: main.pl
-	$(pl) main.pl test $*
+test3-%: stage3.pl
+	$(pl) stage3.pl test $*
 
-fasttest: trampoline.pl
-	$(pl) trampoline.pl test
+test2: stage2.pl
+	$(pl) stage2.pl test
 
-fasttest-%: trampoline.pl
-	$(pl) trampoline.pl test $*
+test2-%: stage2.pl
+	$(pl) stage2.pl test $*
 
-main.pl: trampoline.pl main.xtl
-	rm -f main.pl
-	$(pl) trampoline.pl extoltoprolog main.xtl main.pl
+stage3.pl: stage2.pl main.xtl
+	rm -f stage3.pl
+	$(pl) stage2.pl extoltoprolog main.xtl stage3.pl
 
-trampoline.pl: main.xtl
-	rm -f trampoline.pl
-	$(pl) boot.pl extoltoprolog main.xtl trampoline.pl
+stage2.pl: main.xtl
+	rm -f stage2.pl
+	$(pl) stage1.pl extoltoprolog main.xtl stage2.pl
 
-boot.pl: main.pl
-	rm -f newboot.pl
-	$(pl) main.pl extoltoprolog main.xtl newboot.pl
-	mv newboot.pl boot.pl
+stage1.pl: stage3.pl
+	cp stage3.pl stage1.pl
 
 clean:
-	rm -f main.pl trampoline.pl
+	rm -f stage2.pl stage3.pl
