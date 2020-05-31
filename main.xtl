@@ -872,7 +872,6 @@ xtl_to_pl_declaration((N --> L), (NPL :- LPL)) :- !,
      numbervars(NPL-LPL).
 xtl_to_pl_declaration(X, X) :- !, numbervars(X).
 
-%xtl_to_pl_dcg(F, _, I, O) :- t(F:(I->O)), fail.
 xtl_to_pl_dcg((A, B), (APL, BPL), I, O) :- !,
     xtl_to_pl_dcg(A, APL, I, IO),
     xtl_to_pl_dcg(B, BPL, IO, O).
@@ -893,7 +892,6 @@ xtl_to_pl_dcg(D,_,_,_) :-
 test xtl_to_pl_dcg :-
     xtl_to_pl_dcg(((f; g), h), ((f(a, b); g(a, b)), h(b, c)), a, c),
     xtl_to_pl_dcg((e, (f, i; g), h), (e(a, b), (f(b, c), i(c, d); g(b, d)), h(d, e)), a, e).
-
 
 test xtl_to_pl_dcg_regression :-
     XTL = (
@@ -917,13 +915,3 @@ test xtl_to_pl_dcg_regression :-
               ; C = none,
                 G = L),
               append([operator(';')], M, L)).
-
-%% (c_declaration(declare(A,B,C),D,E):-
-%%      c_type(B,D,F),
-%%      append([symbol(A)],G,F),
-%%      (append([operator(=)],H,G),
-%%       c_value(I,H,J),
-%%       (!,J=K),
-%%       C=value(I),K=L;
-%%       C=none,G=L),
-%%      append([operator(;)],E,L))
