@@ -1,8 +1,5 @@
 %% Header
 
-:- op(999, fx, tc).
-:- op(1200, fy, test).
-
 :- discontiguous('/'('test', 1)).
 :- discontiguous('/'('type', 1)).
 :- discontiguous('/'('typed', 1)).
@@ -111,11 +108,13 @@ undo(G, A, B) :- call(G, A, B), fail.
 
 %% Types
 
-type(callable(_)) :- opaque.
-type(stream(_)) :- opaque.
-type(byte(X)) :- number(X).
-type(list(T, X)) :- maplist(T, X).
-type(bytes(X)) :- list(byte, X).
+type(stream) :- unique(stream).
+type(byte) :- unique(byte).
+type(list(T)) :- constructors([
+       ['[]'],
+       ['.', T, list(T)]
+     ]).
+type(bytes) :- list(byte).
 
 %% Streams
 
@@ -634,7 +633,7 @@ test xtl_makevars :-
 typed(xtl_atom_char(-byte, +bytes, -bytes)).
 xtl_atom_char(C) -->
     [C], !,
-    { member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789?") }.
+    { member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789?$") }.
 
 typed(xtl_atom(-atom, +bytes, -bytes)).
 xtl_atom(Atom) -->
@@ -778,7 +777,7 @@ xtl_known_op(Cs, Op, Prec, Assoc) --> { atom_codes(Op, Cs), xtl_op(_, _, Op), !,
 xtl_known_op(Cs, Op, Prec, Assoc) --> { append(Shorter, [C], Cs) }, append([C]), xtl_known_op(Shorter, Op, Prec, Assoc).
 
 xtl_op_char(C) -->
-    [C], { member(C, "`~!@#$%^&*<>/;:-_=+,|\\.") }, !.
+    [C], { member(C, "`~!@#%^&*<>/;:-_=+,|\\.") }, !.
 
 typed(xtl_expression(+maybe(term), +precedence, -term, +bytes, -bytes)).
 xtl_expression(none, Prec, Term) -->
@@ -861,7 +860,9 @@ test regression :-
 xtl_to_pl_toplevel(XTL, PL) :-
     maplist(xtl_to_pl_declaration, XTL, DeclsPL),
     append([
-                  (:- set_prolog_flag(singleton_warning, off))
+                  (:- set_prolog_flag(singleton_warning, off)),
+                  (:- op(1200, fy, test)),
+                  (:- op(999, fx, tc))
               ], DeclsPL, PL).
 
 xtl_to_pl_declaration((HeadXTL :- GoalXTL), (HeadPL :- GoalPL)) :- !,
@@ -878,6 +879,9 @@ xtl_to_pl_declaration((N --> L), (NPL :- LPL)) :- !,
      numbervars(NPL-LPL).
 xtl_to_pl_declaration(X, X) :- !, numbervars(X).
 
+xtl_to_pl_goal(Var, _) :-
+    var(Var), !,
+    throw(error(uninstantiated_goal(Var))).
 xtl_to_pl_goal((A, B), (APL, BPL)) :- !,
     xtl_to_pl_goal(A, APL),
     xtl_to_pl_goal(B, BPL).
@@ -946,11 +950,15 @@ xtl_gather_types(tenv(_, Preds), typed(Pred)) :- !,
     member((F/N):T, Preds),
     error_unless(var(T), already_typed(Pred, T)),
     T = Pred.
-xtl_gather_types(Env, type(T)) :- !,
-    xtl_type_decl(Env, (type(T) :- true)).
 xtl_gather_types(tenv(Types, _), (type(T) :- Body)) :- !,
     member((T:-Body), Types).
 xtl_gather_types(_, _).
+
+test xtl_gather_types :-
+    xtl_gather_types(tenv([], []), foo).
+    %xtl_gather_types(tenv([], [f/0 : f]), typed(f)),
+    %xtl_gather_types(tenv([], [f/1 : f(5)]), typed(f(5))),
+    %xtl_gather_types(tenv([(one :- two)], []), (type(one) :- two)).
 
 xtl_check_types(_, (:- _)) :- !.
 xtl_check_types(_, type(_)) :- !.
@@ -968,7 +976,7 @@ xtl_check_types(Env, Head) :-
 xtl_check_type_head(Env, Vars, Head) :-
     Head =.. [F | A],
     length(A, N),
-    tenv_lookup_predicate(Env, (F/N):T),
+    tenv_lookup_predicate(Env, F/N, T),
     maplist(xtl_check_type_assign(Env, Vars), A, T).
 
 xtl_check_type_goal(Env, Vars, A = B) :- !,
@@ -979,24 +987,47 @@ xtl_check_type_goal(Env, Vars, Goal) :-
 xtl_type_check_call(Env, Vars, Goal) :-
     Goal =.. [F | A],
     length(A, N),
-    tenv_lookup_predicate(Env, (F/N):T),
+    tenv_lookup_predicate(Env, F/N, T),
     maplist(xtl_check_type_expr(Env, Vars), A, T).
 
-xtl_check_type_expr(Env, Vars, Expr, '$'(Constraints)) :-
-    maplist(xtl_check_constraint(Env, Vars, Expr), Contraints).
-xtl_check_type_expr(_, _, Expr, Type) :-
-    throw(error(invalid_type_for(Type, Expr))).
+xtl_check_type_expr(Env, Vars, Var, Type) :-
+    var(Var), !,
+    Var = '$type'(Type).
+xtl_check_type_expr(Env, Vars, '$type'(GivenType), ExpectedType) :-
+    xtl_type_union(Env, GivenType, ExpectedType).
+xtl_check_type_expr(Env, Vars, Functor, unique(UniqueTag)) :-
+    !, throw(error(functor_is_not_unique(Functor, UniqueTag))).
+xtl_check_type_expr(Env, Vars, Functor, constructors(Cases)) :-
+    Functor =.. [F | A],
+    length(A, N),
+    length(T, N),
+    error_unless(member([F | T], Cases), no_matching_constructor(Functor, Cases)),
+    maplist(xtl_check_type(Env, Vars), A, T).
+xtl_check_type_expr(Env, Vars, Expr, UserDefined) :-
+    tenv_lookup_type(Env, UserDefined, Type),
+    xtl_check_type_expr(Env, Vars, Expr, Type).
 
-xtl_check_constraint(Env, Vars, Expr, goal) :-
-    xtl_check_type_goal(Env, Vars, Expr).
-xtl_check_constraint(Env, Vars, Expr, Type) :-
-    Type =.. [_,_],
-    xtl_refine_type(Env, Vars, Expr, Type).
+tenv_lookup_predicate(tenv(_, Preds), FN, T) :-
+    member(FN:TT, Preds),
+    copy_term(TT, T).
 
-tenv_lookup_predicate(tenv(_, Preds), FNT) :-
-    member(FNT, Preds).
+tenv_lookup_type(tenv(Types, _), UserType, Expanded) :-
+    UserType =.. [F | A],
+    length(A, N),
+    length(V, N),
+    Query =.. [F | V],
+    member((Query :- Body), Types),
+    copy_term(Query-Body, UserType-Expanded).
+
+error_unless(Goal, _) :-
+    call(Goal), !.
+error_unless(_, Error) :-
+    throw(error(Error)).
+
+% TODOS
 
 % xtl_refine_type(Env, Vars, Expr, Type) :-
 %    tenv_lookup_type(Env, Type, 
 
 % xtl_check_type_vars
+% xtl_type_union

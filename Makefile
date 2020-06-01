@@ -1,4 +1,4 @@
-pl = echo -n | GLOBALSZ=1048576 gprolog --consult-file
+pl = echo -n | LOCALSZ=102400 GLOBALSZ=1048576 gprolog --consult-file
 
 fulltest: test1 test2 diff23 test3
 
@@ -22,7 +22,7 @@ $(eval $(call make_stage,1,0))
 $(eval $(call make_stage,2,1))
 $(eval $(call make_stage,3,2))
 
-reboot:
+reboot: stage3.pl
 	cp stage3.pl stage0.pl
 
 clean:
