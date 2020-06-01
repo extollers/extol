@@ -29,7 +29,7 @@ ticall(A,B,C,D):-g_read(tindent,E),F is E+1,g_assignb(tindent,F),A=..G,append(G,
 undo(A).
 undo(A):-call(A),fail.
 undo(A,B,B).
-undo(A,B,C):-call(A,B,C),fail.
+undo(A,B,C):-dcg_call(A,B,C),fail.
 type(stream):-unique(stream).
 type(byte):-unique(byte).
 type(list(A)):-constructors([[[]],['.',A,list(A)]]).
@@ -48,9 +48,9 @@ write_file(A,B):-open(A,write,C,[type(binary),buffering(block)]),write_bytes(C,B
 main:-current_prolog_flag(argv,[A,B|C]),command(B,C).
 typed(command(atom,list(atom))).
 command(test,A):-undo(halt),write('Running tests'),nl,(test B:-C),([B]=A;A=[]),write(B),write(...),once(run_test(C)),fail.
-command(extoltoprolog,[A,B]):-read_file(A,C),!,xtl_top_level(D,C,[]),!,xtl_to_pl_toplevel(D,E),pl_write_top_level(E,F,[]),!,append([37,32,71,101,110,101,114,97,116,101,100,32,98,121,32,101,120,116,111,108,116,111,112,114,111,108,111,103,10],F,G),write_file(B,G).
+command(extoltoprolog,[A,B]):-read_file(A,C),!,xtl_top_level(D,C,[]),!,xtl_to_pl_toplevel(D,E),pl_write_top_level(E,F,[]),!,append([37,32,71,101,110,101,114,97,116,101,100,32,98,121,32,101,120,116,111,108,116,111,112,114,111,108,111,103,10],F,G),write_file(B,G),halt.
 run_test(done):-!,write(success),nl.
-run_test((A,B)):-!,call(A)->run_test(B);nl,write('  failed: '),write(A),nl.
+run_test((A,B)):-!,(call(A)->run_test(B);nl,write('  failed: '),write(A),nl,halt).
 run_test(A):-run_test((A,done)).
 :-discontiguous((test)/1).
 test test_c:-read_file('test.c',A),!,c_pp([],B,A,[]),!,c_top_level(C,B,[]).
@@ -165,6 +165,7 @@ pl_comma_separated_next([A|B],C,D,E,F):-require(pl_token([44]),E,G),(!,G=H),pl_e
 pl_op_or_term(!,term,A,B):-append([33],C,A),pl_skipwhite(C,B).
 pl_op_or_term(A,B,C,D):-pl_regular_term(A,C,E),(!,E=F),((pl_op(G,H,A),B=op(G,H)),F=D;B=term,F=D).
 pl_op_or_term(A,B,C,D):-many1(pl_op_char,E,C,F),(pl_known_op(E,A,G,H,F,I),B=op(G,H),I=J),pl_skipwhite(J,D).
+test pl_op_or_term:- \+pl_op_or_term(A,op(B,C),[49],[]).
 pl_known_op(A,B,C,D,E,F):-(atom_codes(B,A),pl_op(G,H,B),!,pl_op(C,D,B)),E=F.
 pl_known_op(A,B,C,D,E,F):-(append(G,[H],A),E=I),append([H],I,J),pl_known_op(G,B,C,D,J,F).
 pl_op_char(A,B,C):-append([A],D,B),(member(A,[96,126,33,64,35,36,37,94,38,42,60,62,63,47,59,58,45,95,61,43,44,124,92,46]),D=E),!,E=C.
@@ -327,6 +328,8 @@ xtl_to_pl_declaration(A,A):-!,numbervars(A).
 xtl_to_pl_goal(A,call(A)):-var(A),!.
 xtl_to_pl_goal((A,B),(C,D)):-!,xtl_to_pl_goal(A,C),xtl_to_pl_goal(B,D).
 xtl_to_pl_goal((A;B),(C;D)):-!,xtl_to_pl_goal(A,C),xtl_to_pl_goal(B,D).
+xtl_to_pl_goal((A->B;C),(D->E;F)):-!,xtl_to_pl_goal(A,D),xtl_to_pl_goal(B,E),xtl_to_pl_goal(C,F).
+xtl_to_pl_goal((A->B),(C->D)):-!,xtl_to_pl_goal(A,C),xtl_to_pl_goal(B,D).
 xtl_to_pl_goal(!,!):-!.
 xtl_to_pl_goal(A,B):-A=B.
 xtl_to_pl_dcg(A,dcg_call(A,B,C),B,C):-var(A),!.
@@ -335,10 +338,10 @@ xtl_to_pl_dcg((A;B),(C;D),E,F):-!,xtl_to_pl_dcg(A,C,E,F),xtl_to_pl_dcg(B,D,E,F).
 xtl_to_pl_dcg(!,(!,A=B),A,B):-!.
 xtl_to_pl_dcg([],A=B,A,B):-!.
 xtl_to_pl_dcg([A|B],append([A|B],C,D),D,C):-!.
-xtl_to_pl_dcg({A},(A,B=C),B,C):-!.
+xtl_to_pl_dcg({A},(B,C=D),C,D):-!,xtl_to_pl_goal(A,B).
 xtl_to_pl_dcg(A,B,C,D):-!,A=..E,append(E,[C,D],F),B=..F.
 xtl_to_pl_dcg(A,B,C,D):-throw(error(xtl_to_pl_dcg,A)).
-test xtl_to_pl_dcg:-xtl_to_pl_dcg(((f;g),h),((f(a,b);g(a,b)),h(b,c)),a,c),xtl_to_pl_dcg((e,(f,i;g),h),(e(a,b),(f(b,c),i(c,d);g(b,d)),h(d,e)),a,e).
+test xtl_to_pl_dcg:-xtl_to_pl_dcg(((f;g),h),((f(a,b);g(a,b)),h(b,c)),a,c),xtl_to_pl_dcg((e,(f,i;g),h),(e(a,b),(f(b,c),i(c,d);g(b,d)),h(d,e)),a,e),xtl_to_pl_dcg(A,B,i,o),B==dcg_call(A,i,o),xtl_to_pl_dcg({A},C,i,o),C==(call(A),i=o).
 test xtl_to_pl_dcg_regression:-A=(c_declaration(declare(B,C,D))-->c_type(C),[symbol(B)],([operator(=)],c_value(E),!,{D=value(E)};{D=none}),[operator(;)]),xtl_to_pl_declaration(A,F),F=(c_declaration(declare(G,H,I),J,K):-c_type(H,J,L),append([symbol(G)],M,L),(append([operator(=)],N,M),c_value(O,N,P),(!,P=Q),I=value(O),Q=R;I=none,M=R),append([operator(;)],S,R)).
 xtl_check_types(A):-copy_term(A,B),C=tenv(D,E),maplist(xtl_gather_types(C),A),length(D,F),length(E,G),!,maplist(xtl_check_types(C),A).
 xtl_gather_types(tenv(A,B),typed(C)):-!,C=..[D|E],length(E,F),member(D/F:G,B),error_unless(var(G),already_typed(C,G)),G=C.

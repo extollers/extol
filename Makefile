@@ -1,4 +1,5 @@
-pl = echo -n | LOCALSZ=102400 GLOBALSZ=1048576 gprolog --consult-file
+# pl = echo -n | LOCALSZ=102400 GLOBALSZ=1048576 gprolog --consult-file
+pl = LOCALSZ=102400 GLOBALSZ=1048576 gprolog --consult-file
 
 fulltest: test1 test2 diff23 test3
 
