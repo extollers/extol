@@ -879,9 +879,8 @@ xtl_to_pl_declaration((N --> L), (NPL :- LPL)) :- !,
      numbervars(NPL-LPL).
 xtl_to_pl_declaration(X, X) :- !, numbervars(X).
 
-xtl_to_pl_goal(Var, _) :-
-    var(Var), !,
-    throw(error(uninstantiated_goal(Var))).
+xtl_to_pl_goal(Var, call(Var)) :-
+    var(Var), !.
 xtl_to_pl_goal((A, B), (APL, BPL)) :- !,
     xtl_to_pl_goal(A, APL),
     xtl_to_pl_goal(B, BPL).
@@ -892,6 +891,8 @@ xtl_to_pl_goal('!', '!') :- !.
 xtl_to_pl_goal(G, GPL) :-
     G = GPL.
 
+xtl_to_pl_dcg(Var, dcg_call(Var, I, O), I, O) :-
+    var(Var), !.
 xtl_to_pl_dcg((A, B), (APL, BPL), I, O) :- !,
     xtl_to_pl_dcg(A, APL, I, IO),
     xtl_to_pl_dcg(B, BPL, IO, O).
@@ -911,7 +912,9 @@ xtl_to_pl_dcg(D,_,_,_) :-
 
 test xtl_to_pl_dcg :-
     xtl_to_pl_dcg(((f; g), h), ((f(a, b); g(a, b)), h(b, c)), a, c),
-    xtl_to_pl_dcg((e, (f, i; g), h), (e(a, b), (f(b, c), i(c, d); g(b, d)), h(d, e)), a, e).
+    xtl_to_pl_dcg((e, (f, i; g), h), (e(a, b), (f(b, c), i(c, d); g(b, d)), h(d, e)), a, e),
+    xtl_to_pl_dcg(V, PL, i, o),
+    PL == dcg_call(V, i, o).
 
 test xtl_to_pl_dcg_regression :-
     XTL = (

@@ -324,11 +324,12 @@ xtl_to_pl_declaration((:-A),(:-A)):-!,numbervars(A).
 xtl_to_pl_declaration((test A),(test A)):-!,numbervars(A).
 xtl_to_pl_declaration((A-->B),(C:-D)):-!,A=..[E|F],append(F,[G,H],I),C=..[E|I],xtl_to_pl_dcg(B,D,G,H),numbervars(C-D).
 xtl_to_pl_declaration(A,A):-!,numbervars(A).
-xtl_to_pl_goal(A,B):-var(A),!,throw(error(uninstantiated_goal(A))).
+xtl_to_pl_goal(A,call(A)):-var(A),!.
 xtl_to_pl_goal((A,B),(C,D)):-!,xtl_to_pl_goal(A,C),xtl_to_pl_goal(B,D).
 xtl_to_pl_goal((A;B),(C;D)):-!,xtl_to_pl_goal(A,C),xtl_to_pl_goal(B,D).
 xtl_to_pl_goal(!,!):-!.
 xtl_to_pl_goal(A,B):-A=B.
+xtl_to_pl_dcg(A,dcg_call(A,B,C),B,C):-var(A),!.
 xtl_to_pl_dcg((A,B),(C,D),E,F):-!,xtl_to_pl_dcg(A,C,E,G),xtl_to_pl_dcg(B,D,G,F).
 xtl_to_pl_dcg((A;B),(C;D),E,F):-!,xtl_to_pl_dcg(A,C,E,F),xtl_to_pl_dcg(B,D,E,F).
 xtl_to_pl_dcg(!,(!,A=B),A,B):-!.
@@ -343,7 +344,7 @@ xtl_check_types(A):-copy_term(A,B),C=tenv(D,E),maplist(xtl_gather_types(C),A),le
 xtl_gather_types(tenv(A,B),typed(C)):-!,C=..[D|E],length(E,F),member(D/F:G,B),error_unless(var(G),already_typed(C,G)),G=C.
 xtl_gather_types(tenv(A,B),(type(C):-D)):-!,member((C:-D),A).
 xtl_gather_types(A,B).
-test xtl_gather_types:-xtl_gather_types(tenv([],[]),foo).
+test xtl_gather_types:-xtl_gather_types(tenv([],[]),foo),xtl_gather_types(tenv([],A),typed(f)),A=[f/0:f],xtl_gather_types(tenv([],B),typed(f(5))),B=[f/1:f(5)],xtl_gather_types(tenv(C,[]),(type(one):-two)),C=[(one:-two)].
 xtl_check_types(A,(:-B)):-!.
 xtl_check_types(A,type(B)):-!.
 xtl_check_types(A,typed(B)):-!.
