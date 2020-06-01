@@ -138,7 +138,7 @@ pl_declaration(A,B,C):-pl_expression(A,B,D),require(pl_token([46]),D,C).
 pl_atom_char(A,B,C):-append([A],D,B),(!,D=E),member(A,[97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,95,48,49,50,51,52,53,54,55,56,57]),E=C.
 pl_atom(A,B,C):-append([39],D,B),pl_quoted_atom_chars_(E,D,F),atom_codes(A,E),F=C.
 pl_atom(A,B,C):-many1(pl_atom_char,D,B,E),(!,E=F),(atom_codes(G,D),(D=[H|I],member(H,[95,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90]),!,A=..['$VARNAME',G];A=G)),F=C.
-test pl_atom:-pl_atom(a,[39,97,39],[]),pl_atom(+,[39,43,39],[]),pl_atom('9',[39,92,57,39],[]),pl_atom(ab,[97,98],[]).
+test pl_atom:-pl_atom(a,[39,97,39],[]),pl_atom(+,[39,43,39],[]),pl_atom('9',[39,92,57,39],[]),pl_atom(ab,[97,98],[]),pl_atom(ab,[97,98],[]).
 pl_quoted_char(A,B,C):-append([92],D,B),(!,D=E),require([F],E,G),(member(F:A,[110:10,114:13,116:9,101:127,H:H]),G=I),!,I=C.
 pl_quoted_atom_chars_([],A,B):-append([39],C,A),!,C=B.
 pl_quoted_atom_chars_([A|B],C,D):-pl_quoted_char(A,C,E),(!,E=F),pl_quoted_atom_chars_(B,F,D).
@@ -232,11 +232,11 @@ xtl_makevars([A|B],[C|D],E):-!,xtl_makevars(A,C,E),xtl_makevars(B,D,E).
 xtl_makevars(A,B,C):-A=..D,!,xtl_makevars(D,E,C),B=..E.
 test xtl_makevars:-A=..['XTL$VARNAME','A'],xtl_makevars(foo(A,A),foo(1,B),C),atomic(B),B=1.
 typed(xtl_atom_char(-byte,+bytes,-bytes)).
-xtl_atom_char(A,B,C):-append([A],D,B),(!,D=E),member(A,[97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,95,48,49,50,51,52,53,54,55,56,57]),E=C.
+xtl_atom_char(A,B,C):-append([A],D,B),(!,D=E),member(A,[97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,95,48,49,50,51,52,53,54,55,56,57,63]),E=C.
 typed(xtl_atom(-atom,+bytes,-bytes)).
 xtl_atom(A,B,C):-append([39],D,B),xtl_quoted_atom_chars_(E,D,F),atom_codes(A,E),F=C.
 xtl_atom(A,B,C):-many1(xtl_atom_char,D,B,E),(!,E=F),(atom_codes(G,D),D=[H|I],(H=95,!,A=..['XTL$VARNAME','_'];member(H,[65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90]),!,A=..['XTL$VARNAME',G];A=G)),F=C.
-test xtl_atom:-xtl_atom(a,[39,97,39],[]),xtl_atom(+,[39,43,39],[]),xtl_atom('9',[39,92,57,39],[]),xtl_atom(ab,[97,98],[]).
+test xtl_atom:-xtl_atom(a,[39,97,39],[]),xtl_atom(+,[39,43,39],[]),xtl_atom('9',[39,92,57,39],[]),xtl_atom(ab,[97,98],[]),xtl_atom('ab?',[97,98,63],[]).
 typed(xtl_quoted_char(-byte,+bytes,-bytes)).
 xtl_quoted_char(A,B,C):-append([92],D,B),(!,D=E),require([F],E,G),(member(F:A,[110:10,114:13,116:9,101:127,H:H]),G=I),!,I=C.
 typed(xtl_quoted_atom_chars_(-list(bytes),+bytes,-bytes)).
@@ -274,7 +274,7 @@ xtl_op_or_term(A,B,C,D):-xtl_regular_term(A,C,E),(!,E=F),((xtl_op(G,H,A),B=op(G,
 xtl_op_or_term(A,B,C,D):-many1(xtl_op_char,E,C,F),(xtl_known_op(E,A,G,H,F,I),B=op(G,H),I=J),xtl_skipwhite(J,D).
 xtl_known_op(A,B,C,D,E,F):-(atom_codes(B,A),xtl_op(G,H,B),!,xtl_op(C,D,B)),E=F.
 xtl_known_op(A,B,C,D,E,F):-(append(G,[H],A),E=I),append([H],I,J),xtl_known_op(G,B,C,D,J,F).
-xtl_op_char(A,B,C):-append([A],D,B),(member(A,[96,126,33,64,35,36,37,94,38,42,60,62,63,47,59,58,45,95,61,43,44,124,92,46]),D=E),!,E=C.
+xtl_op_char(A,B,C):-append([A],D,B),(member(A,[96,126,33,64,35,36,37,94,38,42,60,62,47,59,58,45,95,61,43,44,124,92,46]),D=E),!,E=C.
 typed(xtl_expression(+maybe(term),+precedence,-term,+bytes,-bytes)).
 xtl_expression(none,A,B,C,D):-xtl_op_or_term(E,op(F,G),C,H),((member(G-I,[fx-0,fy-1]),J is F+I),H=K),try(xtl_expression(none,J,L),K,M),(N=..[E,L],M=O),xtl_expression(just(N),A,B,O,D).
 xtl_expression(none,A,B,C,D):-(!,C=E),require(xtl_op_or_term(F,term),E,G),xtl_expression(just(F),A,B,G,D).
@@ -320,11 +320,15 @@ xtl_op(999,fx,tc).
 test parse_self:-read_file('main.xtl',A),!,xtl_top_level(B,A,[]).
 test regression:-xtl_declaration(A,[58,45,32,100,105,115,99,111,110,116,105,103,117,111,117,115,40,39,47,39,40,116,101,115,116,44,32,49,41,41,46],[]).
 xtl_to_pl_toplevel(A,B):-maplist(xtl_to_pl_declaration,A,C),append([(:-set_prolog_flag(singleton_warning,off))],C,B).
-xtl_to_pl_declaration((A:-B),(A:-B)):-!,numbervars(A-B).
+xtl_to_pl_declaration((A:-B),(C:-D)):-!,copy_term(A-B,C-E),xtl_to_pl_goal(E,D),numbervars(C-D).
 xtl_to_pl_declaration((:-A),(:-A)):-!,numbervars(A).
 xtl_to_pl_declaration((test A),(test A)):-!,numbervars(A).
 xtl_to_pl_declaration((A-->B),(C:-D)):-!,A=..[E|F],append(F,[G,H],I),C=..[E|I],xtl_to_pl_dcg(B,D,G,H),numbervars(C-D).
 xtl_to_pl_declaration(A,A):-!,numbervars(A).
+xtl_to_pl_goal((A,B),(C,D)):-!,xtl_to_pl_goal(A,C),xtl_to_pl_goal(B,D).
+xtl_to_pl_goal((A;B),(C;D)):-!,xtl_to_pl_goal(A,C),xtl_to_pl_goal(B,D).
+xtl_to_pl_goal(!,!):-!.
+xtl_to_pl_goal(A,B):-A=B.
 xtl_to_pl_dcg((A,B),(C,D),E,F):-!,xtl_to_pl_dcg(A,C,E,G),xtl_to_pl_dcg(B,D,G,F).
 xtl_to_pl_dcg((A;B),(C;D),E,F):-!,xtl_to_pl_dcg(A,C,E,F),xtl_to_pl_dcg(B,D,E,F).
 xtl_to_pl_dcg(!,(!,A=B),A,B):-!.
@@ -335,3 +339,23 @@ xtl_to_pl_dcg(A,B,C,D):-!,A=..E,append(E,[C,D],F),B=..F.
 xtl_to_pl_dcg(A,B,C,D):-throw(error(xtl_to_pl_dcg,A)).
 test xtl_to_pl_dcg:-xtl_to_pl_dcg(((f;g),h),((f(a,b);g(a,b)),h(b,c)),a,c),xtl_to_pl_dcg((e,(f,i;g),h),(e(a,b),(f(b,c),i(c,d);g(b,d)),h(d,e)),a,e).
 test xtl_to_pl_dcg_regression:-A=(c_declaration(declare(B,C,D))-->c_type(C),[symbol(B)],([operator(=)],c_value(E),!,{D=value(E)};{D=none}),[operator(;)]),xtl_to_pl_declaration(A,F),F=(c_declaration(declare(G,H,I),J,K):-c_type(H,J,L),append([symbol(G)],M,L),(append([operator(=)],N,M),c_value(O,N,P),(!,P=Q),I=value(O),Q=R;I=none,M=R),append([operator(;)],S,R)).
+xtl_check_types(A):-copy_term(A,B),C=tenv(D,E),maplist(xtl_gather_types(C),A),length(D,F),length(E,G),!,maplist(xtl_check_types(C),A).
+xtl_gather_types(tenv(A,B),typed(C)):-!,C=..[D|E],length(E,F),member(D/F:G,B),error_unless(var(G),already_typed(C,G)),G=C.
+xtl_gather_types(A,type(B)):-!,xtl_type_decl(A,(type(B):-true)).
+xtl_gather_types(tenv(A,B),(type(C):-D)):-!,member((C:-D),A).
+xtl_gather_types(A,B).
+xtl_check_types(A,(:-B)):-!.
+xtl_check_types(A,type(B)):-!.
+xtl_check_types(A,typed(B)):-!.
+xtl_check_types(A,(test B:-C)):-!,xtl_check_type_goal(D,E,C).
+xtl_check_types(A,(B:-C)):-!,xtl_check_type_head(A,D,B),xtl_check_type_goal(A,D,C),xtl_check_type_vars(A,D).
+xtl_check_types(A,B):-xtl_check_type_head(A,C,B),xtl_check_type_vars(A,C).
+xtl_check_type_head(A,B,C):-C=..[D|E],length(E,F),tenv_lookup_predicate(A,D/F:G),maplist(xtl_check_type_assign(A,B),E,G).
+xtl_check_type_goal(A,B,C=D):-!,xtl_type_check_assign(A,B,C,D).
+xtl_check_type_goal(A,B,C):-xtl_type_check_call(A,B,C).
+xtl_type_check_call(A,B,C):-C=..[D|E],length(E,F),tenv_lookup_predicate(A,D/F:G),maplist(xtl_check_type_expr(A,B),E,G).
+xtl_check_type_expr(A,B,C,$(D)):-maplist(xtl_check_constraint(A,B,C),E).
+xtl_check_type_expr(A,B,C,D):-throw(error(invalid_type_for(D,C))).
+xtl_check_constraint(A,B,C,goal):-xtl_check_type_goal(A,B,C).
+xtl_check_constraint(A,B,C,D):-D=..[E,F],xtl_refine_type(A,B,C,D).
+tenv_lookup_predicate(tenv(A,B),C):-member(C,B).

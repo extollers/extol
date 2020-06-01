@@ -384,6 +384,7 @@ test pl_atom :-
     pl_atom(a, "'a'", ""),
     pl_atom('+', "'+'", ""),
     pl_atom('9', "'\\9'", ""),
+    pl_atom(ab, "ab", ""),
     pl_atom(ab, "ab", "").
 
 pl_quoted_char(C) -->
@@ -633,7 +634,7 @@ test xtl_makevars :-
 typed(xtl_atom_char(-byte, +bytes, -bytes)).
 xtl_atom_char(C) -->
     [C], !,
-    { member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789") }.
+    { member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789?") }.
 
 typed(xtl_atom(-atom, +bytes, -bytes)).
 xtl_atom(Atom) -->
@@ -654,7 +655,8 @@ test xtl_atom :-
     xtl_atom(a, "'a'", ""),
     xtl_atom('+', "'+'", ""),
     xtl_atom('9', "'\\9'", ""),
-    xtl_atom(ab, "ab", "").
+    xtl_atom(ab, "ab", ""),
+    xtl_atom('ab?', "ab?", "").
 
 typed(xtl_quoted_char(-byte, +bytes, -bytes)).
 xtl_quoted_char(C) -->
@@ -776,7 +778,7 @@ xtl_known_op(Cs, Op, Prec, Assoc) --> { atom_codes(Op, Cs), xtl_op(_, _, Op), !,
 xtl_known_op(Cs, Op, Prec, Assoc) --> { append(Shorter, [C], Cs) }, append([C]), xtl_known_op(Shorter, Op, Prec, Assoc).
 
 xtl_op_char(C) -->
-    [C], { member(C, "`~!@#$%^&*<>?/;:-_=+,|\\.") }, !.
+    [C], { member(C, "`~!@#$%^&*<>/;:-_=+,|\\.") }, !.
 
 typed(xtl_expression(+maybe(term), +precedence, -term, +bytes, -bytes)).
 xtl_expression(none, Prec, Term) -->
@@ -995,6 +997,6 @@ tenv_lookup_predicate(tenv(_, Preds), FNT) :-
     member(FNT, Preds).
 
 % xtl_refine_type(Env, Vars, Expr, Type) :-
-%     tenv_lookup_type(Env, Type, 
+%    tenv_lookup_type(Env, Type, 
 
 % xtl_check_type_vars
