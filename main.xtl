@@ -860,9 +860,12 @@ xtl_to_pl_toplevel(XTL, PL) :-
     maplist(xtl_to_pl_declaration, XTL, DeclsPL),
     append([
                   (:- set_prolog_flag(singleton_warning, off))
-              ], DeclsPL, PL) .
+              ], DeclsPL, PL).
 
-xtl_to_pl_declaration((P :- R), (P :- R)) :- !, numbervars(P-R).
+xtl_to_pl_declaration((HeadXTL :- GoalXTL), (HeadPL :- GoalPL)) :- !,
+    copy_term(HeadXTL-GoalXTL, HeadPL-Goal),
+    xtl_to_pl_goal(Goal, GoalPL),
+    numbervars(HeadPL-GoalPL).
 xtl_to_pl_declaration((:- Q), (:- Q)) :- !, numbervars(Q).
 xtl_to_pl_declaration((test T), (test T)) :- !, numbervars(T).
 xtl_to_pl_declaration((N --> L), (NPL :- LPL)) :- !,
@@ -872,6 +875,16 @@ xtl_to_pl_declaration((N --> L), (NPL :- LPL)) :- !,
      xtl_to_pl_dcg(L, LPL, I, O),
      numbervars(NPL-LPL).
 xtl_to_pl_declaration(X, X) :- !, numbervars(X).
+
+xtl_to_pl_goal((A, B), (APL, BPL)) :- !,
+    xtl_to_pl_goal(A, APL),
+    xtl_to_pl_goal(B, BPL).
+xtl_to_pl_goal((A; B), (APL; BPL)) :- !,
+    xtl_to_pl_goal(A, APL),
+    xtl_to_pl_goal(B, BPL).
+xtl_to_pl_goal('!', '!') :- !.
+xtl_to_pl_goal(G, GPL) :-
+    G = GPL.
 
 xtl_to_pl_dcg((A, B), (APL, BPL), I, O) :- !,
     xtl_to_pl_dcg(A, APL, I, IO),
