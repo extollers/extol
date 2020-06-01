@@ -955,10 +955,13 @@ xtl_gather_types(tenv(Types, _), (type(T) :- Body)) :- !,
 xtl_gather_types(_, _).
 
 test xtl_gather_types :-
-    xtl_gather_types(tenv([], []), foo).
-    %xtl_gather_types(tenv([], [f/0 : f]), typed(f)),
-    %xtl_gather_types(tenv([], [f/1 : f(5)]), typed(f(5))),
-    %xtl_gather_types(tenv([(one :- two)], []), (type(one) :- two)).
+    xtl_gather_types(tenv([], []), foo),
+    xtl_gather_types(tenv([], L1), typed(f)),
+    L1 = [f/0 : f],
+    xtl_gather_types(tenv([], L2), typed(f(5))),
+    L2 = [f/1 : f(5)],
+    xtl_gather_types(tenv(L3, []), (type(one) :- two)),
+    L3 = [(one :- two)].
 
 xtl_check_types(_, (:- _)) :- !.
 xtl_check_types(_, type(_)) :- !.
