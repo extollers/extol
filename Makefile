@@ -1,4 +1,5 @@
-# pl = echo -n | LOCALSZ=102400 GLOBALSZ=1048576 gprolog --consult-file
+MAKEFLAGS += --no-builtin-rules --no-builtin-variables --warn-undefined-variables
+
 pl = LOCALSZ=102400 GLOBALSZ=1048576 gprolog --consult-file
 
 fulltest: test1 test2 diff23 test3
@@ -17,6 +18,9 @@ test$(1)-%: stage$(1).pl
 stage$(1).pl: stage$(2).pl main.xtl
 	rm -f $$@
 	$(pl) $$< extoltoprolog main.xtl $$@
+
+$(1): stage$(1).pl
+
 endef
 
 $(eval $(call make_stage,1,0))
@@ -28,3 +32,4 @@ reboot: stage3.pl
 
 clean:
 	rm -f stage1.pl stage2.pl stage3.pl
+

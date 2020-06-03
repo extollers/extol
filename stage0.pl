@@ -45,12 +45,12 @@ read_file(A,B):-open(A,read,C,[type(binary),buffering(block)]),read_bytes(C,B),c
 typed(write_file(+atom,+bytes)).
 write_file(A,B):-open(A,write,C,[type(binary),buffering(block)]),write_bytes(C,B),close(C).
 :-initialization(main).
-main:-current_prolog_flag(argv,[A,B|C]),command(B,C).
+main:-catch((current_prolog_flag(argv,[A,B|C]),command(B,C),halt),D,(write('failed: '),write(D),nl,halt(1))).
 typed(command(atom,list(atom))).
-command(test,A):-undo(halt),write('Running tests'),nl,(test B:-C),([B]=A;A=[]),write(B),write(...),once(run_test(C)),fail.
-command(extoltoprolog,[A,B]):-read_file(A,C),!,xtl_top_level(D,C,[]),!,xtl_to_pl_toplevel(D,E),pl_write_top_level(E,F,[]),!,append([37,32,71,101,110,101,114,97,116,101,100,32,98,121,32,101,120,116,111,108,116,111,112,114,111,108,111,103,10],F,G),write_file(B,G),halt.
+command(test,A):-write('Running tests'),nl,(test B:-C),([B]=A;A=[]),write(B),write(...),once(run_test(C)),fail;true.
+command(extoltoprolog,[A,B]):-read_file(A,C),!,xtl_top_level(D,C,[]),!,xtl_to_pl_toplevel(D,E),pl_write_top_level(E,F,[]),!,append([37,32,71,101,110,101,114,97,116,101,100,32,98,121,32,101,120,116,111,108,116,111,112,114,111,108,111,103,10],F,G),write_file(B,G).
 run_test(done):-!,write(success),nl.
-run_test((A,B)):-!,(call(A)->run_test(B);nl,write('  failed: '),write(A),nl,halt).
+run_test((A,B)):-!,(call(A)->run_test(B);nl,write('  failed: '),write(A),nl,throw(test_failed)).
 run_test(A):-run_test((A,done)).
 :-discontiguous((test)/1).
 test test_c:-read_file('test.c',A),!,c_pp([],B,A,[]),!,c_top_level(C,B,[]).
