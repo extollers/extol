@@ -2,6 +2,7 @@
 :-set_prolog_flag(singleton_warning,off).
 :-op(1200,fy,test).
 :-op(999,fx,tc).
+:-op(700,xfx,'=...').
 :-discontiguous((test)/1).
 :-discontiguous(type/1).
 :-discontiguous(typed/1).
@@ -317,9 +318,10 @@ xtl_op(200,fy,+).
 xtl_op(200,fy,-).
 xtl_op(1200,fy,test).
 xtl_op(999,fx,tc).
+xtl_op(700,xfx,'=...').
 test parse_self:-read_file('main.xtl',A),!,xtl_top_level(B,A,[]).
 test regression:-xtl_declaration(A,[58,45,32,100,105,115,99,111,110,116,105,103,117,111,117,115,40,39,47,39,40,116,101,115,116,44,32,49,41,41,46],[]).
-xtl_to_pl_toplevel(A,B):-maplist(xtl_to_pl_declaration,A,C),append([(:-set_prolog_flag(singleton_warning,off)),(:-op(1200,fy,test)),(:-op(999,fx,tc))],C,B).
+xtl_to_pl_toplevel(A,B):-maplist(xtl_to_pl_declaration,A,C),append([(:-set_prolog_flag(singleton_warning,off)),(:-op(1200,fy,test)),(:-op(999,fx,tc)),(:-op(700,xfx,'=...'))],C,B).
 xtl_to_pl_declaration((A:-B),(C:-D)):-!,copy_term(A-B,C-E),xtl_to_pl_goal(E,D),numbervars(C-D).
 xtl_to_pl_declaration((:-A),(:-A)):-!,numbervars(A).
 xtl_to_pl_declaration((test A),(test A)):-!,numbervars(A).

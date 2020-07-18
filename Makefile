@@ -2,7 +2,7 @@ MAKEFLAGS += --no-builtin-rules --no-builtin-variables --warn-undefined-variable
 
 pl = LOCALSZ=102400 GLOBALSZ=1048576 gprolog --consult-file
 
-fulltest: test1 test2 diff23 test3
+fulltest: test1 test2 diff23
 
 define make_stage
 

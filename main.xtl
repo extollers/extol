@@ -108,35 +108,32 @@ undo(G, A, B) :- dcg_call(G, A, B), fail.
 
 %% Types
 
-type(stream) :- unique(stream).
-type(byte) :- unique(number).
-type(list(T)) :- constructors([
-       ['[]'],
-       ['.', T, list(T)]
-     ]).
-type(bytes) :- list(byte).
+byte(Byte) :- number(Byte), Byte >= 0, Byte < 256.
+bytes(Bytes) :- ground(Bytes), maplist(byte, Bytes).
 
 %% Streams
 
-typed(read_bytes(+stream, -bytes)).
+%%%%% read_bytes(Stream, Bytes) expects ground(Stream).
+%%%%% read_bytes(Stream, Bytes) ensures bytes(Bytes).
 read_bytes(Stream, []) :- at_end_of_stream(Stream), !.
 read_bytes(Stream, [X | Xs]) :-
     get_byte(Stream, X),
     read_bytes(Stream, Xs).
 
-typed(write_bytes(+stream, +bytes)).
+%%%%% write_bytes(Stream, Bytes) expects ground(Stream), current_stream(Stream), bytes(Bytes).
 write_bytes(_, []).
 write_bytes(Stream, [X | Xs]) :-
     put_byte(Stream, X),
     write_bytes(Stream, Xs).
 
-typed(read_file(+atom, -bytes)).
+%%%%% read_file(Path, Bytes) expects atom(Path).
+%%%%% read_file(Path, Bytes) ensures bytes(Bytes).
 read_file(Path, Bytes) :-
     open(Path, read, Stream, [type(binary), buffering(block)]),
     read_bytes(Stream, Bytes),
     close(Stream).
 
-typed(write_file(+atom, +bytes)).
+%%%%% write_file(Path, Bytes) expects ground(Path), bytes(Bytes).
 write_file(Path, Bytes) :-
     open(Path, write, Stream, [type(binary), buffering(block)]),
     write_bytes(Stream, Bytes),
@@ -157,7 +154,8 @@ main :-
               halt(1)
           )).
 
-typed(command(atom, list(atom))).
+%%%%% command(Command, Args) expects atom(Command), ground(Args), list(Args).
+
 command(test, Args) :-
     ( write('Running tests'), nl,
       test((Name :- Goals)),
@@ -193,28 +191,29 @@ test 'test_c' :-
 
 %% Parsing
 
-typed(many(+predicate(T), -list(T), +bytes, -bytes)).
+%%%%% many(Predicate, List) expects callable(Predicate), partial_list(List).
+%%%%% many(Predicate, List) ensures list(List).
 many(P, [X | Xs]) --> call(P, X), many(P, Xs), !.
 many(_, []) --> [].
 
-typed(many1(+predicate(T), -list(T), +bytes, -bytes)).
+%%%%% many1(Predicate, List) expects callable(Predicate), partial_list(List).
+%%%%% many1(Predicate, List) ensures list(List).
 many1(P, [X | Xs]) --> call(P, X), !, many(P, Xs).
 
-typed(eof(+bytes, -bytes)).
+%%%%% eof(In, Out) expects partial_list(In), partial_list(Out).
 eof([], []).
 
-typed(peek(-bytes, +bytes, -bytes)).
+%%%%% eof(Rest, In, Out) expects partial_list(In), partial_list(Out), partial_list(Rest).
 peek(Rest, Rest, Rest).
 
-typed(alpha(-byte, +bytes, -bytes)).
+%%%%% alpha(C) dcg_ensures number(C).
 alpha(C) --> [C], { member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ") }.
 
-typed(digit(-byte, +bytes, -bytes)).
+%%%%% digit(D) dcg_ensures number(D).
 digit(D) -->
     [C],
     { member(C - D, [0'0 - 0, 0'1 - 1, 0'2 - 2, 0'3 - 3, 0'4 - 4, 0'5 - 5, 0'6 - 6, 0'7 - 7, 0'8 - 8, 0'9 - 9]) }.
 
-typed(dcg_call(+sentence, +bytes, -bytes)).
 dcg_call(Var) --> { var(Var), !, fail }.
 dcg_call([]) --> !, [].
 dcg_call([X | Xs]) --> !, [X], Xs.
@@ -224,17 +223,16 @@ dcg_call((_ ; B)) --> !, B.
 dcg_call({A}) --> !, { A }.
 dcg_call(G, I, O) :- !, call(G, I, O).
 
-typed(require(+sentence, +bytes, -bytes)).
 require(N, Xs, Rest) :-
     ( dcg_call(N, Xs, Rest), !
     ; pretty_init(Xs, C), throw(parse_failed(N, C)) ).
 
-typed(try(+sentence, +bytes, -bytes)).
 try(N, Xs, Rest) :- catch(dcg_call(N, Xs, Rest), parse_failed(_, _), Failed=true), !, Failed=false.
 
 %% Lists
 
-typed(foldl(+predicate(T, U, V), '?'(T), +list(U), '?'(V))).
+%%%%% foldl(F, Z, L, RR) expects callable(F), partial_list(L).
+%%%%% foldl(F, Z, L, RR) ensures list(L).
 foldl(_, R, [], R).
 foldl(F, Z, [X | Xs], RR) :- call(F, Z, X, R), foldl(F, R, Xs, RR).
 
@@ -581,7 +579,6 @@ pl_op(200, fy, '-').
 
 %% Extol
 
-typed(xtl_token(+sentence), +bytes, -bytes).
 xtl_token(N) --> N, xtl_skipwhite, !.
 
 test xtl_token :-
@@ -589,14 +586,12 @@ test xtl_token :-
     xtl_token("x", "x % comment", ""),
     xtl_token("x", "x % comment\n  \t", "").
 
-typed(xtl_skipwhite(+bytes, -bytes)).
 xtl_skipwhite --> xtl_white, !.
 xtl_skipwhite --> [].
 
 test xtl_skipwhite :-
     xtl_skipwhite("", "").
 
-typed(xtl_white(+bytes, -bytes)).
 xtl_white --> "%", !, xtl_line_comment_, xtl_skipwhite.
 xtl_white --> (" "; "\t"; "\r" ; "\n" ), !, xtl_skipwhite.
 
@@ -608,14 +603,14 @@ test xtl_white :-
 xtl_line_comment_ --> ("\n" ; eof), !.
 xtl_line_comment_ --> [_], xtl_line_comment_.
 
-typed(xtl_top_level(-list(declaration), +bytes, -bytes)).
+%%%%% xtl_top_level(Decls) dcg_ensures list(Decls), ground(Decls).
 xtl_top_level(Decls) -->
     ( "#!", !, xtl_line_comment_; { true }),
     xtl_skipwhite,
     many(xtl_declaration, Decls),
     require(eof).
 
-typed(xtl_declaration(-declaration, +bytes, -bytes)).
+%%%%% xtl_declaration(Decl) dcg_ensures ground(Decl).
 xtl_declaration(_) --> eof, !, {fail}.
 xtl_declaration(Decl) --> xtl_expression(DeclV), { xtl_makevars(DeclV, Decl, _) }, require(xtl_token(".")).
 
@@ -630,9 +625,9 @@ xtl_makevars([X|Xs], [Y|Ys], Vars) :- !,
     xtl_makevars(X, Y, Vars),
     xtl_makevars(Xs, Ys, Vars).
 xtl_makevars(In, Out, Vars) :-
-    In =.. InL, !,
+    In =... InL, !,
     xtl_makevars(InL, OutL, Vars),
-    Out =.. OutL.
+    Out =... OutL.
 
 test xtl_makevars :-
     A =.. ['XTL$VARNAME', 'A'],
@@ -640,12 +635,11 @@ test xtl_makevars :-
     atomic(Z),
     Z = 1.
 
-typed(xtl_atom_char(-byte, +bytes, -bytes)).
+%%%%% xtl_atom_char(Byte) dcg_ensures number(Byte).
 xtl_atom_char(C) -->
     [C], !,
-    { member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789?$") }.
+    { member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789$?") }.
 
-typed(xtl_atom(-atom, +bytes, -bytes)).
 xtl_atom(Atom) -->
     "'",
     xtl_quoted_atom_chars_(Cs),
@@ -667,7 +661,7 @@ test xtl_atom :-
     xtl_atom(ab, "ab", ""),
     xtl_atom('ab?', "ab?", "").
 
-typed(xtl_quoted_char(-byte, +bytes, -bytes)).
+%%%%% xtl_quoted_char(Bytes) dcg_ensures number(Byte).
 xtl_quoted_char(C) -->
     "\\", !,
     require([Quoted]),
@@ -679,7 +673,6 @@ xtl_quoted_char(C) -->
                  AsIs : AsIs
     ]) }, !.
 
-typed(xtl_quoted_atom_chars_(-list(bytes), +bytes, -bytes)).
 xtl_quoted_atom_chars_([]) --> "'", !.
 xtl_quoted_atom_chars_([C | Cs]) -->
     xtl_quoted_char(C), !,
@@ -688,11 +681,10 @@ xtl_quoted_atom_chars_([C | Cs]) -->
     [C],
     xtl_quoted_atom_chars_(Cs).
 
-typed(xtl_expression(-term, +bytes, -bytes)).
 xtl_expression(Expr) -->
     xtl_expression(1201, Expr).
 
-typed(xtl_expression(+precedence, -term, +bytes, -bytes)).
+%%%%% xtl_expression(Prec, Expr) dcg_expects number(Prec).
 xtl_expression(Prec, Expr) -->
     xtl_expression(none, Prec, Expr).
 
@@ -708,7 +700,6 @@ test xtl_expression :-
 test comma_expr :-
     xtl_expression((p :- (a, b)), "p :- a, b", []).
 
-typed(xtl_regular_term(-term, +bytes, -bytes)).
 xtl_regular_term(Char) --> "0'", !, require(xtl_string_char(Char)), xtl_skipwhite.
 xtl_regular_term(Integer) -->
     many1(digit, Ds), !,
@@ -736,7 +727,7 @@ xtl_regular_term(Term) -->
                        ( xtl_token("]"), {Tail=[]}
                        ; xtl_token("|"), xtl_expression(Tail), xtl_token("]"))), !.
 
-typed(xtl_string_char(-byte, +bytes, -bytes)).
+%%%%% xtl_string_char(Byte) dcg_ensures byte(Byte).
 xtl_string_char(_) --> "\"", !, { false }.
 xtl_string_char(C) --> xtl_quoted_char(C), !.
 xtl_string_char(C) --> [C].
@@ -751,7 +742,6 @@ test xtl_regular_term :-
     xtl_regular_term([], "[]", ""),
     xtl_regular_term([1,2,3], "[1,2,3]", "").
 
-typed(xtl_comma_separated(-list(term), +list(term), +sentence, +bytes, -bytes)).
 xtl_comma_separated(As, Tail, End) -->
     xtl_comma_seperated_first(As, Tail, End).
 
@@ -768,7 +758,6 @@ xtl_comma_separated_next([A | As], Tail, End) -->
     xtl_expression(1000, A), !,
     xtl_comma_separated_next(As, Tail, End).
 
-typed(xtl_op_or_term(-term, -op_info, +bytes, -bytes)).
 xtl_op_or_term('!', term) --> "!", xtl_skipwhite.
 xtl_op_or_term(X, Info) -->
     xtl_regular_term(X), !,
@@ -789,7 +778,6 @@ xtl_known_op(Cs, Op, Prec, Assoc) --> { append(Shorter, [C], Cs) }, append([C]),
 xtl_op_char(C) -->
     [C], { member(C, "`~!@#%^&*<>/;:-_=+,|\\.") }, !.
 
-typed(xtl_expression(+maybe(term), +precedence, -term, +bytes, -bytes)).
 xtl_expression(none, Prec, Term) -->
     xtl_op_or_term(Op, op(OpPrec, Assoc)),
     { member(Assoc-N, [fx-0, fy-1]),
@@ -820,7 +808,6 @@ xtl_expression(just(Left), Prec, Term) -->
     xtl_expression(just(Combined), Prec, Term).
 xtl_expression(just(Term), _, Term) --> !.
 
-typed(xtl_op(-precedence, -associativity, -atom)).
 xtl_op(1200, xfx, ':-').
 xtl_op(1200, xfx, '-->').
 xtl_op(1200, fx, ':-').
@@ -857,6 +844,13 @@ xtl_op(200, fy, '-').
 
 xtl_op(1200, fy, test).
 xtl_op(999, fx, tc).
+xtl_op(700, xfx, '=...').
+xtl_op(1200, xfx, expects).
+xtl_op(1200, xfx, ensures).
+xtl_op(1200, xfx, dcg_expects).
+xtl_op(1200, xfx, dcg_ensures).
+
+'=...'(F, A) :- (compound(F); atom(F); A = [G | _], atom(G)), F =.. A.
 
 test parse_self :-
     read_file('main.xtl', Bytes), !,
@@ -872,7 +866,8 @@ xtl_to_pl_toplevel(XTL, PL) :-
     append([
                   (:- set_prolog_flag(singleton_warning, off)),
                   (:- op(1200, fy, test)),
-                  (:- op(999, fx, tc))
+                  (:- op(999, fx, tc)),
+                  (:- op(700, xfx, '=...'))
               ], DeclsPL, PL).
 
 xtl_to_pl_declaration((HeadXTL :- GoalXTL), (HeadPL :- GoalPL)) :- !,
@@ -882,9 +877,9 @@ xtl_to_pl_declaration((HeadXTL :- GoalXTL), (HeadPL :- GoalPL)) :- !,
 xtl_to_pl_declaration((:- Q), (:- Q)) :- !, numbervars(Q).
 xtl_to_pl_declaration((test T), (test T)) :- !, numbervars(T).
 xtl_to_pl_declaration((N --> L), (NPL :- LPL)) :- !,
-     N =.. [F|A],
+     N =... [F|A],
      append(A, [I, O], AIO),
-     NPL =.. [F|AIO],
+     NPL =... [F|AIO],
      xtl_to_pl_dcg(L, LPL, I, O),
      numbervars(NPL-LPL).
 xtl_to_pl_declaration(X, X) :- !, numbervars(X).
@@ -922,9 +917,9 @@ xtl_to_pl_dcg([X|XS], append([X|XS], O, I), I, O) :- !.
 xtl_to_pl_dcg({G}, (GPL, I=O), I, O) :- !,
     xtl_to_pl_goal(G, GPL).
 xtl_to_pl_dcg(F, C, I, O) :- !,
-    F =.. L,
+    F =... L,
     append(L, [I,O], LL),
-    C =.. LL.
+    C =... LL.
 xtl_to_pl_dcg(D,_,_,_) :-
     throw(error(xtl_to_pl_dcg, D)).
 
@@ -959,184 +954,9 @@ test xtl_to_pl_dcg_regression :-
                 G = L),
               append([operator(';')], M, L)).
 
-xtl_check_types(Decls) :-
-    copy_term(Decls, TypedDecls),
-    TypeEnv = tenv(Types, Preds),
-    t(gathering_types),
-    error_unless(maplist(xtl_gather_types(TypeEnv), Decls)),
-    length(Types, _),
-    length(Preds, _), !,
-    t(checking_types),
-    maplist(xtl_check_types(TypeEnv), Decls).
-
-xtl_gather_types(tenv(_, Preds), typed(Pred)) :- !,
-    Pred =.. [F | A],
-    length(A, N),
-    member((F/N):T, Preds),
-    error_unless(var(T), already_typed(Pred, T)),
-    T = Pred.
-xtl_gather_types(tenv(Types, _), (type(T) :- Body)) :- !,
-    member((T:-Body), Types).
-xtl_gather_types(_, _).
-
-test xtl_gather_types :-
-    xtl_gather_types(tenv([], []), foo),
-    xtl_gather_types(tenv([], L1), typed(f)),
-    L1 = [f/0 : f],
-    xtl_gather_types(tenv([], L2), typed(f(5))),
-    L2 = [f/1 : f(5)],
-    xtl_gather_types(tenv(L3, []), (type(one) :- two)),
-    L3 = [(one :- two)].
-
-xtl_check_types(_, Decl) :- t(checking_type(Decl)), fail.
-xtl_check_types(_, (:- _)) :- !.
-xtl_check_types(_, type(_)) :- !.
-xtl_check_types(_, typed(_)) :- !.
-xtl_check_types(_, test((_ :- Tests))) :- !,
-    xtl_check_type_goal(Env, Loc, Tests).
-xtl_check_types(Env, (Head :- Body)) :- !,
-    xtl_check_type_head(Env, Loc, Head),
-    xtl_check_type_goal(Env, Loc, Body).
-xtl_check_types(Env, Head) :-
-    xtl_check_type_head(Env, Loc, Head).
-
-xtl_check_type_head(Env, Loc, Head) :-
-    t(checking_head(Head)),
-    Head =.. [F | A],
-    length(A, N),
-    ( tenv_lookup_predicate(Env, F/N, T), !,
-      maplist(xtl_type_term(Env), A, AT),
-      maplist(xtl_type_eq(Env, Loc), AT, T)
-    ; true ).
-
-xtl_check_type_goal(Env, Loc, A = B) :- !,
-    xtl_type_term(Env, A, AT),
-    xtl_type_term(Env, B, BT),
-    xtl_type_eq(Env, Loc, AT, BT).
-xtl_check_type_goal(Env, Loc, Goal) :-
-    xtl_type_check_call(Env, Loc, Goal).
-
-xtl_type_check_call(Env, Loc, Goal) :-
-    t(checking_call(Goal)),
-    Goal =.. [F | A],
-    length(A, N),
-    ( tenv_lookup_predicate(Env, F/N, T), !,
-      maplist(xtl_check_type_expr(Env, Loc), A, T)
-    ; true ).
-
-xtl_check_type_goal(Env, Loc, Goal) :- t(checking_expr(Goal)), fail.
-xtl_check_type_expr(Env, Loc, Var, Type) :-
-    var(Var), !,
-    Var = '$type'(Type).
-xtl_check_type_expr(Env, Loc, '$type'(GivenType), ExpectedType) :-
-    xtl_type_lt(Env, GivenType, ExpectedType).
-xtl_check_type_expr(Env, Loc, Functor, unique(UniqueTag)) :-
-    !, throw(error(functor_is_not_unique(Functor, UniqueTag))).
-xtl_check_type_expr(Env, Loc, Functor, constructors(Cases)) :-
-    Functor =.. [F | A],
-    length(A, N),
-    length(T, N),
-    error_unless(member([F | T], Cases), no_matching_constructor(Functor, Cases)),
-    maplist(xtl_check_type(Env, Loc), A, T).
-xtl_check_type_expr(Env, Loc, Expr, UserDefined) :-
-    tenv_lookup_type(Env, UserDefined, Type),
-    xtl_check_type_expr(Env, Loc, Expr, Type).
-
-tenv_lookup_predicate(tenv(_, Preds), FN, T) :-
-    t(lookup_predicate(FN)),
-    member(FN:TT, Preds),
-    t(found(TT)),
-    copy_term(TT, TM),
-    TM =.. [F | AM],
-    maplist(remove_mode, AM, A),
-    T =.. [F | A],
-    t(cleaned(T)).
-
-remove_mode(+X, X) :- !.
-remove_mode(-X, X) :- !.
-remove_mode('?'(X), X) :- !.
-remove_mode(X, X).
-
-tenv_lookup_ype(_, Var, Var) :-
-    var(Var), !.
-tenv_lookup_type(_, unique(Tag), unique(Tag)).
-tenv_lookup_type(_, constructors(C), constructors(C)).
-tenv_lookup_type(tenv(Types, _), UserType, Expanded) :-
-    UserType =.. [F | A],
-    length(A, N),
-    length(V, N),
-    Query =.. [F | V],
-    member((Query :- Body), Types),
-    copy_term(Query-Body, UserType-Expanded).
-
 error_unless(Goal, _) :-
     call(Goal), !.
 error_unless(_, Error) :-
     throw(error(Error)).
-
 error_unless(Goal) :-
     error_unless(Goal, goal_failed(Goal)).
-
-xtl_type_lt(Env, Given, Expected) :-
-    ground(Given), ground(Expected),
-    Given = Expected, !.
-xtl_type_lt(Env, Given, Expected) :-
-    tenv_lookup_type(Env, Given, GivenT),
-    tenv_lookup_type(Env, Expected, ExpectedT),
-    xtl_type_lt_t(Env, GivenT, ExpectedT).
-
-xtl_type_lt_t(Env, Given, unique(Tag)) :-
-    var(Given), !,
-    Given = unique(Tag).
-xtl_type_lt_t(Env, Given, constructors(C)) :-
-    var(Given), !,
-    copy_term(C, CC),
-    append(CC, _, OpenC),
-    Given = constructors(OpenC).
-xtl_type_lt_t(Env, Given, Expected) :-
-    var(Expected), !.
-xtl_type_lt_t(Env, unique(Given), unique(Expected)) :- !,
-    Given = Expected.
-xtl_type_lt_t(Env, constructors(Givens), constructors(Expecteds)) :-
-    maplist(xtl_type_lt_given(Env, Expecteds), Givens).
-
-xtl_type_lt_given(Env, Expecteds, [Constructor | Parameters]) :-
-    length(Parameters, N),
-    length(Arguments, N),
-    member([Constructor | Arguments], Expecteds),
-    maplist(xtl_type_lt(Env), Parameters, Arguments).
-
-test xtl_type_lt :-
-    Env = tenv([], []),
-    xtl_type_lt(Env, _, unique(t)),
-    xtl_type_lt(Env, _, constructors([c])),
-    xtl_type_lt(Env, unique(t), _),
-    xtl_type_lt(Env, unique(t), unique(t)),
-    \+ xtl_type_lt(Env, unique(a), unique(b)),
-    xtl_type_lt(Env, constructors([[a]]), constructors([[a]])),
-    xtl_type_lt(Env, constructors([[a]]), constructors([[a],[b]])),
-    \+ xtl_type_lt(Env, constructors([[a]]), constructors([[b]])),
-    xtl_type_lt(Env, constructors([[a],[b]]), constructors([[a],[b]])),
-    \+ xtl_type_lt(Env, constructors([[a],[c]]), constructors([[a],[b]])),
-    xtl_type_lt(Env, constructors([[f, unique(a)]]), constructors([[f, unique(a)]])),
-    \+ xtl_type_lt(Env, constructors([[f, unique(a)]]), constructors([[f, unique(b)]])).
-
-xtl_type_term(Env, Term, unique(number)) :- number(Term), !.
-xtl_type_term(Env, Term, unique(atom)) :- atom(Term), !.
-xtl_type_term(Env, Term, constructors([FT])) :-
-    Term =.. [F | A], !,
-    length(A, N),
-    length(T, N),
-    member([F|T], FT),
-    maplist(xtl_type_term(Env, A, T)).
-
-test xtl_type_term :-
-    Env = tenv([], []),
-    xtl_type_term(Env, 1, unique(number)),
-    xtl_type_term(Env, a, unique(atom)),
-    xtl_type_term(Env, f(_), constructors[[f, _]]),
-    \+xtl_type_term(Env, f(_), constructors[[g, _]]),
-    xtl_type_term(Env, f(1), constructors[[f, unique(number)]]),
-    \+xtl_type_term(Env, f(1), constructors[[g, unique(atom)]]).
-
-% xtl_type_eq
