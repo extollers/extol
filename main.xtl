@@ -1,11 +1,12 @@
 %% Debugging
 
 % Trace
-t(X) :- write('trace: '), ti, writeq(X), nl.
-t(X, A, A) :-
+t: (X: write('trace: '), ti, writeq(X), nl).
+
+t: (X, A, A:
     write('trace: '), ti, writeq(X), write(', at: '),
     pretty_init(A, C), write(C),
-    nl, ! .
+    nl, !).
 
 pretty_init(A, C) :-
     copy_term(A, AA),
@@ -858,7 +859,7 @@ xtl_op(1200, xfx, dcg_expects) :- true.
 xtl_op(1200, xfx, dcg_ensures) :- true.
 xtl_op(1200, xfx, ':') :- true.
 
-'=...'(F, A) :- (compound(F); atom(F); A = [G | _], atom(G)), F =.. A.
+'=...': (F, A : (compound(F); atom(F); A = [G | _], atom(G)), F =.. A).
 
 test parse_self :-
     read_file('main.xtl', Bytes), !,
