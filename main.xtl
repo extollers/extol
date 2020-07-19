@@ -236,6 +236,10 @@ append([X | Xs], L) :-
     append(Xs, LL),
     append(X, LL, L).
 
+comma_list(Var, [Var]) :- var(Var), !.
+comma_list((X, XCs), [X | Xs]) :- !, comma_list(XCs, Xs).
+comma_list(X, [X]) :- true.
+
 %% C preprocessor
 
 c_pp(Env, Tokens) -->
@@ -394,12 +398,12 @@ test pl_atom :-
 pl_quoted_char(C) -->
     "\\", !,
     require([Quoted]),
-    { member(Quoted : C, [
-                 0'n : 10,
-                 0'r : 13,
-                 0't : 9,
-                 0'e : 127,
-                 AsIs : AsIs
+    { member(Quoted - C, [
+                 0'n - 10,
+                 0'r - 13,
+                 0't - 9,
+                 0'e - 127,
+                 AsIs - AsIs
     ]) }, !.
 
 pl_quoted_atom_chars_([]) --> "'", !.
@@ -614,6 +618,10 @@ xtl_declaration(Decl) dcg_ensures ground(Decl).
 xtl_declaration(_) --> eof, !, {fail}.
 xtl_declaration(Decl) --> xtl_expression(DeclV), { xtl_makevars(DeclV, Decl, _) }, require(xtl_token(".")).
 
+test xtl_declaration :-
+    xtl_declaration(Decl, "f: (x: 1), (y: 2, 3).", ""),
+    Decl = (f: ((x: 1), (y: (2, 3)))).
+
 xtl_makevars(V, _, _) :-
     V =.. ['XTL$VARNAME', '_'], !.
 xtl_makevars(V, Var, Vars) :-
@@ -665,12 +673,12 @@ xtl_quoted_char(Bytes) dcg_ensures number(Byte).
 xtl_quoted_char(C) -->
     "\\", !,
     require([Quoted]),
-    { member(Quoted : C, [
-                 0'n : 10,
-                 0'r : 13,
-                 0't : 9,
-                 0'e : 127,
-                 AsIs : AsIs
+    { member(Quoted - C, [
+                 0'n - 10,
+                 0'r - 13,
+                 0't - 9,
+                 0'e - 127,
+                 AsIs - AsIs
     ]) }, !.
 
 xtl_quoted_atom_chars_([]) --> "'", !.
@@ -827,7 +835,6 @@ xtl_op(700, xfx, '>') :- true.
 xtl_op(700, xfx, '=<') :- true.
 xtl_op(700, xfx, '>=') :- true.
 xtl_op(700, xfx, '=\\=') :- true.
-xtl_op(600, xfy, ':') :- true.
 xtl_op(500, yfx, '+') :- true.
 xtl_op(500, yfx, '-') :- true.
 xtl_op(400, yfx, '*') :- true.
@@ -849,6 +856,7 @@ xtl_op(1200, xfx, expects) :- true.
 xtl_op(1200, xfx, ensures) :- true.
 xtl_op(1200, xfx, dcg_expects) :- true.
 xtl_op(1200, xfx, dcg_ensures) :- true.
+xtl_op(1200, xfx, ':') :- true.
 
 '=...'(F, A) :- (compound(F); atom(F); A = [G | _], atom(G)), F =.. A.
 
@@ -872,17 +880,21 @@ xtl_to_pl_declaration((HeadXTL :- GoalXTL), [(HeadPL :- GoalPL)]) :- !,
     copy_term(HeadXTL-GoalXTL, HeadPL-Goal),
     xtl_to_pl_goal(Goal, GoalPL),
     numbervars(HeadPL-GoalPL).
+
 xtl_to_pl_declaration((test T), [test T]) :- !, numbervars(T).
+
 xtl_to_pl_declaration((N --> L), [(NPL :- LPL)]) :- !,
      N =... [F|A],
      append(A, [I, O], AIO),
      NPL =... [F|AIO],
      xtl_to_pl_dcg(L, LPL, I, O),
      numbervars(NPL-LPL).
+
 xtl_to_pl_declaration((H expects C), [(HPL :- assert(CPL), false)]) :- !,
     copy_term(H-C, HPL-CC),
     xtl_to_pl_goal(CC, CPL),
     numbervars(HPL-CPL).
+
 xtl_to_pl_declaration((H dcg_expects C), [(HPL :- assert((CIO, CPL)), false)]) :- !,
     copy_term(H-C, HH-CC),
     HH =... L,
@@ -891,9 +903,34 @@ xtl_to_pl_declaration((H dcg_expects C), [(HPL :- assert((CIO, CPL)), false)]) :
     xtl_to_pl_goal(CC, CPL),
     CIO = (list_or_partial_list(I), list_or_partial_list(O)),
     numbervars(HPL-CPL-CIO).
+
 xtl_to_pl_declaration((_ ensures _), []) :- !. % TODO
+
 xtl_to_pl_declaration((_ dcg_ensures _), []) :- !. % TODO
+
+xtl_to_pl_declaration((Pred: Defs), Decls) :- !,
+    comma_list(Defs, Xs),
+    maplist(xtl_def_to_pl(Pred), Xs, Decls).
+
 xtl_to_pl_declaration(X, _) :- !, throw(error(unknown_declaration(X))).
+
+test xtl_to_pl_declaration :-
+    xtl_to_pl_declaration(
+        (odd:
+         (0: false),
+         (1: true),
+         (N: M is N - 2, odd(M))),
+        Res),
+    Res = [(odd(0) :- false),
+           (odd(1) :- true),
+           (odd(NN) :- MM is NN - 2, odd(MM))].
+
+xtl_def_to_pl(Pred, (Head: Body), (HeadPL :- GoalPL)) :-
+    copy_term(Head-Body, HeadVars-Goal),
+    comma_list(HeadVars, HeadArgs),
+    HeadPL =.. [Pred | HeadArgs],
+    xtl_to_pl_goal(Goal, GoalPL),
+    numbervars(HeadPL-GoalPL).
 
 xtl_to_pl_goal(Var, call(Var)) :-
     var(Var), !.
