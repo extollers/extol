@@ -4,8 +4,7 @@
 :-op(999,fx,tc).
 :-op(700,xfx,=...).
 :-discontiguous((test)/1).
-:-discontiguous(type/1).
-:-discontiguous(typed/1).
+:-initialization((main;write('error: unexpected failure in main'),nl,halt(1))).
 t(A):-write('trace: '),ti,writeq(A),nl.
 t(A,B,B):-write('trace: '),ti,writeq(A),write(', at: '),pretty_init(B,C),write(C),nl,!.
 pretty_init(A,B):-copy_term(A,C),(length(D,32),append(D,E,C);D=C),!,prep_chars(D,F,[]),length(F,G),(G<10->append(F,[60,101,111,102,62],H);H=F),atom_codes(B,H).
@@ -46,7 +45,6 @@ read_file(A,B):-assert(atom(A)),false.
 read_file(A,B):-open(A,read,C,[type(binary),buffering(block)]),read_bytes(C,B),close(C).
 write_file(A,B):-assert((ground(A),bytes(B))),false.
 write_file(A,B):-open(A,write,C,[type(binary),buffering(block)]),write_bytes(C,B),close(C).
-:-initialization((main;write('error: unexpected failure in main'),nl,halt(1))).
 main:-catch((current_prolog_flag(argv,[A,B|C]),command(B,C),halt),D,(write('failed: '),write(D),nl,halt(1))).
 command(A,B):-assert((atom(A),ground(B),list(B))),false.
 command(test,A):-write('Running tests'),nl,(test B:-C),([B]=A;A=[]),write(B),write(...),once(run_test(C)),fail;true.
@@ -54,7 +52,6 @@ command(extoltoprolog,[A,B]):-read_file(A,C),!,xtl_top_level(D,C,[]),!,t('top le
 run_test(done):-!,write(success),nl.
 run_test((A,B)):-!,(call(A)->run_test(B);nl,write('  failed: '),write(A),nl,throw(test_failed)).
 run_test(A):-run_test((A,done)).
-:-discontiguous((test)/1).
 test test_c:-read_file('test.c',A),!,c_pp([],B,A,[]),!,c_top_level(C,B,[]).
 many(A,B):-assert((callable(A),list_or_partial_list(B))),false.
 many(A,[B|C],D,E):-call(A,B,D,F),many(A,C,F,G),!,G=E.
@@ -307,10 +304,8 @@ xtl_op(1200,xfx,dcg_expects):-true.
 xtl_op(1200,xfx,dcg_ensures):-true.
 A=...B:-(compound(A);atom(A);B=[C|D],atom(C)),A=..B.
 test parse_self:-read_file('main.xtl',A),!,xtl_top_level(B,A,[]).
-test regression:-xtl_declaration(A,[58,45,32,100,105,115,99,111,110,116,105,103,117,111,117,115,40,39,47,39,40,116,101,115,116,44,32,49,41,41,46],[]).
-xtl_to_pl_toplevel(A,B):-maplist(xtl_to_pl_declaration,A,C),append(C,D),append([(:-set_prolog_flag(singleton_warning,off)),(:-op(1200,fy,test)),(:-op(999,fx,tc)),(:-op(700,xfx,=...))],D,B).
+xtl_to_pl_toplevel(A,B):-maplist(xtl_to_pl_declaration,A,C),append(C,D),append([(:-set_prolog_flag(singleton_warning,off)),(:-op(1200,fy,test)),(:-op(999,fx,tc)),(:-op(700,xfx,=...)),(:-discontiguous((test)/1)),(:-initialization((main;write('error: unexpected failure in main'),nl,halt(1))))],D,B).
 xtl_to_pl_declaration((A:-B),[(C:-D)]):-!,copy_term(A-B,C-E),xtl_to_pl_goal(E,D),numbervars(C-D).
-xtl_to_pl_declaration((:-A),[(:-A)]):-!,numbervars(A).
 xtl_to_pl_declaration((test A),[(test A)]):-!,numbervars(A).
 xtl_to_pl_declaration((A-->B),[(C:-D)]):-!,A=...[E|F],append(F,[G,H],I),C=...[E|I],xtl_to_pl_dcg(B,D,G,H),numbervars(C-D).
 xtl_to_pl_declaration(expects(A,B),[(C:-assert(D),false)]):-!,copy_term(A-B,C-E),xtl_to_pl_goal(E,D),numbervars(C-D).
