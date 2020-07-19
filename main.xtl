@@ -8,13 +8,13 @@ t: (X, A, A:
     pretty_init(A, C), write(C),
     nl, !).
 
-pretty_init(A, C) :-
+pretty_init: (A, C :
     copy_term(A, AA),
     (length(B, 32), append(B, _, AA) ; B = AA), !,
     prep_chars(B, Q, []),
     length(Q, N),
     (N < 10 -> append(Q, "<eof>", QQ) ; QQ = Q),
-    atom_codes(C, QQ).
+    atom_codes(C, QQ)).
 
 prep_chars([]) --> [].
 prep_chars([X | Xs]) --> prep_char(X), prep_chars(Xs).
@@ -108,7 +108,6 @@ byte(Byte) :- number(Byte), Byte >= 0, Byte < 256.
 bytes(Bytes) :- ground(Bytes), maplist(byte, Bytes).
 
 assert((A, B)) :- assert(A), assert(B).
-assert((A; B)) :- assert(A); assert(B).
 assert(G) :- G, !.
 assert(G) :- throw(assert_failed(G)).
 
@@ -645,9 +644,9 @@ test xtl_makevars :-
     Z = 1.
 
 xtl_atom_char(Byte) dcg_ensures number(Byte).
-xtl_atom_char(C) -->
+dcg(xtl_atom_char): (C:
     [C], !,
-    { member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789$?") }.
+    { member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789$?") }).
 
 xtl_atom(Atom) -->
     "'",
@@ -858,8 +857,10 @@ xtl_op(1200, xfx, ensures) :- true.
 xtl_op(1200, xfx, dcg_expects) :- true.
 xtl_op(1200, xfx, dcg_ensures) :- true.
 xtl_op(1200, xfx, ':') :- true.
+xtl_op(1150, fy, dcg) :- true.
 
-'=...': (F, A : (compound(F); atom(F); A = [G | _], atom(G)), F =.. A).
+'=...'(F, A) expects compound(F); atom(F); A = [G | _], atom(G).
+'=...': (F, A : F =.. A).
 
 test parse_self :-
     read_file('main.xtl', Bytes), !,
@@ -921,11 +922,20 @@ test xtl_to_pl_declaration :-
          (0: false),
          (1: true),
          (N: M is N - 2, odd(M))),
-        Res),
-    Res = [(odd(0) :- false),
+        Res1),
+    Res1 = [(odd(0) :- false),
            (odd(1) :- true),
-           (odd(NN) :- MM is NN - 2, odd(MM))].
+           (odd(NN) :- MM is NN - 2, odd(MM))],
+    xtl_to_pl_declaration((dcg(f): (x: [x])), Res2),
+    Res2 = [(f(x,I,O) :- append([x],O,I))].
 
+xtl_def_to_pl(dcg(Pred), (Head: Body), (HeadPL :- GoalPL)) :-
+    copy_term(Head-Body, HeadVars-Goal),
+    comma_list(HeadVars, HeadArgs),
+    append(HeadArgs, [I,O], HeadIO),
+    HeadPL =.. [Pred | HeadIO],
+    xtl_to_pl_dcg(Goal, GoalPL, I, O),
+    numbervars(HeadPL-GoalPL).
 xtl_def_to_pl(Pred, (Head: Body), (HeadPL :- GoalPL)) :-
     copy_term(Head-Body, HeadVars-Goal),
     comma_list(HeadVars, HeadArgs),

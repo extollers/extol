@@ -30,7 +30,6 @@
 :-(byte(A),','(number(A),','(>=(A,0),<(A,256)))).
 :-(bytes(A),','(ground(A),maplist(byte,A))).
 :-(assert(','(A,B)),','(assert(A),assert(B))).
-:-(assert(;(A,B)),;(assert(A),assert(B))).
 :-(assert(A),','(call(A),!)).
 :-(assert(A),throw(assert_failed(A))).
 :-(read_bytes(A,B),','(assert(ground(A)),false)).
@@ -303,7 +302,9 @@ test(:-(xtl_regular_term,','(xtl_regular_term(123,'.'(49,'.'(50,'.'(51,[]))),[])
 :-(xtl_op(1200,xfx,dcg_expects),true).
 :-(xtl_op(1200,xfx,dcg_ensures),true).
 :-(xtl_op(1200,xfx,:),true).
-:-(=...(A,B),','(;(compound(A),;(atom(A),','(=(B,'.'(C,D)),atom(C)))),=..(A,B))).
+:-(xtl_op(1150,fy,dcg),true).
+:-(=...(A,B),','(assert(;(compound(A),;(atom(A),','(=(B,'.'(C,D)),atom(C))))),false)).
+:-(=...(A,B),=..(A,B)).
 test(:-(parse_self,','(read_file('main.xtl',A),','(!,xtl_top_level(B,A,[]))))).
 :-(xtl_to_pl_toplevel(A,B),','(maplist(xtl_to_pl_declaration,A,C),','(append(C,D),append('.'(:-(set_prolog_flag(singleton_warning,off)),'.'(:-(discontiguous(/(test,1))),'.'(:-(initialization(;(main,','(write('error: unexpected failure in main'),','(nl,halt(1)))))),[]))),D,B)))).
 :-(xtl_to_pl_declaration(:-(A,B),'.'(:-(C,D),[])),','(!,','(copy_term(-(A,B),-(C,E)),','(xtl_to_pl_goal(E,D),numbervars(-(C,D)))))).
@@ -315,7 +316,8 @@ test(:-(parse_self,','(read_file('main.xtl',A),','(!,xtl_top_level(B,A,[]))))).
 :-(xtl_to_pl_declaration(dcg_ensures(A,B),[]),!).
 :-(xtl_to_pl_declaration(:(A,B),C),','(!,','(comma_list(B,D),maplist(xtl_def_to_pl(A),D,C)))).
 :-(xtl_to_pl_declaration(A,B),','(!,throw(error(unknown_declaration(A))))).
-test(:-(xtl_to_pl_declaration,','(xtl_to_pl_declaration(:(odd,','(:(0,false),','(:(1,true),:(A,','(is(B,-(A,2)),odd(B)))))),C),=(C,'.'(:-(odd(0),false),'.'(:-(odd(1),true),'.'(:-(odd(D),','(is(E,-(D,2)),odd(E))),[]))))))).
+test(:-(xtl_to_pl_declaration,','(xtl_to_pl_declaration(:(odd,','(:(0,false),','(:(1,true),:(A,','(is(B,-(A,2)),odd(B)))))),C),','(=(C,'.'(:-(odd(0),false),'.'(:-(odd(1),true),'.'(:-(odd(D),','(is(E,-(D,2)),odd(E))),[])))),','(xtl_to_pl_declaration(:(dcg(f),:(x,'.'(x,[]))),F),=(F,'.'(:-(f(x,G,H),append('.'(x,[]),H,G)),[]))))))).
+:-(xtl_def_to_pl(dcg(A),:(B,C),:-(D,E)),','(copy_term(-(B,C),-(F,G)),','(comma_list(F,H),','(append(H,'.'(I,'.'(J,[])),K),','(=..(D,'.'(A,K)),','(xtl_to_pl_dcg(G,E,I,J),numbervars(-(D,E)))))))).
 :-(xtl_def_to_pl(A,:(B,C),:-(D,E)),','(copy_term(-(B,C),-(F,G)),','(comma_list(F,H),','(=..(D,'.'(A,H)),','(xtl_to_pl_goal(G,E),numbervars(-(D,E))))))).
 :-(xtl_to_pl_goal(A,call(A)),','(var(A),!)).
 :-(xtl_to_pl_goal(','(A,B),','(C,D)),','(!,','(xtl_to_pl_goal(A,C),xtl_to_pl_goal(B,D)))).
