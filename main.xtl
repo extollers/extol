@@ -1,14 +1,14 @@
 %% Debugging
 
 % Trace
-t: (X: write('trace: '), ti, writeq(X), nl).
+pred t: (X: write('trace: '), ti, writeq(X), nl).
 
-t: (X, A, A:
+pred t: (X, A, A:
     write('trace: '), ti, writeq(X), write(', at: '),
     pretty_init(A, C), write(C),
     nl, !).
 
-pretty_init: (A, C :
+pred pretty_init: (A, C :
     copy_term(A, AA),
     (length(B, 32), append(B, _, AA) ; B = AA), !,
     prep_chars(B, Q, []),
@@ -644,7 +644,7 @@ test xtl_makevars :-
     Z = 1.
 
 xtl_atom_char(Byte) dcg_ensures number(Byte).
-dcg(xtl_atom_char): (C:
+dcg xtl_atom_char: (C:
     [C], !,
     { member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789$?") }).
 
@@ -858,9 +858,10 @@ xtl_op(1200, xfx, dcg_expects) :- true.
 xtl_op(1200, xfx, dcg_ensures) :- true.
 xtl_op(1200, xfx, ':') :- true.
 xtl_op(1150, fy, dcg) :- true.
+xtl_op(1150, fy, pred) :- true.
 
 '=...'(F, A) expects compound(F); atom(F); A = [G | _], atom(G).
-'=...': (F, A : F =.. A).
+pred '=...': (F, A : F =.. A).
 
 test parse_self :-
     read_file('main.xtl', Bytes), !,
@@ -918,7 +919,7 @@ xtl_to_pl_declaration(X, _) :- !, throw(error(unknown_declaration(X))).
 
 test xtl_to_pl_declaration :-
     xtl_to_pl_declaration(
-        (odd:
+        (pred odd:
          (0: false),
          (1: true),
          (N: M is N - 2, odd(M))),
@@ -936,7 +937,7 @@ xtl_def_to_pl(dcg(Pred), (Head: Body), (HeadPL :- GoalPL)) :-
     HeadPL =.. [Pred | HeadIO],
     xtl_to_pl_dcg(Goal, GoalPL, I, O),
     numbervars(HeadPL-GoalPL).
-xtl_def_to_pl(Pred, (Head: Body), (HeadPL :- GoalPL)) :-
+xtl_def_to_pl(pred(Pred), (Head: Body), (HeadPL :- GoalPL)) :-
     copy_term(Head-Body, HeadVars-Goal),
     comma_list(HeadVars, HeadArgs),
     HeadPL =.. [Pred | HeadArgs],

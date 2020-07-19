@@ -303,6 +303,7 @@ test(:-(xtl_regular_term,','(xtl_regular_term(123,'.'(49,'.'(50,'.'(51,[]))),[])
 :-(xtl_op(1200,xfx,dcg_ensures),true).
 :-(xtl_op(1200,xfx,:),true).
 :-(xtl_op(1150,fy,dcg),true).
+:-(xtl_op(1150,fy,pred),true).
 :-(=...(A,B),','(assert(;(compound(A),;(atom(A),','(=(B,'.'(C,D)),atom(C))))),false)).
 :-(=...(A,B),=..(A,B)).
 test(:-(parse_self,','(read_file('main.xtl',A),','(!,xtl_top_level(B,A,[]))))).
@@ -316,9 +317,9 @@ test(:-(parse_self,','(read_file('main.xtl',A),','(!,xtl_top_level(B,A,[]))))).
 :-(xtl_to_pl_declaration(dcg_ensures(A,B),[]),!).
 :-(xtl_to_pl_declaration(:(A,B),C),','(!,','(comma_list(B,D),maplist(xtl_def_to_pl(A),D,C)))).
 :-(xtl_to_pl_declaration(A,B),','(!,throw(error(unknown_declaration(A))))).
-test(:-(xtl_to_pl_declaration,','(xtl_to_pl_declaration(:(odd,','(:(0,false),','(:(1,true),:(A,','(is(B,-(A,2)),odd(B)))))),C),','(=(C,'.'(:-(odd(0),false),'.'(:-(odd(1),true),'.'(:-(odd(D),','(is(E,-(D,2)),odd(E))),[])))),','(xtl_to_pl_declaration(:(dcg(f),:(x,'.'(x,[]))),F),=(F,'.'(:-(f(x,G,H),append('.'(x,[]),H,G)),[]))))))).
+test(:-(xtl_to_pl_declaration,','(xtl_to_pl_declaration(:(pred(odd),','(:(0,false),','(:(1,true),:(A,','(is(B,-(A,2)),odd(B)))))),C),','(=(C,'.'(:-(odd(0),false),'.'(:-(odd(1),true),'.'(:-(odd(D),','(is(E,-(D,2)),odd(E))),[])))),','(xtl_to_pl_declaration(:(dcg(f),:(x,'.'(x,[]))),F),=(F,'.'(:-(f(x,G,H),append('.'(x,[]),H,G)),[]))))))).
 :-(xtl_def_to_pl(dcg(A),:(B,C),:-(D,E)),','(copy_term(-(B,C),-(F,G)),','(comma_list(F,H),','(append(H,'.'(I,'.'(J,[])),K),','(=..(D,'.'(A,K)),','(xtl_to_pl_dcg(G,E,I,J),numbervars(-(D,E)))))))).
-:-(xtl_def_to_pl(A,:(B,C),:-(D,E)),','(copy_term(-(B,C),-(F,G)),','(comma_list(F,H),','(=..(D,'.'(A,H)),','(xtl_to_pl_goal(G,E),numbervars(-(D,E))))))).
+:-(xtl_def_to_pl(pred(A),:(B,C),:-(D,E)),','(copy_term(-(B,C),-(F,G)),','(comma_list(F,H),','(=..(D,'.'(A,H)),','(xtl_to_pl_goal(G,E),numbervars(-(D,E))))))).
 :-(xtl_to_pl_goal(A,call(A)),','(var(A),!)).
 :-(xtl_to_pl_goal(','(A,B),','(C,D)),','(!,','(xtl_to_pl_goal(A,C),xtl_to_pl_goal(B,D)))).
 :-(xtl_to_pl_goal(;(A,B),;(C,D)),','(!,','(xtl_to_pl_goal(A,C),xtl_to_pl_goal(B,D)))).
