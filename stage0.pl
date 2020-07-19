@@ -27,32 +27,44 @@ ti:-A=[124,32,46,32,46,32|A],g_read(tindent,B),C is B*2,length(D,C),append(D,E,A
 ticall(A):-g_read(tindent,B),C is B+1,g_assignb(tindent,C),call(A),g_assignb(tindent,B).
 ticall(A,B,C):-g_read(tindent,D),E is D+1,g_assignb(tindent,E),dcg_call(A,B,C),g_assignb(tindent,D).
 ticall(A,B,C,D):-g_read(tindent,E),F is E+1,g_assignb(tindent,F),A=..G,append(G,[B],H),I=..H,dcg_call(I,C,D),g_assignb(tindent,E).
-undo(A).
+undo(A):-true.
 undo(A):-call(A),fail.
-undo(A,B,B).
+undo(A,B,B):-true.
 undo(A,B,C):-dcg_call(A,B,C),fail.
 byte(A):-number(A),A>=0,A<256.
 bytes(A):-ground(A),maplist(byte,A).
+assert((A,B)):-assert(A),assert(B).
+assert((A;B)):-assert(A);assert(B).
+assert(A):-call(A),!.
+assert(A):-throw(assert_failed(A)).
+read_bytes(A,B):-assert(ground(A)),false.
 read_bytes(A,[]):-at_end_of_stream(A),!.
 read_bytes(A,[B|C]):-get_byte(A,B),read_bytes(A,C).
-write_bytes(A,[]).
+write_bytes(A,[]):-true.
 write_bytes(A,[B|C]):-put_byte(A,B),write_bytes(A,C).
+read_file(A,B):-assert(atom(A)),false.
 read_file(A,B):-open(A,read,C,[type(binary),buffering(block)]),read_bytes(C,B),close(C).
+write_file(A,B):-assert((ground(A),bytes(B))),false.
 write_file(A,B):-open(A,write,C,[type(binary),buffering(block)]),write_bytes(C,B),close(C).
 :-initialization((main;write('error: unexpected failure in main'),nl,halt(1))).
 main:-catch((current_prolog_flag(argv,[A,B|C]),command(B,C),halt),D,(write('failed: '),write(D),nl,halt(1))).
+command(A,B):-assert((atom(A),ground(B),list(B))),false.
 command(test,A):-write('Running tests'),nl,(test B:-C),([B]=A;A=[]),write(B),write(...),once(run_test(C)),fail;true.
-command(extoltoprolog,[A,B]):-read_file(A,C),!,xtl_top_level(D,C,[]),!,xtl_to_pl_toplevel(D,E),pl_write_top_level(E,F,[]),!,append([37,32,71,101,110,101,114,97,116,101,100,32,98,121,32,101,120,116,111,108,116,111,112,114,111,108,111,103,10],F,G),write_file(B,G).
+command(extoltoprolog,[A,B]):-read_file(A,C),!,xtl_top_level(D,C,[]),!,t('top leveled'),xtl_to_pl_toplevel(D,E),t('to pled'),pl_write_top_level(E,F,[]),!,t('wrote bytes'),append([37,32,71,101,110,101,114,97,116,101,100,32,98,121,32,101,120,116,111,108,116,111,112,114,111,108,111,103,10],F,G),t(appended),write_file(B,G),t('wrote file').
 run_test(done):-!,write(success),nl.
 run_test((A,B)):-!,(call(A)->run_test(B);nl,write('  failed: '),write(A),nl,throw(test_failed)).
 run_test(A):-run_test((A,done)).
 :-discontiguous((test)/1).
 test test_c:-read_file('test.c',A),!,c_pp([],B,A,[]),!,c_top_level(C,B,[]).
+many(A,B):-assert((callable(A),list_or_partial_list(B))),false.
 many(A,[B|C],D,E):-call(A,B,D,F),many(A,C,F,G),!,G=E.
 many(A,[],B,C):-B=C.
+many1(A,B):-assert((callable(A),list_or_partial_list(B))),false.
 many1(A,[B|C],D,E):-call(A,B,D,F),(!,F=G),many(A,C,G,E).
-eof([],[]).
-peek(A,A,A).
+eof(A,B):-assert((list_or_partial_list(A),list_or_partial_list(B))),false.
+eof([],[]):-true.
+eof(A,B,C):-assert((list_or_partial_list(B),list_or_partial_list(C),list_or_partial_list(A))),false.
+peek(A,A,A):-true.
 alpha(A,B,C):-append([A],D,B),member(A,[97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90]),D=C.
 digit(A,B,C):-append([D],E,B),member(D-A,[48-0,49-1,50-2,51-3,52-4,53-5,54-6,55-7,56-8,57-9]),E=C.
 dcg_call(A,B,C):-(var(A),!,fail),B=C.
@@ -65,8 +77,11 @@ dcg_call({A},B,C):-(!,B=D),call(A),D=C.
 dcg_call(A,B,C):-!,call(A,B,C).
 require(A,B,C):-dcg_call(A,B,C),!;pretty_init(B,D),throw(parse_failed(A,D)).
 try(A,B,C):-catch(dcg_call(A,B,C),parse_failed(D,E),F=true),!,F=false.
-foldl(A,B,[],B).
+foldl(A,B,C,D):-assert((callable(A),list_or_partial_list(C))),false.
+foldl(A,B,[],B):-true.
 foldl(A,B,[C|D],E):-call(A,B,C,F),foldl(A,F,D,E).
+append([],[]):-true.
+append([A|B],C):-append(B,D),append(A,D,C).
 c_pp(A,B,C,D):-c_pp_lines(E,C,F),eof(F,G),(!,G=H),c_pp_eval(A,E,B,[]),H=D.
 c_pp_lines([],A,B):-eof(A,C),!,C=B.
 c_pp_lines([A|B],C,D):-c_pp_line(A,C,E),(!,E=F),c_pp_lines(B,F,D).
@@ -158,39 +173,39 @@ pl_expression(none,A,B,C,D):-(!,C=E),require(pl_op_or_term(F,term),E,G),pl_expre
 pl_expression(just(A),B,C,D,E):-pl_op_or_term(F,op(G,H),D,I),((member(H-J,[xf-0,yf-1]),K is G+J,K<B,!,L=..[F,A]),I=M),pl_expression(just(L),B,C,M,E).
 pl_expression(just(A),B,C,D,E):-pl_op_or_term(F,op(G,H),D,I),((member(H-J-K,[xfx-0-0,xfy-0-1,yfx-1-0]),L is G+J,L<B,!,M is G+K),I=N),require(pl_expression(none,M,O),N,P),(Q=..[F,A,O],P=R),pl_expression(just(Q),B,C,R,E).
 pl_expression(just(A),B,A,C,D):-!,C=D.
-pl_op(1200,xfx,:-).
-pl_op(1200,xfx,-->).
-pl_op(1200,fx,:-).
-pl_op(1105,xfy,'|').
-pl_op(1100,xfy,;).
-pl_op(1050,xfy,->).
-pl_op(1000,xfy,',').
-pl_op(900,fy,\+).
-pl_op(700,xfx,=).
-pl_op(700,xfx,\=).
-pl_op(700,xfx,=..).
-pl_op(700,xfx,==).
-pl_op(700,xfx,\==).
-pl_op(700,xfx,is).
-pl_op(700,xfx,<).
-pl_op(700,xfx,>).
-pl_op(700,xfx,=<).
-pl_op(700,xfx,>=).
-pl_op(700,xfx,=\=).
-pl_op(600,xfy,:).
-pl_op(500,yfx,+).
-pl_op(500,yfx,-).
-pl_op(400,yfx,*).
-pl_op(400,yfx,/).
-pl_op(400,yfx,rem).
-pl_op(400,yfx,mod).
-pl_op(400,yfx,div).
-pl_op(400,yfx,<<).
-pl_op(400,yfx,>>).
-pl_op(200,xfx,**).
-pl_op(200,xfx,^).
-pl_op(200,fy,+).
-pl_op(200,fy,-).
+pl_op(1200,xfx,:-):-true.
+pl_op(1200,xfx,-->):-true.
+pl_op(1200,fx,:-):-true.
+pl_op(1105,xfy,'|'):-true.
+pl_op(1100,xfy,;):-true.
+pl_op(1050,xfy,->):-true.
+pl_op(1000,xfy,','):-true.
+pl_op(900,fy,\+):-true.
+pl_op(700,xfx,=):-true.
+pl_op(700,xfx,\=):-true.
+pl_op(700,xfx,=..):-true.
+pl_op(700,xfx,==):-true.
+pl_op(700,xfx,\==):-true.
+pl_op(700,xfx,is):-true.
+pl_op(700,xfx,<):-true.
+pl_op(700,xfx,>):-true.
+pl_op(700,xfx,=<):-true.
+pl_op(700,xfx,>=):-true.
+pl_op(700,xfx,=\=):-true.
+pl_op(600,xfy,:):-true.
+pl_op(500,yfx,+):-true.
+pl_op(500,yfx,-):-true.
+pl_op(400,yfx,*):-true.
+pl_op(400,yfx,/):-true.
+pl_op(400,yfx,rem):-true.
+pl_op(400,yfx,mod):-true.
+pl_op(400,yfx,div):-true.
+pl_op(400,yfx,<<):-true.
+pl_op(400,yfx,>>):-true.
+pl_op(200,xfx,**):-true.
+pl_op(200,xfx,^):-true.
+pl_op(200,fy,+):-true.
+pl_op(200,fy,-):-true.
 xtl_token(A,B,C):-dcg_call(A,B,D),xtl_skipwhite(D,E),!,E=C.
 test xtl_token:-xtl_token([120],[120,32,32],[]),xtl_token([120],[120,32,37,32,99,111,109,109,101,110,116],[]),xtl_token([120],[120,32,37,32,99,111,109,109,101,110,116,10,32,32,9],[]).
 xtl_skipwhite(A,B):-xtl_white(A,C),!,C=B.
@@ -219,6 +234,7 @@ xtl_quoted_atom_chars_([],A,B):-append([39],C,A),!,C=B.
 xtl_quoted_atom_chars_([A|B],C,D):-xtl_quoted_char(A,C,E),(!,E=F),xtl_quoted_atom_chars_(B,F,D).
 xtl_quoted_atom_chars_([A|B],C,D):-append([A],E,C),xtl_quoted_atom_chars_(B,E,D).
 xtl_expression(A,B,C):-xtl_expression(1201,A,B,C).
+xtl_expression(A,B,C,D):-assert(((list_or_partial_list(C),list_or_partial_list(D)),number(A))),false.
 xtl_expression(A,B,C,D):-xtl_expression(none,A,B,C,D).
 test xtl_expression:-xtl_expression(1,[49],[]),xtl_expression(a,[97],[]),xtl_expression(a+b,[97,32,43,32,98],[]),xtl_expression(a+b*c,[97,32,43,32,98,32,42,32,99],[]),xtl_expression(a*b+c,[97,32,42,32,98,32,43,32,99],[]),xtl_expression(-a*b,[45,97,32,42,32,98],[]),xtl_expression((:-a*b),[58,45,32,97,32,42,32,98],[]).
 test comma_expr:-xtl_expression((p:-a,b),[112,32,58,45,32,97,44,32,98],[]).
@@ -249,55 +265,59 @@ xtl_expression(none,A,B,C,D):-(!,C=E),require(xtl_op_or_term(F,term),E,G),xtl_ex
 xtl_expression(just(A),B,C,D,E):-xtl_op_or_term(F,op(G,H),D,I),((member(H-J,[xf-0,yf-1]),K is G+J,K<B,!,L=..[F,A]),I=M),xtl_expression(just(L),B,C,M,E).
 xtl_expression(just(A),B,C,D,E):-xtl_op_or_term(F,op(G,H),D,I),((member(H-J-K,[xfx-0-0,xfy-0-1,yfx-1-0]),L is G+J,L<B,!,M is G+K),I=N),require(xtl_expression(none,M,O),N,P),(Q=..[F,A,O],P=R),xtl_expression(just(Q),B,C,R,E).
 xtl_expression(just(A),B,A,C,D):-!,C=D.
-xtl_op(1200,xfx,:-).
-xtl_op(1200,xfx,-->).
-xtl_op(1200,fx,:-).
-xtl_op(1105,xfy,'|').
-xtl_op(1100,xfy,;).
-xtl_op(1050,xfy,->).
-xtl_op(1000,xfy,',').
-xtl_op(900,fy,\+).
-xtl_op(700,xfx,=).
-xtl_op(700,xfx,\=).
-xtl_op(700,xfx,=..).
-xtl_op(700,xfx,==).
-xtl_op(700,xfx,\==).
-xtl_op(700,xfx,is).
-xtl_op(700,xfx,<).
-xtl_op(700,xfx,>).
-xtl_op(700,xfx,=<).
-xtl_op(700,xfx,>=).
-xtl_op(700,xfx,=\=).
-xtl_op(600,xfy,:).
-xtl_op(500,yfx,+).
-xtl_op(500,yfx,-).
-xtl_op(400,yfx,*).
-xtl_op(400,yfx,/).
-xtl_op(400,yfx,rem).
-xtl_op(400,yfx,mod).
-xtl_op(400,yfx,div).
-xtl_op(400,yfx,<<).
-xtl_op(400,yfx,>>).
-xtl_op(200,xfx,**).
-xtl_op(200,xfx,^).
-xtl_op(200,fy,+).
-xtl_op(200,fy,-).
-xtl_op(1200,fy,test).
-xtl_op(999,fx,tc).
-xtl_op(700,xfx,=...).
-xtl_op(1200,xfx,expects).
-xtl_op(1200,xfx,ensures).
-xtl_op(1200,xfx,dcg_expects).
-xtl_op(1200,xfx,dcg_ensures).
+xtl_op(1200,xfx,:-):-true.
+xtl_op(1200,xfx,-->):-true.
+xtl_op(1200,fx,:-):-true.
+xtl_op(1105,xfy,'|'):-true.
+xtl_op(1100,xfy,;):-true.
+xtl_op(1050,xfy,->):-true.
+xtl_op(1000,xfy,','):-true.
+xtl_op(900,fy,\+):-true.
+xtl_op(700,xfx,=):-true.
+xtl_op(700,xfx,\=):-true.
+xtl_op(700,xfx,=..):-true.
+xtl_op(700,xfx,==):-true.
+xtl_op(700,xfx,\==):-true.
+xtl_op(700,xfx,is):-true.
+xtl_op(700,xfx,<):-true.
+xtl_op(700,xfx,>):-true.
+xtl_op(700,xfx,=<):-true.
+xtl_op(700,xfx,>=):-true.
+xtl_op(700,xfx,=\=):-true.
+xtl_op(600,xfy,:):-true.
+xtl_op(500,yfx,+):-true.
+xtl_op(500,yfx,-):-true.
+xtl_op(400,yfx,*):-true.
+xtl_op(400,yfx,/):-true.
+xtl_op(400,yfx,rem):-true.
+xtl_op(400,yfx,mod):-true.
+xtl_op(400,yfx,div):-true.
+xtl_op(400,yfx,<<):-true.
+xtl_op(400,yfx,>>):-true.
+xtl_op(200,xfx,**):-true.
+xtl_op(200,xfx,^):-true.
+xtl_op(200,fy,+):-true.
+xtl_op(200,fy,-):-true.
+xtl_op(1200,fy,test):-true.
+xtl_op(999,fx,tc):-true.
+xtl_op(700,xfx,=...):-true.
+xtl_op(1200,xfx,expects):-true.
+xtl_op(1200,xfx,ensures):-true.
+xtl_op(1200,xfx,dcg_expects):-true.
+xtl_op(1200,xfx,dcg_ensures):-true.
 A=...B:-(compound(A);atom(A);B=[C|D],atom(C)),A=..B.
 test parse_self:-read_file('main.xtl',A),!,xtl_top_level(B,A,[]).
 test regression:-xtl_declaration(A,[58,45,32,100,105,115,99,111,110,116,105,103,117,111,117,115,40,39,47,39,40,116,101,115,116,44,32,49,41,41,46],[]).
-xtl_to_pl_toplevel(A,B):-maplist(xtl_to_pl_declaration,A,C),append([(:-set_prolog_flag(singleton_warning,off)),(:-op(1200,fy,test)),(:-op(999,fx,tc)),(:-op(700,xfx,=...))],C,B).
-xtl_to_pl_declaration((A:-B),(C:-D)):-!,copy_term(A-B,C-E),xtl_to_pl_goal(E,D),numbervars(C-D).
-xtl_to_pl_declaration((:-A),(:-A)):-!,numbervars(A).
-xtl_to_pl_declaration((test A),(test A)):-!,numbervars(A).
-xtl_to_pl_declaration((A-->B),(C:-D)):-!,A=...[E|F],append(F,[G,H],I),C=...[E|I],xtl_to_pl_dcg(B,D,G,H),numbervars(C-D).
-xtl_to_pl_declaration(A,A):-!,numbervars(A).
+xtl_to_pl_toplevel(A,B):-maplist(xtl_to_pl_declaration,A,C),append(C,D),append([(:-set_prolog_flag(singleton_warning,off)),(:-op(1200,fy,test)),(:-op(999,fx,tc)),(:-op(700,xfx,=...))],D,B).
+xtl_to_pl_declaration((A:-B),[(C:-D)]):-!,copy_term(A-B,C-E),xtl_to_pl_goal(E,D),numbervars(C-D).
+xtl_to_pl_declaration((:-A),[(:-A)]):-!,numbervars(A).
+xtl_to_pl_declaration((test A),[(test A)]):-!,numbervars(A).
+xtl_to_pl_declaration((A-->B),[(C:-D)]):-!,A=...[E|F],append(F,[G,H],I),C=...[E|I],xtl_to_pl_dcg(B,D,G,H),numbervars(C-D).
+xtl_to_pl_declaration(expects(A,B),[(C:-assert(D),false)]):-!,copy_term(A-B,C-E),xtl_to_pl_goal(E,D),numbervars(C-D).
+xtl_to_pl_declaration(dcg_expects(A,B),[(C:-assert((D,E)),false)]):-!,copy_term(A-B,F-G),F=...H,append(H,[I,J],K),C=...K,xtl_to_pl_goal(G,E),D=(list_or_partial_list(I),list_or_partial_list(J)),numbervars(C-E-D).
+xtl_to_pl_declaration(ensures(A,B),[]):-!.
+xtl_to_pl_declaration(dcg_ensures(A,B),[]):-!.
+xtl_to_pl_declaration(A,B):-!,throw(error(unknown_declaration(A))).
 xtl_to_pl_goal(A,call(A)):-var(A),!.
 xtl_to_pl_goal((A,B),(C,D)):-!,xtl_to_pl_goal(A,C),xtl_to_pl_goal(B,D).
 xtl_to_pl_goal((A;B),(C;D)):-!,xtl_to_pl_goal(A,C),xtl_to_pl_goal(B,D).
@@ -315,7 +335,7 @@ xtl_to_pl_dcg({A},(B,C=D),C,D):-!,xtl_to_pl_goal(A,B).
 xtl_to_pl_dcg(A,B,C,D):-!,A=...E,append(E,[C,D],F),B=...F.
 xtl_to_pl_dcg(A,B,C,D):-throw(error(xtl_to_pl_dcg,A)).
 test xtl_to_pl_dcg:-xtl_to_pl_dcg(((f;g),h),((f(a,b);g(a,b)),h(b,c)),a,c),xtl_to_pl_dcg((e,(f,i;g),h),(e(a,b),(f(b,c),i(c,d);g(b,d)),h(d,e)),a,e),xtl_to_pl_dcg(A,B,i,o),B==dcg_call(A,i,o),xtl_to_pl_dcg({A},C,i,o),C==(call(A),i=o).
-test xtl_to_pl_dcg_regression:-A=(c_declaration(declare(B,C,D))-->c_type(C),[symbol(B)],([operator(=)],c_value(E),!,{D=value(E)};{D=none}),[operator(;)]),xtl_to_pl_declaration(A,F),F=(c_declaration(declare(G,H,I),J,K):-c_type(H,J,L),append([symbol(G)],M,L),(append([operator(=)],N,M),c_value(O,N,P),(!,P=Q),I=value(O),Q=R;I=none,M=R),append([operator(;)],S,R)).
+test xtl_to_pl_dcg_regression:-A=(c_declaration(declare(B,C,D))-->c_type(C),[symbol(B)],([operator(=)],c_value(E),!,{D=value(E)};{D=none}),[operator(;)]),xtl_to_pl_declaration(A,[F]),F=(c_declaration(declare(G,H,I),J,K):-c_type(H,J,L),append([symbol(G)],M,L),(append([operator(=)],N,M),c_value(O,N,P),(!,P=Q),I=value(O),Q=R;I=none,M=R),append([operator(;)],S,R)).
 error_unless(A,B):-call(A),!.
 error_unless(A,B):-throw(error(B)).
 error_unless(A):-error_unless(A,goal_failed(A)).
