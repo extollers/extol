@@ -4,7 +4,8 @@
   - ☑ a Prolog parser in Prolog that can parse itself
   - ☑ a Prolog generator for the parsed declaration
   - ☑ runtime type checking
-  - → stack traces
+  - → explicit import
+  - □ stack traces
   - □ compile-time type checking
   - □ proper AST instead of raw Prolog terms
   - □ custom prelude to wrap Prolog predicates

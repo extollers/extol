@@ -930,7 +930,9 @@ prolog xtl_to_pl_declaration(prolog((HeadXTL :- GoalXTL)), [(HeadPL :- GoalPL)])
     xtl_to_pl_goal(Goal, GoalPL),
     numbervars(HeadPL-GoalPL).
 
-prolog xtl_to_pl_declaration((test T), [test T]) :- !, numbervars(T).
+prolog xtl_to_pl_declaration((test XTL), [test PL]) :- !,
+    xtl_to_pl_goal(XTL, PL),
+    numbervars(PL).
 
 prolog xtl_to_pl_declaration(prolog((N --> L)), [(NPL :- LPL)]) :- !,
      N =... [F|A],
@@ -949,8 +951,6 @@ prolog xtl_to_pl_declaration((Pred: Defs), Decls) :- !,
       xtl_contract_to_pl(Pred, InnerName, Contract, OuterDecls),
       append(OuterDecls, InnerDecls, Decls)
     ; maplist(xtl_def_to_pl(Pred), Xs, Decls)).
-
-%prolog xtl_to_pl_declaration(X, P) :- !, xtl_to_pl_declaration(prolog(X), P).
 
 prolog xtl_to_pl_declaration(X, _) :- !, throw(error(unknown_declaration(X))).
 
