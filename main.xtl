@@ -116,12 +116,12 @@ assert(G) :- throw(assert_failed(G)).
 
 %% Streams
 
-read_bytes(Stream, Bytes) expects ground(Stream).
-read_bytes(Stream, Bytes) ensures bytes(Bytes).
-read_bytes(Stream, []) :- at_end_of_stream(Stream), !.
-read_bytes(Stream, [X | Xs]) :-
-    get_byte(Stream, X),
-    read_bytes(Stream, Xs).
+pred read_bytes:
+contract((Stream, Bytes), ground(Stream), bytes(Bytes)),
+((Stream, []): at_end_of_stream(Stream), !),
+((Stream, [X | Xs]):
+ get_byte(Stream, X),
+ '__contract_free_read_bytes'(Stream, Xs)).
 
 % write_bytes(Stream, Bytes) expects ground(Stream), current_stream(Stream), bytes(Bytes).
 write_bytes(_, []) :- true.
@@ -244,8 +244,8 @@ append([X | Xs], L) :-
     append(X, LL, L).
 
 comma_list(Var, [Var]) :- var(Var), !.
-comma_list((X, XCs), [X | Xs]) :- !, comma_list(XCs, Xs).
-comma_list(X, [X]) :- true.
+comma_list((X, XCs), [X | Xs]) :- !, comma_list(XCs, Xs), !.
+comma_list(X, [X]) :- !.
 
 pred separate:
   ((P, [], [], []): true),
@@ -927,14 +927,14 @@ xtl_to_pl_declaration((_ ensures _), []) :- !. % TODO
 xtl_to_pl_declaration((_ dcg_ensures _), []) :- !. % TODO
 
 xtl_to_pl_declaration((Pred: Defs), Decls) :- !,
-    tc comma_list(Defs, Xs),
-    ( tc xtl_def_contract(Xs, Contract, Rest),
+    comma_list(Defs, Xs),
+    ( xtl_def_contract(Xs, Contract, Rest),
       Pred =... [Type, Name],
-      tc atom_concat('__contract_free_', Name, InnerName),
+      atom_concat('__contract_free_', Name, InnerName),
       Head =... [Type, InnerName],
-      tc maplist(xtl_def_to_pl(Head), Rest, InnerDecls),
-      tc xtl_contract_to_pl(Pred, InnerName, Contract, OuterDecls),
-      tc append(OuterDecls, InnerDecls, Decls)
+      maplist(xtl_def_to_pl(Head), Rest, InnerDecls),
+      xtl_contract_to_pl(Pred, InnerName, Contract, OuterDecls),
+      append(OuterDecls, InnerDecls, Decls)
     ; maplist(xtl_def_to_pl(Pred), Xs, Decls)).
 
 xtl_to_pl_declaration(X, _) :- !, throw(error(unknown_declaration(X))).

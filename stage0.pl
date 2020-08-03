@@ -32,9 +32,9 @@
 :-(assert(','(A,B)),','(assert(A),assert(B))).
 :-(assert(A),','(call(A),!)).
 :-(assert(A),throw(assert_failed(A))).
-:-(read_bytes(A,B),','(assert(ground(A)),false)).
-:-(read_bytes(A,[]),','(at_end_of_stream(A),!)).
-:-(read_bytes(A,'.'(B,C)),','(get_byte(A,B),read_bytes(A,C))).
+:-(read_bytes(A,B),','(assert(ground(A)),','('__contract_free_read_bytes'(A,B),assert(bytes(B))))).
+:-('__contract_free_read_bytes'(A,[]),','(at_end_of_stream(A),!)).
+:-('__contract_free_read_bytes'(A,'.'(B,C)),','(get_byte(A,B),'__contract_free_read_bytes'(A,C))).
 :-(write_bytes(A,[]),true).
 :-(write_bytes(A,'.'(B,C)),','(put_byte(A,B),write_bytes(A,C))).
 :-(read_file(A,B),','(assert(atom(A)),false)).
@@ -76,8 +76,8 @@ test(:-(test_c,','(read_file('test.c',A),','(!,','(c_pp([],B,A,[]),','(!,c_top_l
 :-(append([],[]),true).
 :-(append('.'(A,B),C),','(append(B,D),append(A,D,C))).
 :-(comma_list(A,'.'(A,[])),','(var(A),!)).
-:-(comma_list(','(A,B),'.'(A,C)),','(!,comma_list(B,C))).
-:-(comma_list(A,'.'(A,[])),true).
+:-(comma_list(','(A,B),'.'(A,C)),','(!,','(comma_list(B,C),!))).
+:-(comma_list(A,'.'(A,[])),!).
 :-(separate(A,[],[],[]),true).
 :-(separate(A,'.'(B,C),'.'(B,D),E),','(call(A,B),','(!,separate(C,D,E)))).
 :-(separate(A,'.'(B,C),D,'.'(B,E)),separate(C,D,E)).
@@ -319,7 +319,7 @@ test(:-(parse_self,','(read_file('main.xtl',A),','(!,xtl_top_level(B,A,[]))))).
 :-(xtl_to_pl_declaration(dcg_expects(A,B),'.'(:-(C,','(assert(','(D,E)),false)),[])),','(!,','(copy_term(-(A,B),-(F,G)),','(=...(F,H),','(append(H,'.'(I,'.'(J,[])),K),','(=...(C,K),','(xtl_to_pl_goal(G,E),','(=(D,','(list_or_partial_list(I),list_or_partial_list(J))),numbervars(-(-(C,E),D)))))))))).
 :-(xtl_to_pl_declaration(ensures(A,B),[]),!).
 :-(xtl_to_pl_declaration(dcg_ensures(A,B),[]),!).
-:-(xtl_to_pl_declaration(:(A,B),C),','(!,','(tc(comma_list(B,D)),;(','(tc(xtl_def_contract(D,E,F)),','(=...(A,'.'(G,'.'(H,[]))),','(tc(atom_concat('__contract_free_',H,I)),','(=...(J,'.'(G,'.'(I,[]))),','(tc(maplist(xtl_def_to_pl(J),F,K)),','(tc(xtl_contract_to_pl(A,I,E,L)),tc(append(L,K,C)))))))),maplist(xtl_def_to_pl(A),D,C))))).
+:-(xtl_to_pl_declaration(:(A,B),C),','(!,','(comma_list(B,D),;(','(xtl_def_contract(D,E,F),','(=...(A,'.'(G,'.'(H,[]))),','(atom_concat('__contract_free_',H,I),','(=...(J,'.'(G,'.'(I,[]))),','(maplist(xtl_def_to_pl(J),F,K),','(xtl_contract_to_pl(A,I,E,L),append(L,K,C))))))),maplist(xtl_def_to_pl(A),D,C))))).
 :-(xtl_to_pl_declaration(A,B),','(!,throw(error(unknown_declaration(A))))).
 test(:-(xtl_to_pl_declaration,','(xtl_to_pl_declaration(:(pred(odd),','(:(0,false),','(:(1,true),:(A,','(is(B,-(A,2)),odd(B)))))),C),','(=(C,'.'(:-(odd(0),false),'.'(:-(odd(1),true),'.'(:-(odd(D),','(is(E,-(D,2)),odd(E))),[])))),','(xtl_to_pl_declaration(:(dcg(f),:(x,'.'(x,[]))),F),','(=(F,'.'(:-(f(x,G,H),append('.'(x,[]),H,G)),[])),','(xtl_to_pl_declaration(:(pred(f),','(contract(a,b,c),:(d,e))),I),=(I,'.'(:-(f(a),','(assert(b),','('__contract_free_f'(a),assert(c)))),'.'(:-('__contract_free_f'(d),e),[])))))))))).
 :-(xtl_def_contract('.'(A,B),A,B),=(A,contract(C,D,E))).
