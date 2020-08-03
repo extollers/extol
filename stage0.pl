@@ -82,7 +82,9 @@ test(:-(test_c,','(read_file('test.c',A),','(!,','(c_pp([],B,A,[]),','(!,c_top_l
 :-(append('.'(A,B),C),','(append(B,D),append(A,D,C))).
 :-(comma_list(A,'.'(A,[])),','(var(A),!)).
 :-(comma_list(','(A,B),'.'(A,C)),','(!,','(comma_list(B,C),!))).
+:-(comma_list('()',[]),!).
 :-(comma_list(A,'.'(A,[])),!).
+test(:-(comma_list,','(comma_list('()',[]),','(comma_list(1,'.'(1,[])),','(comma_list(','(1,2),'.'(1,'.'(2,[]))),','(comma_list(','(1,','(2,3)),'.'(1,'.'(2,'.'(3,[])))),','(comma_list(A,'.'(A,[])),comma_list(','(1,','(2,A)),'.'(1,'.'(2,'.'(A,[]))))))))))).
 :-(separate(A,[],[],[]),true).
 :-(separate(A,'.'(B,C),'.'(B,D),E),','(call(A,B),','(!,separate(C,D,E)))).
 :-(separate(A,'.'(B,C),D,'.'(B,E)),separate(C,D,E)).
@@ -244,12 +246,13 @@ test(:-(xtl_atom,','(xtl_atom(a,'.'(39,'.'(97,'.'(39,[]))),[]),','(xtl_atom(+,'.
 :-(xtl_expression(A,B,C),xtl_expression(1201,A,B,C)).
 :-(xtl_expression(A,B,C,D),','(assert(number(A)),','('__contract_free_xtl_expression'(A,B,C,D),assert(true)))).
 :-('__contract_free_xtl_expression'(A,B,C,D),xtl_expression(none,A,B,C,D)).
-test(:-(xtl_expression,','(xtl_expression(1,'.'(49,[]),[]),','(xtl_expression(a,'.'(97,[]),[]),','(xtl_expression(+(a,b),'.'(97,'.'(32,'.'(43,'.'(32,'.'(98,[]))))),[]),','(xtl_expression(+(a,*(b,c)),'.'(97,'.'(32,'.'(43,'.'(32,'.'(98,'.'(32,'.'(42,'.'(32,'.'(99,[]))))))))),[]),','(xtl_expression(+(*(a,b),c),'.'(97,'.'(32,'.'(42,'.'(32,'.'(98,'.'(32,'.'(43,'.'(32,'.'(99,[]))))))))),[]),','(xtl_expression(*(-(a),b),'.'(45,'.'(97,'.'(32,'.'(42,'.'(32,'.'(98,[])))))),[]),xtl_expression(:-(*(a,b)),'.'(58,'.'(45,'.'(32,'.'(97,'.'(32,'.'(42,'.'(32,'.'(98,[])))))))),[]))))))))).
+test(:-(xtl_expression,','(xtl_expression(1,'.'(49,[]),[]),','(xtl_expression(a,'.'(97,[]),[]),','(xtl_expression(+(a,b),'.'(97,'.'(32,'.'(43,'.'(32,'.'(98,[]))))),[]),','(xtl_expression(+(a,*(b,c)),'.'(97,'.'(32,'.'(43,'.'(32,'.'(98,'.'(32,'.'(42,'.'(32,'.'(99,[]))))))))),[]),','(xtl_expression(+(*(a,b),c),'.'(97,'.'(32,'.'(42,'.'(32,'.'(98,'.'(32,'.'(43,'.'(32,'.'(99,[]))))))))),[]),','(xtl_expression(*(-(a),b),'.'(45,'.'(97,'.'(32,'.'(42,'.'(32,'.'(98,[])))))),[]),','(xtl_expression(:-(*(a,b)),'.'(58,'.'(45,'.'(32,'.'(97,'.'(32,'.'(42,'.'(32,'.'(98,[])))))))),[]),xtl_expression('()','.'(40,'.'(32,'.'(41,[]))),[])))))))))).
 test(:-(comma_expr,xtl_expression(:-(p,','(a,b)),'.'(112,'.'(32,'.'(58,'.'(45,'.'(32,'.'(97,'.'(44,'.'(32,'.'(98,[]))))))))),[]))).
 :-(xtl_regular_term(A,B,C),','(append('.'(48,'.'(39,[])),D,B),','(','(!,=(D,E)),','(require(xtl_string_char(A),E,F),xtl_skipwhite(F,C))))).
 :-(xtl_regular_term(A,B,C),','(many1(digit,D,B,E),','(','(!,=(E,F)),','(','(foldl(add_digit,0,D,A),=(F,G)),xtl_skipwhite(G,C))))).
 :-(xtl_regular_term(A,B,C),','(append('.'(34,[]),D,B),','(','(!,=(D,E)),','(require(many(xtl_string_char,A),E,F),','(require('.'(34,[]),F,G),xtl_skipwhite(G,C)))))).
 :-(xtl_regular_term(A,B,C),','(xtl_atom(D,B,E),','(','(!,=(E,F)),;(','(xtl_token('.'(40,[]),F,G),','(','(!,=(G,H)),','(xtl_comma_separated(I,[],xtl_token('.'(41,[])),H,J),','(=..(A,'.'(D,I)),=(J,C))))),','(xtl_skipwhite(F,K),','(=(A,D),=(K,C))))))).
+:-(xtl_regular_term(A,B,C),','(xtl_token('.'(40,[]),B,D),','(xtl_token('.'(41,[]),D,E),','(!,=(E,C))))).
 :-(xtl_regular_term(A,B,C),','(xtl_token('.'(40,[]),B,D),','(xtl_expression(A,D,E),require(xtl_token('.'(41,[])),E,C)))).
 :-(xtl_regular_term({}(A),B,C),','(xtl_token('.'(123,[]),B,D),','(xtl_expression(A,D,E),require(xtl_token('.'(125,[])),E,C)))).
 :-(xtl_regular_term(A,B,C),','(xtl_token('.'(91,[]),B,D),','(xtl_comma_separated(A,E,;(','(xtl_token('.'(93,[])),{}(=(E,[]))),','(xtl_token('.'(124,[])),','(xtl_expression(E),xtl_token('.'(93,[]))))),D,F),','(!,=(F,C))))).
@@ -307,6 +310,7 @@ test(:-(xtl_regular_term,','(xtl_regular_term(123,'.'(49,'.'(50,'.'(51,[]))),[])
 :-(xtl_op(200,fy,+),true).
 :-(xtl_op(200,fy,-),true).
 :-(xtl_op(1200,fy,test),true).
+:-(xtl_op(1200,fy,prolog),true).
 :-(xtl_op(999,fx,tc),true).
 :-(xtl_op(700,xfx,=...),true).
 :-(xtl_op(1200,xfx,:),true).
@@ -316,10 +320,11 @@ test(:-(xtl_regular_term,','(xtl_regular_term(123,'.'(49,'.'(50,'.'(51,[]))),[])
 :-('__contract_free_=...'(A,B),=..(A,B)).
 test(:-(parse_self,','(read_file('main.xtl',A),','(!,xtl_top_level(B,A,[]))))).
 :-(xtl_to_pl_toplevel(A,B),','(maplist(must(xtl_to_pl_declaration),A,C),','(append(C,D),append('.'(:-(set_prolog_flag(singleton_warning,off)),'.'(:-(discontiguous(/(test,1))),'.'(:-(initialization(;(main,','(write('error: unexpected failure in main'),','(nl,halt(1)))))),[]))),D,B)))).
-:-(xtl_to_pl_declaration(:-(A,B),'.'(:-(C,D),[])),','(!,','(copy_term(-(A,B),-(C,E)),','(xtl_to_pl_goal(E,D),numbervars(-(C,D)))))).
+:-(xtl_to_pl_declaration(prolog(:-(A,B)),'.'(:-(C,D),[])),','(!,','(copy_term(-(A,B),-(C,E)),','(xtl_to_pl_goal(E,D),numbervars(-(C,D)))))).
 :-(xtl_to_pl_declaration(test(A),'.'(test(A),[])),','(!,numbervars(A))).
-:-(xtl_to_pl_declaration(-->(A,B),'.'(:-(C,D),[])),','(!,','(=...(A,'.'(E,F)),','(append(F,'.'(G,'.'(H,[])),I),','(=...(C,'.'(E,I)),','(xtl_to_pl_dcg(B,D,G,H),numbervars(-(C,D)))))))).
+:-(xtl_to_pl_declaration(prolog(-->(A,B)),'.'(:-(C,D),[])),','(!,','(=...(A,'.'(E,F)),','(append(F,'.'(G,'.'(H,[])),I),','(=...(C,'.'(E,I)),','(xtl_to_pl_dcg(B,D,G,H),numbervars(-(C,D)))))))).
 :-(xtl_to_pl_declaration(:(A,B),C),','(!,','(comma_list(B,D),;(','(xtl_def_contract(D,E,F),','(=...(A,'.'(G,'.'(H,[]))),','(atom_concat('__contract_free_',H,I),','(=...(J,'.'(G,'.'(I,[]))),','(maplist(xtl_def_to_pl(J),F,K),','(xtl_contract_to_pl(A,I,E,L),append(L,K,C))))))),maplist(xtl_def_to_pl(A),D,C))))).
+:-(xtl_to_pl_declaration(A,B),','(!,xtl_to_pl_declaration(prolog(A),B))).
 :-(xtl_to_pl_declaration(A,B),','(!,throw(error(unknown_declaration(A))))).
 test(:-(xtl_to_pl_declaration,','(xtl_to_pl_declaration(:(pred(odd),','(:(0,false),','(:(1,true),:(A,','(is(B,-(A,2)),odd(B)))))),C),','(=(C,'.'(:-(odd(0),false),'.'(:-(odd(1),true),'.'(:-(odd(D),','(is(E,-(D,2)),odd(E))),[])))),','(xtl_to_pl_declaration(:(dcg(f),:(x,'.'(x,[]))),F),','(=(F,'.'(:-(f(x,G,H),append('.'(x,[]),H,G)),[])),','(xtl_to_pl_declaration(:(pred(f),','(contract(a,b,c),:(d,e))),I),','(=(I,'.'(:-(f(a),','(assert(b),','('__contract_free_f'(a),assert(c)))),'.'(:-('__contract_free_f'(d),e),[]))),','(xtl_to_pl_declaration(:(dcg(f),','(contract(a,b,c),:(d,e))),J),=(J,'.'(:-(f(a,K,L),','(assert(b),','('__contract_free_f'(a,K,L),assert(c)))),'.'(:-('__contract_free_f'(d,K,L),e(K,L)),[])))))))))))).
 :-(xtl_def_contract('.'(A,B),A,B),=(A,contract(C,D,E))).
@@ -342,7 +347,7 @@ test(:-(xtl_to_pl_declaration,','(xtl_to_pl_declaration(:(pred(odd),','(:(0,fals
 :-(xtl_to_pl_dcg(A,B,C,D),','(!,','(=...(A,E),','(append(E,'.'(C,'.'(D,[])),F),=...(B,F))))).
 :-(xtl_to_pl_dcg(A,B,C,D),throw(error(xtl_to_pl_dcg,A))).
 test(:-(xtl_to_pl_dcg,','(xtl_to_pl_dcg(','(;(f,g),h),','(;(f(a,b),g(a,b)),h(b,c)),a,c),','(xtl_to_pl_dcg(','(e,','(;(','(f,i),g),h)),','(e(a,b),','(;(','(f(b,c),i(c,d)),g(b,d)),h(d,e))),a,e),','(xtl_to_pl_dcg(A,B,i,o),','(==(B,dcg_call(A,i,o)),','(xtl_to_pl_dcg({}(A),C,i,o),==(C,','(call(A),=(i,o)))))))))).
-test(:-(xtl_to_pl_dcg_regression,','(=(A,-->(c_declaration(declare(B,C,D)),','(c_type(C),','('.'(symbol(B),[]),','(;(','('.'(operator(=),[]),','(c_value(E),','(!,{}(=(D,value(E)))))),{}(=(D,none))),'.'(operator(;),[])))))),','(xtl_to_pl_declaration(A,'.'(F,[])),=(F,:-(c_declaration(declare(G,H,I),J,K),','(c_type(H,J,L),','(append('.'(symbol(G),[]),M,L),','(;(','(append('.'(operator(=),[]),N,M),','(c_value(O,N,P),','(','(!,=(P,Q)),','(=(I,value(O)),=(Q,R))))),','(=(I,none),=(M,R))),append('.'(operator(;),[]),S,R)))))))))).
+test(:-(xtl_to_pl_dcg_regression,','(=(A,prolog(-->(c_declaration(declare(B,C,D)),','(c_type(C),','('.'(symbol(B),[]),','(;(','('.'(operator(=),[]),','(c_value(E),','(!,{}(=(D,value(E)))))),{}(=(D,none))),'.'(operator(;),[]))))))),','(xtl_to_pl_declaration(A,'.'(F,[])),=(F,:-(c_declaration(declare(G,H,I),J,K),','(c_type(H,J,L),','(append('.'(symbol(G),[]),M,L),','(;(','(append('.'(operator(=),[]),N,M),','(c_value(O,N,P),','(','(!,=(P,Q)),','(=(I,value(O)),=(Q,R))))),','(=(I,none),=(M,R))),append('.'(operator(;),[]),S,R)))))))))).
 :-(xtl_contract_to_pl(pred(A),B,contract(C,D,E),'.'(F,[])),','(comma_list(C,G),','(=...(H,'.'(A,G)),','(xtl_to_pl_goal(D,I),','(xtl_to_pl_goal(E,J),','(=...(K,'.'(B,G)),','(=(L,:-(H,','(assert(D),','(K,assert(E))))),','(copy_term(L,F),numbervars(F))))))))).
 :-(xtl_contract_to_pl(dcg(A),B,contract(C,D,E),F),','(comma_list(C,G),','(append(G,'.'(H,'.'(I,[])),J),','(comma_list(K,J),xtl_contract_to_pl(pred(A),B,contract(K,D,E),F))))).
 :-(error_unless(A,B),','(call(A),!)).

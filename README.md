@@ -3,7 +3,8 @@
 - a bootstrapped high-level declarative language (code name Extol)
   - ☑ a Prolog parser in Prolog that can parse itself
   - ☑ a Prolog generator for the parsed declaration
-  - → runtime type checking
+  - ☑ runtime type checking
+  - → stack traces
   - □ compile-time type checking
   - □ proper AST instead of raw Prolog terms
   - □ custom prelude to wrap Prolog predicates

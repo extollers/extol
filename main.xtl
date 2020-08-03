@@ -47,19 +47,19 @@ pred tc: (F:
           undo(t(redo(F))),
           t(exit(F))).
 
-tc(F) -->
+dcg tc: ((F):
     undo(t(failed(F))),
     t(enter(F)),
     ticall(F),
     undo(t(redo(F))),
-    t(exit(F)).
+    t(exit(F))).
 
-tc(F, X) -->
+dcg tc: ((F, X):
     undo(t(failed(F))),
     t(enter(F)),
     ticall(F, X),
     undo(t(redo(F))),
-    t(exit(F)).
+    t(exit(F))).
 
 % Trace indent
 
@@ -259,7 +259,16 @@ append([X | Xs], L) :-
 
 comma_list(Var, [Var]) :- var(Var), !.
 comma_list((X, XCs), [X | Xs]) :- !, comma_list(XCs, Xs), !.
+comma_list('()', []) :- !.
 comma_list(X, [X]) :- !.
+
+test comma_list :-
+    comma_list('()', []),
+    comma_list((1), [1]),
+    comma_list((1,2), [1,2]),
+    comma_list((1,2,3), [1,2,3]),
+    comma_list(X, [X]),
+    comma_list((1,2,X), [1,2,X]).
 
 pred separate:
   ((P, [], [], []): true),
@@ -736,7 +745,8 @@ test xtl_expression :-
     xtl_expression(a + (b * c), "a + b * c", []),
     xtl_expression((a * b) + c, "a * b + c", []),
     xtl_expression((-a) * b, "-a * b", []),
-    xtl_expression((:- (a * b)), ":- a * b", []).
+    xtl_expression((:- (a * b)), ":- a * b", []),
+    xtl_expression('()', "( )", []).
 
 test comma_expr :-
     xtl_expression((p :- (a, b)), "p :- a, b", []).
@@ -754,6 +764,9 @@ xtl_regular_term(Term) -->
       { Term =.. [Atom | Args] }
     ; xtl_skipwhite,
       { Term = Atom }).
+xtl_regular_term(Term) -->
+    xtl_token("("),
+    xtl_token(")"), !.
 xtl_regular_term(Term) -->
     xtl_token("("),
     xtl_expression(Term),
@@ -884,6 +897,7 @@ xtl_op(200, fy, '+') :- true.
 xtl_op(200, fy, '-') :- true.
 
 xtl_op(1200, fy, test) :- true.
+xtl_op(1200, fy, prolog) :- true.
 xtl_op(999, fx, tc) :- true.
 xtl_op(700, xfx, '=...') :- true.
 xtl_op(1200, xfx, ':') :- true.
@@ -910,14 +924,14 @@ xtl_to_pl_toplevel(XTL, PL) :-
               ], FlatDeclsPL, PL).
 
 % xtl_to_pl_declaration(XTL, PL) :- t(to_pl_declaration(XTL)), false.
-xtl_to_pl_declaration((HeadXTL :- GoalXTL), [(HeadPL :- GoalPL)]) :- !,
+xtl_to_pl_declaration(prolog((HeadXTL :- GoalXTL)), [(HeadPL :- GoalPL)]) :- !,
     copy_term(HeadXTL-GoalXTL, HeadPL-Goal),
     xtl_to_pl_goal(Goal, GoalPL),
     numbervars(HeadPL-GoalPL).
 
 xtl_to_pl_declaration((test T), [test T]) :- !, numbervars(T).
 
-xtl_to_pl_declaration((N --> L), [(NPL :- LPL)]) :- !,
+xtl_to_pl_declaration(prolog((N --> L)), [(NPL :- LPL)]) :- !,
      N =... [F|A],
      append(A, [I, O], AIO),
      NPL =... [F|AIO],
@@ -934,6 +948,8 @@ xtl_to_pl_declaration((Pred: Defs), Decls) :- !,
       xtl_contract_to_pl(Pred, InnerName, Contract, OuterDecls),
       append(OuterDecls, InnerDecls, Decls)
     ; maplist(xtl_def_to_pl(Pred), Xs, Decls)).
+
+xtl_to_pl_declaration(X, P) :- !, xtl_to_pl_declaration(prolog(X), P).
 
 xtl_to_pl_declaration(X, _) :- !, throw(error(unknown_declaration(X))).
 
@@ -1031,7 +1047,7 @@ test xtl_to_pl_dcg :-
 
 test xtl_to_pl_dcg_regression :-
     XTL = (
-        c_declaration(declare(Name, Type, Value)) -->
+        prolog((c_declaration(declare(Name, Type, Value)) -->
             c_type(Type),
             [symbol(Name)],
             ( [operator('=')],
@@ -1039,7 +1055,7 @@ test xtl_to_pl_dcg_regression :-
               !,
               { Value = value(Assign) }
             ; { Value = none } ),
-            [operator(';')]),
+            [operator(';')]))),
     xtl_to_pl_declaration(XTL, [PL]),
     PL = (c_declaration(declare(A,B,C),D,E) :-
               c_type(B,D,F),
