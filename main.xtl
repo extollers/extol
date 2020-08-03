@@ -199,23 +199,27 @@ dcg many:
 ((P, [X | Xs]): call(P, X), many(P, Xs), !),
 ((_, []): []).
 
-many1(Predicate, List) expects callable(Predicate), list_or_partial_list(List).
-many1(Predicate, List) ensures list(List).
-many1(P, [X | Xs]) --> call(P, X), !, many(P, Xs).
+dcg many1:
+contract((Predicate, List), (callable(Predicate), list_or_partial_list(List)), list(List)),
+((P, [X | Xs]): call(P, X), !, many(P, Xs)).
 
-eof(In, Out) expects list_or_partial_list(In), list_or_partial_list(Out).
-eof([], []) :- true.
+pred eof:
+contract((In, Out), (list_or_partial_list(In), list_or_partial_list(Out)), true),
+(([], []): true).
 
-eof(Rest, In, Out) expects list_or_partial_list(In), list_or_partial_list(Out), list_or_partial_list(Rest).
-peek(Rest, Rest, Rest) :- true.
+pred peek:
+contract((Rest, In, Out), (list_or_partial_list(In), list_or_partial_list(Out), list_or_partial_list(Rest)), true),
+((Rest, Rest, Rest) : true).
 
-alpha(C) dcg_ensures number(C).
-alpha(C) --> [C], { member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ") }.
+dcg alpha:
+contract((C), true, number(C)),
+((C): [C], { member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ") }).
 
-digit(D) dcg_ensures number(D).
-digit(D) -->
+dcg digit:
+contract((D), true, number(D)),
+((D):
     [C],
-    { member(C - D, [0'0 - 0, 0'1 - 1, 0'2 - 2, 0'3 - 3, 0'4 - 4, 0'5 - 5, 0'6 - 6, 0'7 - 7, 0'8 - 8, 0'9 - 9]) }.
+    { member(C - D, [0'0 - 0, 0'1 - 1, 0'2 - 2, 0'3 - 3, 0'4 - 4, 0'5 - 5, 0'6 - 6, 0'7 - 7, 0'8 - 8, 0'9 - 9]) }).
 
 dcg_call(Var) --> { var(Var), !, fail }.
 dcg_call([]) --> !, [].
@@ -243,10 +247,10 @@ try(N, Xs, Rest) :- catch(dcg_call(N, Xs, Rest), parse_failed(_, _), Failed=true
 
 %% Lists
 
-foldl(F, Z, L, RR) expects callable(F), list_or_partial_list(L).
-foldl(F, Z, L, RR) ensures list(L).
-foldl(_, R, [], R) :- true.
-foldl(F, Z, [X | Xs], RR) :- call(F, Z, X, R), foldl(F, R, Xs, RR).
+pred foldl:
+contract((F, Z, L, RR), (callable(F), list_or_partial_list(L)), list(L)),
+((_, R, [], R): true),
+((F, Z, [X | Xs], RR): call(F, Z, X, R), '__contract_free_foldl'(F, R, Xs, RR)).
 
 append([], []) :- true.
 append([X | Xs], L) :-
