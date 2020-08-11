@@ -4,9 +4,9 @@
 pred t: (X: write('trace: '), ti, writeq(X), nl).
 
 dcg t: (X:
-        write('trace: '), ti, writeq(X), write(', at: '),
-        peek(A), pretty_init(A, C), write(C),
-        nl, !).
+        {write('trace: '), ti, writeq(X), write(', at: ')},
+        peek(A), {pretty_init(A, C), write(C),
+        nl}, !).
 
 pred pretty_init: (A, C :
     copy_term(A, AA),
@@ -269,14 +269,6 @@ test comma_list :-
     comma_list((1,2,3), [1,2,3]),
     comma_list(X, [X]),
     comma_list((1,2,X), [1,2,X]).
-
-pred separate:
-  ((P, [], [], []): true),
-  ((P, [X | Xs], [X | As], Bs): call(P, X), !, separate(Xs, As, Bs)),
-  ((P, [X | Xs], As, [X | Bs]): separate(Xs, As, Bs)).
-
-test separate:
-  seperate(number, [1,a,2,b,c,3], [1,2,3], [a,b,c]).
 
 %% C preprocessor
 

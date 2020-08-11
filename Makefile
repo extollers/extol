@@ -1,6 +1,9 @@
 MAKEFLAGS += --no-builtin-rules --no-builtin-variables --warn-undefined-variables
 
-pl = LOCALSZ=102400 GLOBALSZ=1048576 gprolog --consult-file
+LOCALSZ=102400
+export LOCALSZ
+GLOBALSZ=1048576
+export GLOBALSZ
 
 fulltest: test1 test2 diff23
 
@@ -9,15 +12,18 @@ define make_stage
 diff$(2)$(1): stage$(2).pl stage$(1).pl
 	diff -U2 $$^
 
-test$(1): stage$(1).pl
-	$(pl) stage$(1).pl test
+test$(1): stage$(1)
+	./$$< test
 
-test$(1)-%: stage$(1).pl
-	$(pl) stage$(1).pl test $$*
+test$(1)-%: stage$(1)
+	./$$< test $$*
 
-stage$(1).pl: stage$(2).pl main.xtl
+stage$(1).pl: stage$(2) main.xtl
 	rm -f $$@
-	$(pl) $$< extoltoprolog main.xtl $$@
+	./$$< extoltoprolog main.xtl $$@
+
+stage$(2): stage$(2).pl
+	gplc $$< -o $$@
 
 $(1): stage$(1).pl
 
