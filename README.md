@@ -6,6 +6,7 @@
   - ☑ a Prolog parser in Prolog that can parse itself
   - ☑ a Prolog generator for the parsed declaration
   - ☑ runtime type checking
+  - ☑ repl
   - → explicit import
   - □ stack traces
   - □ compile-time type checking

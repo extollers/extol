@@ -1,2 +1,2 @@
 language = "polygott"
-run = "make BUILD=../build"
+run = "if [ $REPL_OWNER = five-nine ]; then echo '*** BUILDING ***'; make 2 && echo '*** RUNNING REPL ***' && ./build/stage2 repl; else make BUILD=../build; fi"
