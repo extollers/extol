@@ -9,7 +9,8 @@ prolog xtl_to_pl_toplevel(XTL, PL) :-
                   (:- initialization((main;write('error: unexpected failure in main'),nl,halt(1))))
               ], FlatDeclsPL, PL).
 
-% xtl_to_pl_declaration(XTL, PL) :- t(to_pl_declaration(XTL)), false.
+% prolog xtl_to_pl_declaration(XTL, PL) :- t(to_pl_declaration(XTL)), false.
+
 prolog xtl_to_pl_declaration(prolog((HeadXTL :- GoalXTL)), [(HeadPL :- GoalPL)]) :- !,
     copy_term(HeadXTL-GoalXTL, HeadPL-Goal),
     xtl_to_pl_goal(Goal, GoalPL),
@@ -25,6 +26,11 @@ prolog xtl_to_pl_declaration(prolog((N --> L)), [(NPL :- LPL)]) :- !,
      NPL =... [F|AIO],
      xtl_to_pl_dcg(L, LPL, I, O),
      numbervars(NPL-LPL).
+
+prolog xtl_to_pl_declaration((fun(Name) : Clauses), ClausesPL) :- !,
+    tc comma_list(Clauses, ClausesList),
+    tc maplist(xtl_to_pl_fun(Name), ClausesList, ClausesPL),
+    numbervars(ClausesPL).
 
 prolog xtl_to_pl_declaration((Pred: Defs), Decls) :- !,
     comma_list(Defs, Xs),
@@ -69,7 +75,19 @@ test xtl_to_pl_declaration :-
         ('__contract_free_f'(d,A,B) :- e(A,B))],
 
     xtl_to_pl_declaration((pred f: ((): g, h)), Res5),
-    Res5 = [(f :- g, h)].
+    Res5 = [(f :- g, h)],
+
+    xtl_to_pl_declaration((fun(fib) : ((0 : 1), (1 : 1), (N : fib(N - 1)   + fib(N - 2)))), Res6),
+    Res6 = [
+        (fib(0,1):-true),
+        (fib(1,1):-true),
+        (fib(A,B):-
+            -(A,1,C),
+            fib(C,D),
+            -(A,2,E),
+            fib(E,F),
+            +(D,F,B),
+            ())].
 
 pred xtl_def_contract: (([Contract|Rest], Contract, Rest): Contract = contract(_,_,_)).
 
@@ -175,3 +193,32 @@ prolog xtl_contract_to_pl(dcg(Name), InnerName, contract(Args, Expects, Ensures)
     append(ArgsList, [_,_], ArgsListIO),
     comma_list(ArgsIO, ArgsListIO),
     xtl_contract_to_pl(pred(Name), InnerName, contract(ArgsIO, Expects, Ensures), Result).
+
+pred xtl_to_pl_fun:
+    ((Name, (Args : Body), (HeadPL :- BodyPL)):
+        comma_list(Args, ArgsList),
+        append(ArgsList, [Result], ArgsPL),
+        HeadPL =... [Name | ArgsPL],
+        tc xtl_to_pl_funexpr(Result, Body, BodyListPL),
+        ( BodyListPL = [],
+          BodyPL = true
+        ; comma_list(BodyPL, BodyListPL))).
+
+pred xtl_to_pl_funexpr:
+    ((A,B,C): t(xtl_to_pl_funexpr(A,B,C)), fail),
+    ((Var, Var, []): var(Var), !),
+    ((Result, pred(Result, Goal), [PL]):
+        !, xtl_to_pl_goal(Goal, PL)),
+    ((Number, Number, []): number(Number), !),
+    ((Atom, Atom, []): atom(Atom), !),
+    ((Result, Functor, PL): tc compound(Functor), !,
+        tc Functor =... [Name | ListFun],
+        tc maplist(xtl_to_pl_funexpr, Results, ListFun, DepsPLs),
+        tc append(DepsPLs, DepsPL),
+        tc append(Results, [Result], ArgsPL),
+        tc FunctorPL =... [Name | ArgsPL],
+        append(DepsPL, [FunctorPL], PL)).
+
+test xtl_to_pl_funexpr :-
+    xtl_to_pl_funexpr(res, f(1,g(2,3)), X),
+    X = [g(2,3,A),f(1,A,res)].

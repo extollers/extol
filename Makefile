@@ -22,7 +22,7 @@ test$(1): $/stage$(1)
 test$(1)-%: $/stage$(1)
 	$$< test $$*
 
-$/stage$(1).pl: $/stage$(2) main.xtl
+$/stage$(1).pl: $/stage$(2) main.xtl lib/*.xtl
 	@rm -f $$@
 	$$< extoltoprolog main.xtl $$@
 

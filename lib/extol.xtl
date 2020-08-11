@@ -292,10 +292,11 @@ prolog xtl_op(1200, fy, test) :- true.
 prolog xtl_op(1200, fy, prolog) :- true.
 prolog xtl_op(999, fx, tc) :- true.
 prolog xtl_op(700, xfx, '=...') :- true.
-prolog xtl_op(1200, xfx, ':') :- true.
+prolog xtl_op(1200, xfy, ':') :- true.
 prolog xtl_op(1150, fy, dcg) :- true.
 prolog xtl_op(1150, fy, pred) :- true.
 prolog xtl_op(1150, fy, include) :- true.
+prolog xtl_op(1150, fy, fun) :- true.
 
 pred '=...':
 contract((F, A), (compound(F); atom(F); A = [G | _], atom(G)), true),
