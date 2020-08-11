@@ -1123,4 +1123,4 @@ pred xtl_repl:
 
 pred repl_write_result:
 (([]): true),
-(([(V-X) | Xs]): write(V), write(' = '), write(X), nl).
+(([(V-X) | Xs]): write(V), write(' = '), write(X), nl, repl_write_result(Xs)).

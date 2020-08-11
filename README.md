@@ -1,5 +1,20 @@
 [![Run on Repl.it](https://repl.it/badge/github/atnnn/extol)](https://repl.it/github/atnnn/extol)
 
+# Repl.it Programming Languages Jam
+
+[This Jam](https://blog.repl.it/langjam) is a great excuse for me to work on Extol again. I've created a team [here](https://repl.it/@Extollers). I plan to add:
+
+  - ☑ repl
+  - → explicit import
+  - □ stack traces
+  - □ compile-time type checking
+  - □ proper AST instead of raw Prolog terms
+  - □ custom prelude to wrap Prolog predicates
+  - □ functions and expressions
+  - □ anonymous predicates and lambdas
+  - □ first-class predicates and functions
+  - □ modules and namespaces
+
 # Inspiration
 
 - [Mercury](http://www.mercurylang.org/)
@@ -8,22 +23,11 @@
 - [Lean](https://leanprover.github.io/)
 - [Rosette](https://docs.racket-lang.org/rosette-guide/index.html)
 
-# Roadmap
+# Existing Features
 
-- a bootstrapped high-level declarative language (code name Extol)
-  - ☑ a Prolog parser in Prolog that can parse itself
-  - ☑ a Prolog generator for the parsed declaration
-  - ☑ runtime type checking
-  - ☑ repl
-  - → explicit import
-  - □ stack traces
-  - □ compile-time type checking
-  - □ proper AST instead of raw Prolog terms
-  - □ custom prelude to wrap Prolog predicates
-  - □ functions and expressions similar to Ciao's fsyntax
-  - □ anonymous predicates similar to Mercury
-  - □ first-class predicates and functions
-  - □ modules and namespaces
+- ☑ a Prolog parser in Prolog that can parse itself
+- ☑ a Prolog generator for the parsed declaration
+- ☑ runtime type checking
 
 (□ to do, → in progress, ☑ done)
 
