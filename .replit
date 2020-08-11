@@ -1,2 +1,2 @@
 language = "polygott"
-run = "make"
+run = "make BUILD=../build"
