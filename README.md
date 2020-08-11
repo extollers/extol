@@ -1,5 +1,12 @@
 [![Run on Repl.it](https://repl.it/badge/github/atnnn/extol)](https://repl.it/github/atnnn/extol)
 
+# Inspiration
+
+- [Mercury](http://www.mercurylang.org/)
+- [Rosette](https://docs.racket-lang.org/rosette-guide/index.html)
+- [Ciao](https://ciao-lang.org/)
+- [Picat](http://picat-lang.org/)
+
 # Roadmap
 
 - a bootstrapped high-level declarative language (code name Extol)

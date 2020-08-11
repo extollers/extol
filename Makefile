@@ -47,3 +47,5 @@ reboot: $/stage3.pl
 clean:
 	rm -f $/stage0.pl $/stage1.pl $/stage2.pl $/stage3.pl $/stage0 $/stage1 $/stage2
 
+repl: 2
+	$/stage2 repl
