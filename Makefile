@@ -33,7 +33,7 @@ $(1): $/stage$(1)
 
 endef
 
-$/stage0.pl: stage0.pl
+$/stage0.pl: bootstrap/stage0.pl
 	mkdir -p $/
 	cp $< $@
 
@@ -41,8 +41,9 @@ $(eval $(call make_stage,1,0))
 $(eval $(call make_stage,2,1))
 $(eval $(call make_stage,3,2))
 
-reboot: $/stage3.pl
-	cp $< stage0.pl
+reboot: 2
+	$/stage2 extoltoprolog main.xtl $/stage0.pl --slim
+	cp $/stage0.pl bootstrap/stage0.pl
 
 clean:
 	rm -f $/stage0.pl $/stage1.pl $/stage2.pl $/stage3.pl $/stage0 $/stage1 $/stage2

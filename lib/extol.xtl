@@ -301,6 +301,10 @@ pred '=...':
 contract((F, A), (compound(F); atom(F); A = [G | _], atom(G)), true),
 ((F, A) : F =.. A).
 
-test parse_self :-
-    read_file('main.xtl', Bytes), !,
-    xtl_top_level(_Decls, Bytes, []).
+% test parse_self :-
+%     read_file('main.xtl', Bytes), !,
+%     xtl_top_level(_Decls, Bytes, []).
+
+pred xtl_slim_declaration:
+(((test _ : _), []) : true),
+((Decl, Decl) : true).
