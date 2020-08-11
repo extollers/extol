@@ -1,0 +1,91 @@
+
+%% C preprocessor
+
+prolog c_pp(Env, Tokens) -->
+    c_pp_lines(Lines), eof, !,
+    { c_pp_eval(Env, Lines, Tokens, []) }.
+
+prolog c_pp_lines([]) --> eof, !.
+prolog c_pp_lines([Line | Lines]) --> c_pp_line(Line), !, c_pp_lines(Lines).
+
+prolog c_pp_line([]) --> c_pp_skipwhite, ("\n", ! ; eof), !.
+prolog c_pp_line([Token | Tokens]) --> c_pp_skipwhite, !, c_pp_token(Token), !, c_pp_line(Tokens).
+
+prolog c_pp_skipwhite --> c_pp_white, !.
+prolog c_pp_skipwhite --> [].
+
+prolog c_pp_white --> "//", !, c_pp_line_comment_.
+prolog c_pp_white --> "/*", !, c_pp_block_comment_, c_pp_skipwhite.
+prolog c_pp_white --> (" "; "\t"; "\r" ; "\\\r\n" ; "\\\n"), !, c_pp_skipwhite.
+
+prolog c_pp_line_comment_ --> (peek([0'\n | _]) ; eof), !.
+prolog c_pp_line_comment_ --> c_pp_white, !, c_pp_line_comment_.
+prolog c_pp_line_comment_ --> [_], !, c_pp_line_comment_.
+
+prolog c_pp_block_comment_ --> "*/", !.
+prolog c_pp_block_comment_ --> [_], c_pp_block_comment_.
+
+prolog c_pp_token(Token) --> (c_pp_operator(Token) ; c_pp_symbol(Token) ; c_pp_integer(Token)), !.
+
+prolog c_pp_operator(operator(Token), Next, Rest) :-
+    member(Op, [
+               "=",
+               "#", ";"
+    ]),
+    append(Op, Rest, Next),
+    atom_codes(Token, Op).
+
+prolog c_pp_symbol(symbol(Name)) --> c_pp_symbol_chars(Cs), { atom_codes(Name, Cs) }.
+
+prolog c_pp_symbol_chars([X | Xs]) --> c_pp_symbol_first(X), !, many(c_pp_symbol_char, Xs).
+
+prolog c_pp_symbol_first(C) --> alpha(C), !.
+prolog c_pp_symbol_first(0'_) --> "_".
+
+prolog c_pp_symbol_char(C) --> c_pp_symbol_first(C); [C], { member(C, "0123456789") }.
+
+prolog add_digit(N, D, R) :-
+    member(D, [0,1,2,3,4,5,6,7,8,9]),
+    ( var(N), N is R div D; true),
+    R is N * 10 + D.
+
+prolog c_pp_integer(integer(N)) -->
+    many1(digit, Ds), !,
+    { foldl(add_digit, 0, Ds, N) }.
+
+prolog c_pp_eval(_, []) --> eof, !.
+prolog c_pp_eval(EnvA, [Line | Lines]) -->
+    c_pp_eval_line(EnvA, EnvB, Line), !,
+    c_pp_eval(EnvB, Lines).
+
+prolog c_pp_eval_line(Env, [Name = Value | Env], [operator('#'), symbol('define'), symbol(Name) | Value]) --> !.
+prolog c_pp_eval_line(Env, Env, []) --> !.
+prolog c_pp_eval_line(Env, Env, [symbol(X) | Xs]) -->
+    { member(X = Ys, Env), !, append(Ys, Xs, Zs) },
+    c_pp_eval_line(Env, Env, Zs).
+prolog c_pp_eval_line(Env, Env, [X | Xs]) -->
+    [X],
+    c_pp_eval_line(Env, Env, Xs).
+
+%% C
+
+prolog c_top_level(Decls) --> many(c_declaration, Decls), eof.
+
+prolog c_declaration(declare(Name, Type, Value)) -->
+    c_type(Type),
+    [symbol(Name)],
+    ( [operator('=')],
+      c_value(Assign), !,
+      { Value = value(Assign) }
+    ; { Value = none } ),
+    [operator(';')].
+
+prolog c_type(Type) --> [symbol(Type)].
+
+prolog c_value(variable(Name)) --> [symbol(Name)].
+prolog c_value(integer(N)) --> [integer(N)].
+
+test 'test_c' :-
+    read_file('test.c', Bytes), !,
+    c_pp([], Tokens, Bytes, []), !,
+    c_top_level(_Decls, Tokens, []).

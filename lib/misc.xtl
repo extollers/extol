@@ -1,0 +1,52 @@
+
+% Call on undo
+
+prolog undo(_) :- true.
+prolog undo(G) :- call(G), fail.
+
+prolog undo(_, A, A) :- true.
+prolog undo(G, A, B) :- dcg_call(G, A, B), fail.
+
+%% Types
+
+prolog byte(Byte) :- number(Byte), Byte >= 0, Byte < 256.
+
+prolog bytes(Bytes) :- ground(Bytes), maplist(byte, Bytes).
+
+prolog assert((A, B)) :- assert(A), assert(B).
+prolog assert(G) :- G, !.
+prolog assert(G) :- throw(assert_failed(G)).
+
+%% Lists
+
+pred foldl:
+contract((F, Z, L, RR), (callable(F), list_or_partial_list(L)), list(L)),
+((_, R, [], R): true),
+((F, Z, [X | Xs], RR): call(F, Z, X, R), '__contract_free_foldl'(F, R, Xs, RR)).
+
+prolog append([], []) :- true.
+prolog append([X | Xs], L) :-
+    append(Xs, LL),
+    append(X, LL, L).
+
+prolog comma_list(Var, [Var]) :- var(Var), !.
+prolog comma_list((X, XCs), [X | Xs]) :- !, comma_list(XCs, Xs), !.
+prolog comma_list('()', []) :- !.
+prolog comma_list(X, [X]) :- !.
+
+test comma_list :-
+    comma_list('()', []),
+    comma_list((1), [1]),
+    comma_list((1,2), [1,2]),
+    comma_list((1,2,3), [1,2,3]),
+    comma_list(X, [X]),
+    comma_list((1,2,X), [1,2,X]).
+
+%%
+
+prolog error_unless(Goal, _) :-
+    call(Goal), !.
+prolog error_unless(_, Error) :-
+    throw(error(Error)).
+prolog error_unless(Goal) :-
+    error_unless(Goal, goal_failed(Goal)).

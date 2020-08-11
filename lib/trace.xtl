@@ -1,0 +1,96 @@
+% Trace
+
+pred t: (X: write('trace: '), ti, writeq(X), nl).
+
+dcg t: (X:
+        {write('trace: '), ti, writeq(X), write(', at: ')},
+        peek(A), {pretty_init(A, C), write(C),
+        nl}, !).
+
+pred pretty_init: (A, C :
+    copy_term(A, AA),
+    (length(B, 32), append(B, _, AA) ; B = AA), !,
+    prep_chars(B, Q, []),
+    length(Q, N),
+    (N < 10 -> append(Q, "<eof>", QQ) ; QQ = Q),
+    atom_codes(C, QQ)).
+
+dcg prep_chars:
+([]: []),
+([X | Xs]: prep_char(X), prep_chars(Xs)).
+
+dcg prep_char:
+(X: { var(X) }, !, "<?>"),
+(0'\n: !, "<nl>"),
+(0'\r: !, "<cr>"),
+(0'\t: !, "<tab>"),
+(0'<: !, "<lt>"),
+(X:
+ { ( \+integer(X) ; X < 32 ; X > 126), !,
+   open_output_codes_stream(S),
+   write(S, X),
+   close_output_codes_stream(S, C) },
+ "<", C, ">", !),
+(X: [X]).
+
+% Trace and fail
+pred tf: (X: t(X), fail).
+
+pred tf: (X, A, B: tf(X, A, B), fail).
+
+% Trace call
+pred tc: (F:
+          undo(t(failed(F))),
+          t(enter(F)),
+          ticall(F),
+          undo(t(redo(F))),
+          t(exit(F))).
+
+dcg tc: ((F):
+    undo(t(failed(F))),
+    t(enter(F)),
+    ticall(F),
+    undo(t(redo(F))),
+    t(exit(F))).
+
+dcg tc: ((F, X):
+    undo(t(failed(F))),
+    t(enter(F)),
+    ticall(F, X),
+    undo(t(redo(F))),
+    t(exit(F))).
+
+% Trace indent
+
+pred ti: (():
+    Pat = [0'|, 0' , 0'., 0' , 0'., 0'  | Pat],
+    g_read(tindent, I),
+    II is I * 2,
+    length(L, II),
+    append(L, _, Pat),
+    atom_codes(S, L),
+    write(S)).
+
+prolog ticall(G) :-
+    g_read(tindent, I),
+    II is I + 1,
+    g_assignb(tindent, II),
+    call(G),
+    g_assignb(tindent, I).
+
+prolog ticall(G, A, B) :-
+    g_read(tindent, I),
+    II is I + 1,
+    g_assignb(tindent, II),
+    dcg_call(G, A, B),
+    g_assignb(tindent, I).
+
+prolog ticall(G, X, A, B) :-
+    g_read(tindent, I),
+    II is I + 1,
+    g_assignb(tindent, II),
+    G =.. L,
+    append(L, [X], LL),
+    GX =.. LL,
+    dcg_call(GX, A, B),
+    g_assignb(tindent, I).

@@ -1,0 +1,177 @@
+%% Extol to Prolog
+
+prolog xtl_to_pl_toplevel(XTL, PL) :-
+    maplist(must(xtl_to_pl_declaration), XTL, DeclsPL),
+    append(DeclsPL, FlatDeclsPL),
+    append([
+                  (:- set_prolog_flag(singleton_warning, off)),
+                  (:- discontiguous('/'('test', 1))),
+                  (:- initialization((main;write('error: unexpected failure in main'),nl,halt(1))))
+              ], FlatDeclsPL, PL).
+
+% xtl_to_pl_declaration(XTL, PL) :- t(to_pl_declaration(XTL)), false.
+prolog xtl_to_pl_declaration(prolog((HeadXTL :- GoalXTL)), [(HeadPL :- GoalPL)]) :- !,
+    copy_term(HeadXTL-GoalXTL, HeadPL-Goal),
+    xtl_to_pl_goal(Goal, GoalPL),
+    numbervars(HeadPL-GoalPL).
+
+prolog xtl_to_pl_declaration((test XTL), [test PL]) :- !,
+    xtl_to_pl_goal(XTL, PL),
+    numbervars(PL).
+
+prolog xtl_to_pl_declaration(prolog((N --> L)), [(NPL :- LPL)]) :- !,
+     N =... [F|A],
+     append(A, [I, O], AIO),
+     NPL =... [F|AIO],
+     xtl_to_pl_dcg(L, LPL, I, O),
+     numbervars(NPL-LPL).
+
+prolog xtl_to_pl_declaration((Pred: Defs), Decls) :- !,
+    comma_list(Defs, Xs),
+    ( xtl_def_contract(Xs, Contract, Rest),
+      Pred =... [Type, Name],
+      atom_concat('__contract_free_', Name, InnerName),
+      Head =... [Type, InnerName],
+      maplist(xtl_def_to_pl(Head), Rest, InnerDecls),
+      xtl_contract_to_pl(Pred, InnerName, Contract, OuterDecls),
+      append(OuterDecls, InnerDecls, Decls)
+    ; maplist(xtl_def_to_pl(Pred), Xs, Decls)).
+
+prolog xtl_to_pl_declaration(X, _) :- !, throw(error(unknown_declaration(X))).
+
+test xtl_to_pl_declaration :-
+    xtl_to_pl_declaration(
+        (pred odd:
+         (0: false),
+         (1: true),
+         (N: M is N - 2, odd(M))),
+        Res1),
+    Res1 = [(odd(0) :- false),
+           (odd(1) :- true),
+           (odd(NN) :- MM is NN - 2, odd(MM))],
+
+    xtl_to_pl_declaration((dcg(f): (x: [x])), Res2),
+    Res2 = [(f(x,I,O) :- append([x],O,I))],
+
+    xtl_to_pl_declaration((pred f: contract(a, b, c), (d: e)), Res3),
+    Res3 = [
+        (f(a) :- assert(b),
+                 '__contract_free_f'(a),
+                 assert(c)),
+        ('__contract_free_f'(d) :- e)],
+
+    xtl_to_pl_declaration((dcg f: contract(a, b, c), (d: e)), Res4),
+    Res4 = [
+        (f(a,A,B) :-
+             assert(b),
+             '__contract_free_f'(a,A,B),
+             assert(c)),
+        ('__contract_free_f'(d,A,B) :- e(A,B))],
+
+    xtl_to_pl_declaration((pred f: ((): g, h)), Res5),
+    Res5 = [(f :- g, h)].
+
+pred xtl_def_contract: (([Contract|Rest], Contract, Rest): Contract = contract(_,_,_)).
+
+prolog xtl_def_to_pl(dcg(Pred), (Head: Body), (HeadPL :- GoalPL)) :-
+    copy_term(Head-Body, HeadVars-Goal),
+    comma_list(HeadVars, HeadArgs),
+    append(HeadArgs, [I,O], HeadIO),
+    HeadPL =.. [Pred | HeadIO],
+    xtl_to_pl_dcg(Goal, GoalPL, I, O),
+    numbervars(HeadPL-GoalPL).
+prolog xtl_def_to_pl(pred(Pred), (Head: Body), (HeadPL :- GoalPL)) :-
+    copy_term(Head-Body, HeadVars-Goal),
+    comma_list(HeadVars, HeadArgs),
+    HeadPL =.. [Pred | HeadArgs],
+    xtl_to_pl_goal(Goal, GoalPL),
+    numbervars(HeadPL-GoalPL).
+
+prolog xtl_to_pl_goal(Var, call(Var)) :-
+    var(Var), !.
+prolog xtl_to_pl_goal((A, B), (APL, BPL)) :- !,
+    xtl_to_pl_goal(A, APL),
+    xtl_to_pl_goal(B, BPL).
+prolog xtl_to_pl_goal((A; B), (APL; BPL)) :- !,
+    xtl_to_pl_goal(A, APL),
+    xtl_to_pl_goal(B, BPL).
+prolog xtl_to_pl_goal((A -> B ; C), (APL -> BPL ; CPL)) :- !,
+    xtl_to_pl_goal(A, APL),
+    xtl_to_pl_goal(B, BPL),
+    xtl_to_pl_goal(C, CPL).
+prolog xtl_to_pl_goal((A -> B), (APL -> BPL)) :- !,
+    xtl_to_pl_goal(A, APL),
+    xtl_to_pl_goal(B, BPL).
+prolog xtl_to_pl_goal('!', '!') :- !.
+prolog xtl_to_pl_goal(G, GPL) :-
+    G = GPL.
+
+prolog xtl_to_pl_dcg(Var, dcg_call(Var, I, O), I, O) :-
+    var(Var), !.
+prolog xtl_to_pl_dcg((A, B), (APL, BPL), I, O) :- !,
+    xtl_to_pl_dcg(A, APL, I, IO),
+    xtl_to_pl_dcg(B, BPL, IO, O).
+prolog xtl_to_pl_dcg((A; B), (APL; BPL), I, O) :- !,
+    xtl_to_pl_dcg(A, APL, I, O),
+    xtl_to_pl_dcg(B, BPL, I, O).
+prolog xtl_to_pl_dcg((!), (!, I=O), I, O) :- !.
+prolog xtl_to_pl_dcg([], (I=O), I, O) :- !.
+prolog xtl_to_pl_dcg([X|XS], append([X|XS], O, I), I, O) :- !.
+prolog xtl_to_pl_dcg({G}, (GPL, I=O), I, O) :- !,
+    xtl_to_pl_goal(G, GPL).
+prolog xtl_to_pl_dcg(F, C, I, O) :- !,
+    F =... L,
+    append(L, [I,O], LL),
+    C =... LL.
+prolog xtl_to_pl_dcg(D,_,_,_) :-
+    throw(error(xtl_to_pl_dcg, D)).
+
+test xtl_to_pl_dcg :-
+    xtl_to_pl_dcg(((f; g), h), ((f(a, b); g(a, b)), h(b, c)), a, c),
+    xtl_to_pl_dcg((e, (f, i; g), h), (e(a, b), (f(b, c), i(c, d); g(b, d)), h(d, e)), a, e),
+    xtl_to_pl_dcg(V, PL1, i, o),
+    PL1 == dcg_call(V, i, o),
+    xtl_to_pl_dcg({V}, PL2, i, o),
+    PL2 == (call(V), i = o).
+
+test xtl_to_pl_dcg_regression :-
+    XTL = (
+        prolog((c_declaration(declare(Name, Type, Value)) -->
+            c_type(Type),
+            [symbol(Name)],
+            ( [operator('=')],
+              c_value(Assign),
+              !,
+              { Value = value(Assign) }
+            ; { Value = none } ),
+            [operator(';')]))),
+    xtl_to_pl_declaration(XTL, [PL]),
+    PL = (c_declaration(declare(A,B,C),D,E) :-
+              c_type(B,D,F),
+              append([symbol(A)],G,F),
+              ( append([operator('=')], H, G),
+                c_value(I,H,J),
+                (!, J = K),
+                (C = value(I), K = L)
+              ; C = none,
+                G = L),
+              append([operator(';')], M, L)).
+
+prolog xtl_contract_to_pl(pred(Name), InnerName, contract(Args, Expects, Ensures), [DeclsPL]) :-
+    comma_list(Args, ArgsList),
+    Head =... [Name | ArgsList],
+    xtl_to_pl_goal(Expects, ExpectsPL),
+    xtl_to_pl_goal(Ensures, EnsuresPL),
+    Inner =... [InnerName | ArgsList],
+    Decls = (Head :-
+                 assert(Expects),
+                 Inner,
+                 assert(Ensures)),
+    copy_term(Decls, DeclsPL),
+    numbervars(DeclsPL).
+
+prolog xtl_contract_to_pl(dcg(Name), InnerName, contract(Args, Expects, Ensures), Result) :-
+    comma_list(Args, ArgsList),
+    append(ArgsList, [_,_], ArgsListIO),
+    comma_list(ArgsIO, ArgsListIO),
+    xtl_contract_to_pl(pred(Name), InnerName, contract(ArgsIO, Expects, Ensures), Result).

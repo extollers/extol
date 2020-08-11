@@ -1,0 +1,255 @@
+
+%% Prolog
+
+prolog pl_token(N) --> N, pl_skipwhite, !.
+
+test pl_token :-
+    pl_token("x", "x  ", ""),
+    pl_token("x", "x % comment", ""),
+    pl_token("x", "x % comment\n  \t", "").
+
+prolog pl_skipwhite --> pl_white, !.
+prolog pl_skipwhite --> [].
+
+test pl_skipwhite :-
+    pl_skipwhite("", "").
+
+prolog pl_white --> "%", !, pl_line_comment_, pl_skipwhite.
+prolog pl_white --> (" "; "\t"; "\r" ; "\n" ), !, pl_skipwhite.
+
+test pl_white :-
+    pl_white(" ", ""),
+    pl_white("%", ""),
+    pl_white("% comment \n\t  ", "").
+
+prolog pl_line_comment_ --> ("\n" ; eof), !.
+prolog pl_line_comment_ --> [_], pl_line_comment_.
+
+prolog pl_top_level(Decls) -->
+    ( "#!", !, pl_line_comment_; { true }),
+    pl_skipwhite,
+    many(pl_declaration, Decls),
+    require(eof).
+
+prolog pl_write_top_level([]) --> [].
+prolog pl_write_top_level([Decl | Decls]) -->
+    pl_write_term(Decl), ".\n",
+    pl_write_top_level(Decls).
+
+prolog pl_write_term(X) -->
+    { open_output_codes_stream(Stream),
+      write_term(Stream, X, [quoted(true), namevars(true), numbervars(true), ignore_ops(true)]),
+      close_output_codes_stream(Stream, Bytes) },
+    Bytes.
+
+prolog pl_declaration(_) --> eof, !, {fail}.
+prolog pl_declaration(Decl) --> pl_expression(Decl), require(pl_token(".")).
+
+prolog pl_atom_char(C) -->
+    [C], !,
+    { member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789") }.
+
+prolog pl_atom(Atom) -->
+    "'",
+    pl_quoted_atom_chars_(Cs),
+    { atom_codes(Atom, Cs) }.
+prolog pl_atom(AtomVar) -->
+    many1(pl_atom_char, Cs), !,
+    { atom_codes(Atom, Cs),
+      ( Cs = [C|_],
+        member(C, "_ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
+        !, AtomVar =.. ['$VARNAME', Atom]
+      ; AtomVar = Atom )}.
+
+test pl_atom :-
+    pl_atom(a, "'a'", ""),
+    pl_atom('+', "'+'", ""),
+    pl_atom('9', "'\\9'", ""),
+    pl_atom(ab, "ab", ""),
+    pl_atom(ab, "ab", "").
+
+prolog pl_quoted_char(C) -->
+    "\\", !,
+    require([Quoted]),
+    { member(Quoted - C, [
+                 0'n - 10,
+                 0'r - 13,
+                 0't - 9,
+                 0'e - 127,
+                 AsIs - AsIs
+    ]) }, !.
+
+prolog pl_quoted_atom_chars_([]) --> "'", !.
+prolog pl_quoted_atom_chars_([C | Cs]) -->
+    pl_quoted_char(C), !,
+    pl_quoted_atom_chars_(Cs).
+prolog pl_quoted_atom_chars_([C | Cs]) -->
+    [C],
+    pl_quoted_atom_chars_(Cs).
+
+prolog pl_expression(Expr) -->
+    pl_expression(1201, Expr).
+
+prolog pl_expression(Prec, Expr) -->
+    pl_expression(none, Prec, Expr).
+
+test pl_expression :-
+    pl_expression(1, "1", []),
+    pl_expression(a, "a", []),
+    pl_expression(a + b, "a + b", []),
+    pl_expression(a + (b * c), "a + b * c", []),
+    pl_expression((a * b) + c, "a * b + c", []),
+    pl_expression((-a) * b, "-a * b", []),
+    pl_expression((:- (a * b)), ":- a * b", []).
+
+test pl_comma_expr :-
+    pl_expression((p :- (a, b)), "p :- a, b", []).
+
+prolog pl_regular_term(Char) --> "0'", !, require(pl_string_char(Char)), pl_skipwhite.
+prolog pl_regular_term(Integer) -->
+    many1(digit, Ds), !,
+    { foldl(add_digit, 0, Ds, Integer) },
+    pl_skipwhite.
+prolog pl_regular_term(String) --> "\"", !, require(many(pl_string_char, String)), require("\""), pl_skipwhite.
+prolog pl_regular_term(Term) -->
+    pl_atom(Atom), !,
+    ( pl_token("("), !,
+      pl_comma_separated(Args, [], pl_token(")")),
+      { Term =.. [Atom | Args] }
+    ; pl_skipwhite,
+      { Term = Atom }).
+prolog pl_regular_term(Term) -->
+    pl_token("("),
+    pl_expression(Term),
+    require(pl_token(")")).
+prolog pl_regular_term('{}'(Term)) -->
+    pl_token("{"),
+    pl_expression(Term),
+    require(pl_token("}")).
+prolog pl_regular_term(Term) -->
+    pl_token("["),
+    pl_comma_separated(Term, Tail,
+                       ( pl_token("]"), {Tail=[]}
+                       ; pl_token("|"), pl_expression(Tail), pl_token("]"))), !.
+
+prolog pl_string_char(_) --> "\"", !, { false }.
+prolog pl_string_char(C) --> pl_quoted_char(C), !.
+prolog pl_string_char(C) --> [C].
+
+test pl_regular_term :-
+    pl_regular_term(123, "123", ""),
+    pl_regular_term(hi, "hi", ""),
+    pl_regular_term(hi(1), "hi(1)", ""),
+    pl_regular_term(hi(b, 4), "hi(b, 4)", ""),
+    pl_regular_term(6, "(6)", ""),
+    pl_regular_term('{}'(x), "{x}", ""),
+    pl_regular_term([], "[]", ""),
+    pl_regular_term([1,2,3], "[1,2,3]", "").
+
+prolog pl_comma_separated(As, Tail, End) -->
+    pl_comma_seperated_first(As, Tail, End).
+
+prolog pl_comma_seperated_first(Tail, Tail, End) -->
+    End, !.
+prolog pl_comma_seperated_first([A | As], Tail, End) -->
+    pl_expression(1000, A), !,
+    pl_comma_separated_next(As, Tail, End).
+
+prolog pl_comma_separated_next(Tail, Tail, End) -->
+    End, !.
+prolog pl_comma_separated_next([A | As], Tail, End) -->
+    require(pl_token(",")), !,
+    pl_expression(1000, A), !,
+    pl_comma_separated_next(As, Tail, End).
+
+prolog pl_op_or_term('!', term) --> "!", pl_skipwhite.
+prolog pl_op_or_term(X, Info) -->
+    pl_regular_term(X), !,
+    ( { pl_op(Prec, Assoc, X), Info = op(Prec, Assoc) }
+    ; { Info = term } ).
+prolog pl_op_or_term(X, Info) -->
+    many1(pl_op_char, Cs),
+    ( pl_known_op(Cs, X, Prec, Assoc),
+      { Info = op(Prec, Assoc) }
+    % ; { atom_codes(X, Cs),
+    %     Info = term }
+    ),
+    pl_skipwhite.
+
+test pl_op_or_term :-
+    \+ pl_op_or_term(A, op(B, C), "1", []).
+
+prolog pl_known_op(Cs, Op, Prec, Assoc) --> { atom_codes(Op, Cs), pl_op(_, _, Op), !, pl_op(Prec, Assoc, Op) }.
+prolog pl_known_op(Cs, Op, Prec, Assoc) --> { append(Shorter, [C], Cs) }, append([C]), pl_known_op(Shorter, Op, Prec, Assoc).
+
+prolog pl_op_char(C) -->
+    [C], { member(C, "`~!@#$%^&*<>?/;:-_=+,|\\.") }, !.
+
+prolog pl_expression(none, Prec, Term) -->
+    pl_op_or_term(Op, op(OpPrec, Assoc)),
+    { member(Assoc-N, [fx-0, fy-1]),
+      RightPrec is OpPrec + N },
+    try(pl_expression(none, RightPrec, Right)),
+    { Combined =.. [Op, Right] },
+    pl_expression(just(Combined), Prec, Term).
+prolog pl_expression(none, Prec, Term) --> !,
+    require(pl_op_or_term(Left, term)),
+    pl_expression(just(Left), Prec, Term).
+prolog pl_expression(just(Left), Prec, Term) -->
+    pl_op_or_term(Op, op(OpPrec, Assoc)),
+    { member(Assoc-N, [xf-0, yf-1]),
+      LeftPrec is OpPrec + N,
+      LeftPrec < Prec,
+      !,
+      Combined =.. [Op, Left] },
+    pl_expression(just(Combined), Prec, Term).
+prolog pl_expression(just(Left), Prec, Term) -->
+    pl_op_or_term(Op, op(OpPrec, Assoc)),
+    { member(Assoc-N-M, [xfx-0-0, xfy-0-1, yfx-1-0]),
+      LeftPrec is OpPrec + N,
+      LeftPrec < Prec,
+      !,
+      RightPrec is OpPrec + M },
+    require(pl_expression(none, RightPrec, Right)),
+    { Combined =.. [Op, Left, Right] },
+    pl_expression(just(Combined), Prec, Term).
+prolog pl_expression(just(Term), _, Term) --> !.
+
+
+prolog pl_op(1200, xfx, ':-') :- true.
+prolog pl_op(1200, xfx, '-->') :- true.
+prolog pl_op(1200, fx, ':-') :- true.
+prolog pl_op(1105, xfy, '|') :- true.
+prolog pl_op(1100, xfy, ';') :- true.
+prolog pl_op(1050, xfy, '->') :- true.
+prolog pl_op(1000, xfy, ',') :- true.
+prolog pl_op(900, fy, '\\+') :- true.
+prolog pl_op(700, xfx, '=') :- true.
+prolog pl_op(700, xfx, '\\=') :- true.
+prolog pl_op(700, xfx, '=..') :- true.
+prolog pl_op(700, xfx, '==') :- true.
+prolog pl_op(700, xfx, '\\==') :- true.
+prolog pl_op(700, xfx, 'is') :- true.
+prolog pl_op(700, xfx, '<') :- true.
+prolog pl_op(700, xfx, '>') :- true.
+prolog pl_op(700, xfx, '=<') :- true.
+prolog pl_op(700, xfx, '>=') :- true.
+prolog pl_op(700, xfx, '=\\=') :- true.
+prolog pl_op(600, xfy, ':') :- true.
+prolog pl_op(500, yfx, '+') :- true.
+prolog pl_op(500, yfx, '-') :- true.
+prolog pl_op(400, yfx, '*') :- true.
+prolog pl_op(400, yfx, '/') :- true.
+prolog pl_op(400, yfx, 'rem') :- true.
+prolog pl_op(400, yfx, 'mod') :- true.
+prolog pl_op(400, yfx, 'div') :- true.
+prolog pl_op(400, yfx, '<<') :- true.
+prolog pl_op(400, yfx, '>>') :- true.
+prolog pl_op(200, xfx, '**') :- true.
+prolog pl_op(200, xfx, '^') :- true.
+prolog pl_op(200, fy, '+') :- true.
+prolog pl_op(200, fy, '-') :- true.
+
+%test parse_stage1 :-
+%    read_file('stage1.pl', Bytes), !,
+%    pl_top_level(_Decls, Bytes, []).
