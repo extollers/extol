@@ -1,3 +1,5 @@
+[![Run on Repl.it](https://repl.it/badge/github/atnnn/extol)](https://repl.it/github/atnnn/extol)
+
 # Roadmap
 
 - a bootstrapped high-level declarative language (code name Extol)
