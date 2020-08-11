@@ -3,9 +3,10 @@
 # Inspiration
 
 - [Mercury](http://www.mercurylang.org/)
-- [Rosette](https://docs.racket-lang.org/rosette-guide/index.html)
 - [Ciao](https://ciao-lang.org/)
 - [Picat](http://picat-lang.org/)
+- [Lean](https://leanprover.github.io/)
+- [Rosette](https://docs.racket-lang.org/rosette-guide/index.html)
 
 # Roadmap
 
