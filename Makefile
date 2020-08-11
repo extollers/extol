@@ -8,9 +8,8 @@ MAKEFLAGS += --no-builtin-rules --no-builtin-variables --warn-undefined-variable
 BUILD ?= ./build
 / := $(BUILD)/
 
-# $(error $(BUILD) -- $/ -- $/foo)
-
 fulltest: test1 test2 diff23
+	@echo ALL TESTS PASSED
 
 define make_stage
 
