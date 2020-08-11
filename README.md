@@ -10,7 +10,7 @@
 
 # Roadmap
 
-  - a bootstrapped high-level declarative language (code name Extol)
+- a bootstrapped high-level declarative language (code name Extol)
   - ☑ a Prolog parser in Prolog that can parse itself
   - ☑ a Prolog generator for the parsed declaration
   - ☑ runtime type checking
