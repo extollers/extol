@@ -30,7 +30,7 @@ prolog append([X | Xs], L) :-
     append(X, LL, L).
 
 prolog comma_list(Var, [Var]) :- var(Var), !.
-prolog comma_list(Y, [X]) :- var(V), !, V = X.
+prolog comma_list(V, [X]) :- var(V), !, V = X.
 prolog comma_list((X, XCs), [X | Xs]) :- !, comma_list(XCs, Xs), !.
 prolog comma_list('()', []) :- !.
 prolog comma_list(X, [X]) :- !.

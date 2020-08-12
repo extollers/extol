@@ -1,7 +1,7 @@
 %% Extol
 
 pred xtl_include: ((File, DeclsXTL):
-    t('Loading file:'(File)),
+    % t('Loading file:'(File)),
     read_file(File, BytesIn), !,
     xtl_top_level(DeclsXTL, BytesIn, [])).
 

@@ -28,8 +28,8 @@ prolog xtl_to_pl_declaration(prolog((N --> L)), [(NPL :- LPL)]) :- !,
      numbervars(NPL-LPL).
 
 prolog xtl_to_pl_declaration((fun(Name) : Clauses), ClausesPL) :- !,
-    tc comma_list(Clauses, ClausesList),
-    tc maplist(xtl_to_pl_fun(Name), ClausesList, ClausesPL),
+    comma_list(Clauses, ClausesList),
+    maplist(xtl_to_pl_fun(Name), ClausesList, ClausesPL),
     numbervars(ClausesPL).
 
 prolog xtl_to_pl_declaration((Pred: Defs), Decls) :- !,
@@ -77,17 +77,16 @@ test xtl_to_pl_declaration :-
     xtl_to_pl_declaration((pred f: ((): g, h)), Res5),
     Res5 = [(f :- g, h)],
 
-    xtl_to_pl_declaration((fun(fib) : ((0 : 1), (1 : 1), (N : fib(N - 1)   + fib(N - 2)))), Res6),
+    xtl_to_pl_declaration((fun(fib) : ((0 : 1), (1 : 1), (N : fib(N - 1) + fib(N - 2)))), Res6),
     Res6 = [
         (fib(0,1):-true),
         (fib(1,1):-true),
         (fib(A,B):-
-            -(A,1,C),
+            '-'(A,1,C),
             fib(C,D),
-            -(A,2,E),
+            '-'(A,2,E),
             fib(E,F),
-            +(D,F,B),
-            ())].
+            '+'(D,F,B))].
 
 pred xtl_def_contract: (([Contract|Rest], Contract, Rest): Contract = contract(_,_,_)).
 
@@ -199,7 +198,7 @@ pred xtl_to_pl_fun:
         comma_list(Args, ArgsList),
         append(ArgsList, [Result], ArgsPL),
         HeadPL =... [Name | ArgsPL],
-        tc xtl_to_pl_funexpr(Result, Body, BodyListPL),
+        xtl_to_pl_funexpr(Result, Body, BodyListPL),
         ( BodyListPL = [],
           BodyPL = true
         ; comma_list(BodyPL, BodyListPL))).
@@ -211,14 +210,21 @@ pred xtl_to_pl_funexpr:
         !, xtl_to_pl_goal(Goal, PL)),
     ((Number, Number, []): number(Number), !),
     ((Atom, Atom, []): atom(Atom), !),
-    ((Result, Functor, PL): tc compound(Functor), !,
-        tc Functor =... [Name | ListFun],
-        tc maplist(xtl_to_pl_funexpr, Results, ListFun, DepsPLs),
-        tc append(DepsPLs, DepsPL),
-        tc append(Results, [Result], ArgsPL),
-        tc FunctorPL =... [Name | ArgsPL],
+    ((Result, Functor, PL): compound(Functor), !,
+        Functor =... [Name | ListFun],
+        maplist(xtl_to_pl_funexpr, Results, ListFun, DepsPLs),
+        append(DepsPLs, DepsPL),
+        append(Results, [Result], ArgsPL),
+        FunctorPL =... [Name | ArgsPL],
         append(DepsPL, [FunctorPL], PL)).
 
 test xtl_to_pl_funexpr :-
     xtl_to_pl_funexpr(res, f(1,g(2,3)), X),
-    X = [g(2,3,A),f(1,A,res)].
+    X = [g(2,3,A),f(1,A,res)],
+
+    xtl_to_pl_funexpr(res, fib(N - 1) + fib(N - 2), Y),
+    Y = ['-'(A,1,B),
+        fib(B,C),
+        '-'(A,2,D),
+        fib(D,E),
+        '+'(C,E,res)].
