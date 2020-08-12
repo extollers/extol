@@ -6,7 +6,7 @@
 
   - ☑ repl
   - ☑ Emacs mode
-  - ☑ explicit import
+  - ☑ include statement
   - → functions and expressions
   - □ stack traces
   - □ compile-time type checking

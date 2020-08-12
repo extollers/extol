@@ -1,2 +1,2 @@
 language = "polygott"
-run = "if [ $REPL_OWNER = five-nine ]; then echo '*** BUILDING ***' && make 2 && echo '*** RUNNING REPL ***' && make repl; else make BUILD=../build && echo 'Run `make repl` to start an interactive Extol interpreter'; fi"
+run = "if [ $REPL_OWNER = five-nine ]; then echo '*** BUILDING ***' && make 2 && echo '*** RUNNING REPL ***' && make repl; else make && echo 'Run `make repl` to start an interactive Extol interpreter'; fi"
