@@ -5,12 +5,13 @@
 [This Jam](https://blog.repl.it/langjam) is a great excuse for me to work on Extol again. I've created a team [here](https://repl.it/@Extollers) and I'm looking for teammates (prolog experience required). I plan to add:
 
   - ☑ repl
-  - → explicit import
+  - ☑ Emacs mode
+  - ☑ explicit import
+  - → functions and expressions
   - □ stack traces
   - □ compile-time type checking
   - □ proper AST instead of raw Prolog terms
   - □ custom prelude to wrap Prolog predicates
-  - □ functions and expressions
   - □ anonymous predicates and lambdas
   - □ first-class predicates and functions
   - □ modules and namespaces
