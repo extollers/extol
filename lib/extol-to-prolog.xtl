@@ -1,13 +1,13 @@
 %% Extol to Prolog
 
-prolog xtl_to_pl_toplevel(XTL, PL) :-
+pred xtl_to_pl_toplevel: (XTL, PL):
     maplist(must(xtl_to_pl_declaration), XTL, DeclsPL),
     append(DeclsPL, FlatDeclsPL),
     append([
-                  (:- set_prolog_flag(singleton_warning, off)),
-                  (:- discontiguous('/'('test', 1))),
-                  (:- initialization((main;write('error: unexpected failure in main'),nl,halt(1))))
-              ], FlatDeclsPL, PL).
+            (:- set_prolog_flag(singleton_warning, off)),
+            (:- discontiguous('/'('test', 1))),
+            (:- initialization((main;write('error: unexpected failure in main'),nl,halt(1))))
+            ], FlatDeclsPL, PL).
 
 % prolog xtl_to_pl_declaration(XTL, PL) :- t(to_pl_declaration(XTL)), false.
 

@@ -1,21 +1,24 @@
 
 % Call on undo
 
-prolog undo(_) :- true.
-prolog undo(G) :- call(G), fail.
+pred undo:
+    ((_) : true),
+    ((G) : call(G), fail).
 
-prolog undo(_, A, A) :- true.
-prolog undo(G, A, B) :- dcg_call(G, A, B), fail.
+dcg undo:
+    ((_) : { true }),
+    ((G) : dcg_call(G), { fail } ).
 
 %% Types
 
-prolog byte(Byte) :- number(Byte), Byte >= 0, Byte < 256.
+pred byte: (Byte) : number(Byte), Byte >= 0, Byte < 256.
 
-prolog bytes(Bytes) :- ground(Bytes), maplist(byte, Bytes).
+pred bytes: (Bytes) : ground(Bytes), maplist(byte, Bytes).
 
-prolog assert((A, B)) :- assert(A), assert(B).
-prolog assert(G) :- G, !.
-prolog assert(G) :- throw(assert_failed(G)).
+pred assert:
+    (((A, B)) : assert(A), assert(B)),
+    ((G) : G, !),
+    ((G) : throw(assert_failed(G))).
 
 %% Lists
 
@@ -28,11 +31,12 @@ fun append:
     ([] : []),
     ([X | Xs] : append(X, append(Xs))).
 
-prolog comma_list(Var, [Var]) :- var(Var), !.
-prolog comma_list(V, [X]) :- var(V), !, V = X.
-prolog comma_list((X, XCs), [X | Xs]) :- !, comma_list(XCs, Xs), !.
-prolog comma_list('()', []) :- !.
-prolog comma_list(X, [X]) :- !.
+pred comma_list:
+    ((Var, [Var]) : var(Var), !),
+    ((V, [X]) : var(V), !, V = X),
+    (((X, XCs), [X | Xs]) : !, comma_list(XCs, Xs), !),
+    (('()', []) : !),
+    ((X, [X]) : !).
 
 test comma_list :-
     comma_list('()', []),
@@ -45,9 +49,7 @@ test comma_list :-
 
 %%
 
-prolog error_unless(Goal, _) :-
-    call(Goal), !.
-prolog error_unless(_, Error) :-
-    throw(error(Error)).
-prolog error_unless(Goal) :-
-    error_unless(Goal, goal_failed(Goal)).
+pred error_unless:
+    ((Goal, _) : call(Goal), !),
+    ((_, Error) : throw(error(Error))),
+    ((Goal) : error_unless(Goal, goal_failed(Goal))).

@@ -25,11 +25,11 @@
 :-(ticall(A,B,C,D),','(g_read(tindent,E),','(is(F,+(E,1)),','(g_assignb(tindent,F),','(=..(A,G),','(append(G,'.'(B,[]),H),','(=..(I,H),','(dcg_call(I,C,D),g_assignb(tindent,E))))))))).
 :-(undo(A),true).
 :-(undo(A),','(call(A),fail)).
-:-(undo(A,B,B),true).
-:-(undo(A,B,C),','(dcg_call(A,B,C),fail)).
+:-(undo(A,B,C),','(true,=(B,C))).
+:-(undo(A,B,C),','(dcg_call(A,B,D),','(fail,=(D,C)))).
 :-(byte(A),','(number(A),','(>=(A,0),<(A,256)))).
 :-(bytes(A),','(ground(A),maplist(byte,A))).
-:-(assert(','(A,B)),','(assert(A),assert(B))).
+:-(assert(A,B),','(assert(A),assert(B))).
 :-(assert(A),','(call(A),!)).
 :-(assert(A),throw(assert_failed(A))).
 :-(foldl(A,B,C,D),','(assert(','(callable(A),list_or_partial_list(C))),','('__contract_free_foldl'(A,B,C,D),assert(list(C))))).
@@ -119,7 +119,7 @@ test(:-(comma_list,','(comma_list('()',[]),','(comma_list(1,'.'(1,[])),','(comma
 :-(c_type(A,B,C),append('.'(symbol(A),[]),C,B)).
 :-(c_value(variable(A),B,C),append('.'(symbol(A),[]),C,B)).
 :-(c_value(integer(A),B,C),append('.'(integer(A),[]),C,B)).
-test(:-(test_c,','(read_file('test.c',A),','(!,','(c_pp([],B,A,[]),','(!,c_top_level(C,B,[]))))))).
+test(:-(test_c,','(read_file('test.c',A),','(!,','(c_pp([],B,A,[]),','(!,','(c_top_level(C,B,[]),=(C,'.'(declare(x,int,value(integer(437))),'.'(declare(y,int,none),'.'(declare(z,int,value(integer(1))),'.'(declare(k,int,value(integer(2))),[])))))))))))).
 :-(pl_token(A,B,C),','(dcg_call(A,B,D),','(pl_skipwhite(D,E),','(!,=(E,C))))).
 test(:-(pl_token,','(pl_token('.'(120,[]),'.'(120,'.'(32,'.'(32,[]))),[]),','(pl_token('.'(120,[]),'.'(120,'.'(32,'.'(37,'.'(32,'.'(99,'.'(111,'.'(109,'.'(109,'.'(101,'.'(110,'.'(116,[]))))))))))),[]),pl_token('.'(120,[]),'.'(120,'.'(32,'.'(37,'.'(32,'.'(99,'.'(111,'.'(109,'.'(109,'.'(101,'.'(110,'.'(116,'.'(10,'.'(32,'.'(32,'.'(9,[]))))))))))))))),[]))))).
 :-(pl_skipwhite(A,B),','(pl_white(A,C),','(!,=(C,B)))).
