@@ -204,7 +204,6 @@ pred xtl_to_pl_fun:
         ; comma_list(BodyPL, BodyListPL))).
 
 pred xtl_to_pl_funexpr:
-    ((A,B,C): t(xtl_to_pl_funexpr(A,B,C)), fail),
     ((Var, Var, []): var(Var), !),
     ((Result, pred(Result, Goal), [PL]):
         !, xtl_to_pl_goal(Goal, PL)),

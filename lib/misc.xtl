@@ -24,10 +24,9 @@ contract((F, Z, L, RR), (callable(F), list_or_partial_list(L)), list(L)),
 ((_, R, [], R): true),
 ((F, Z, [X | Xs], RR): call(F, Z, X, R), '__contract_free_foldl'(F, R, Xs, RR)).
 
-prolog append([], []) :- true.
-prolog append([X | Xs], L) :-
-    append(Xs, LL),
-    append(X, LL, L).
+fun append:
+    ([] : []),
+    ([X | Xs] : append(X, append(Xs))).
 
 prolog comma_list(Var, [Var]) :- var(Var), !.
 prolog comma_list(V, [X]) :- var(V), !, V = X.

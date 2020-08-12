@@ -7,7 +7,7 @@
   - ☑ repl
   - ☑ Emacs mode
   - ☑ include statement
-  - → functions and expressions
+  - ☑ functions and expressions
   - □ stack traces
   - □ compile-time type checking
   - □ proper AST instead of raw Prolog terms

@@ -306,6 +306,6 @@ contract((F, A), (compound(F); atom(F); A = [G | _], atom(G)), true),
 %     read_file('main.xtl', Bytes), !,
 %     xtl_top_level(_Decls, Bytes, []).
 
-pred xtl_slim_declaration:
-(((test _ : _), []) : true),
-((Decl, Decl) : true).
+fun xtl_slim_declaration:
+(((test _ : _)) : []),
+((Decl) : Decl).
