@@ -38,7 +38,20 @@ contract((Decls), true, list(Decls)),
     { append(Decls, Declss) },
     require(eof)).
 
+pred xtl_declaration:
+    ((prolog _): true),
+    ((pred Name: Clauses): atom(Name), map_comma_list(pred_clause, Clauses)),
+    ((dcg Name: Clauses): atom(Name), map_comma_list(dcg_clause, Clauses)),
+    ((fun Name: Clauses): atom(Name), map_comma_list(fun_clause, Clauses)),
+    ((test (Name :- Goals)): atom(Name), map_comma_list(xtl_goal, Goals)).
+
+pred pred_clause: _: true.
+pred dcg_clause: _: true.
+pred fun_clause: _: true.
+pred xtl_goal: _: true.
+
 dcg xtl_declaration:
+contract(Decls, true, maplist(xtl_declaration, Decls)),
 ((_): eof, !, {fail}),
 ((Decls):
     xtl_expression(DeclV),
@@ -49,8 +62,8 @@ dcg xtl_declaration:
       Decls = [Decl] }).
 
 test xtl_declaration :-
-    xtl_declaration(Decl, "f: (x: 1), (y: 2, 3).", ""),
-    Decl = [(f: ((x: 1), (y: (2, 3))))].
+    xtl_declaration(Decl, "pred f: (x: 1), (y: 2, 3).", ""),
+    Decl = [(pred f: ((x: 1), (y: (2, 3))))].
 
 prolog xtl_makevars(V, _, _) :-
     V =.. ['XTL$VARNAME', '_'], !.

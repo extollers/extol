@@ -11,39 +11,36 @@ pred xtl_to_pl_toplevel: (XTL, PL):
 
 % prolog xtl_to_pl_declaration(XTL, PL) :- t(to_pl_declaration(XTL)), false.
 
-prolog xtl_to_pl_declaration(prolog((HeadXTL :- GoalXTL)), [(HeadPL :- GoalPL)]) :- !,
-    copy_term(HeadXTL-GoalXTL, HeadPL-Goal),
-    xtl_to_pl_goal(Goal, GoalPL),
-    numbervars(HeadPL-GoalPL).
-
-prolog xtl_to_pl_declaration((test XTL), [test PL]) :- !,
-    xtl_to_pl_goal(XTL, PL),
-    numbervars(PL).
-
-prolog xtl_to_pl_declaration(prolog((N --> L)), [(NPL :- LPL)]) :- !,
-     N =... [F|A],
-     append(A, [I, O], AIO),
-     NPL =... [F|AIO],
-     xtl_to_pl_dcg(L, LPL, I, O),
-     numbervars(NPL-LPL).
-
-prolog xtl_to_pl_declaration((fun(Name) : Clauses), ClausesPL) :- !,
-    comma_list(Clauses, ClausesList),
-    maplist(xtl_to_pl_fun(Name), ClausesList, ClausesPL),
-    numbervars(ClausesPL).
-
-prolog xtl_to_pl_declaration((Pred: Defs), Decls) :- !,
-    comma_list(Defs, Xs),
-    ( xtl_def_contract(Xs, Contract, Rest),
-      Pred =... [Type, Name],
-      atom_concat('__contract_free_', Name, InnerName),
-      Head =... [Type, InnerName],
-      maplist(xtl_def_to_pl(Head), Rest, InnerDecls),
-      xtl_contract_to_pl(Pred, InnerName, Contract, OuterDecls),
-      append(OuterDecls, InnerDecls, Decls)
-    ; maplist(xtl_def_to_pl(Pred), Xs, Decls)).
-
-prolog xtl_to_pl_declaration(X, _) :- !, throw(error(unknown_declaration(X))).
+pred xtl_to_pl_declaration:
+    contract((XTL, PL), xtl_declaration(XTL), true),
+    ((prolog((HeadXTL :- GoalXTL)), [(HeadPL :- GoalPL)]) : !,
+        copy_term(HeadXTL-GoalXTL, HeadPL-Goal),
+        xtl_to_pl_goal(Goal, GoalPL),
+        numbervars(HeadPL-GoalPL)),
+    (((test XTL), [test PL]) : !,
+        xtl_to_pl_goal(XTL, PL),
+        numbervars(PL)),
+    ((prolog((N --> L)), [(NPL :- LPL)]) : !,
+        N =... [F|A],
+        append(A, [I, O], AIO),
+        NPL =... [F|AIO],
+        xtl_to_pl_dcg(L, LPL, I, O),
+        numbervars(NPL-LPL)),
+    (((fun(Name) : Clauses), ClausesPL) : !,
+        comma_list(Clauses, ClausesList),
+        maplist(xtl_to_pl_fun(Name), ClausesList, ClausesPL),
+        numbervars(ClausesPL)),
+    (((Pred: Defs), Decls) : !,
+        comma_list(Defs, Xs),
+        ( xtl_def_contract(Xs, Contract, Rest),
+          Pred =... [Type, Name],
+          atom_concat('__contract_free_', Name, InnerName),
+          Head =... [Type, InnerName],
+          maplist(xtl_def_to_pl(Head), Rest, InnerDecls),
+          xtl_contract_to_pl(Pred, InnerName, Contract, OuterDecls),
+          append(OuterDecls, InnerDecls, Decls)
+        ; maplist(xtl_def_to_pl(Pred), Xs, Decls))),
+    ((X, _) : !, throw(error(unknown_declaration(X)))).
 
 test xtl_to_pl_declaration :-
     xtl_to_pl_declaration(

@@ -47,6 +47,10 @@ test comma_list :-
     comma_list((1,2,X), [1,2,X]),
     comma_list(L, [14]), L = 14.
 
+pred map_comma_list: (G, CL):
+    comma_list(CL, L),
+    maplist(G, L).
+
 %%
 
 pred error_unless:
