@@ -33,9 +33,9 @@ fun append:
     ([X | Xs] : append(X, append(Xs))).
 
 fun comma_list:
-    ((Var) : [X] =: (var(Var), !, X = Var)),
-    ((V) : [V] =: (var(V), !)),
-    (((X, XCs), ()): Y =: (Y = [X | Xs], !, comma_list(XCs, Xs), !)),
+    ((Var) : [X] if (var(Var), !, X = Var)),
+    ((V) : [V] if (var(V), !)),
+    (((X, XCs), ()): Y if (Y = [X | Xs], !, comma_list(XCs, Xs), !)),
     (((), ()) : []),
     ((X) : [X]).
 

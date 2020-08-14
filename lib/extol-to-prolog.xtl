@@ -206,7 +206,7 @@ pred xtl_to_pl_fun:
 
 pred xtl_to_pl_funexpr:
     ((Var, Var, []): var(Var), !),
-    ((Result, (Result =: Goal), [PL]):
+    ((Result, (Result if Goal), [PL]):
         !, xtl_to_pl_goal(Goal, PL)),
     ((Number, Number, []): number(Number), !),
     ((Atom, Atom, []): atom(Atom), !),

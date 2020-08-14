@@ -337,7 +337,7 @@ test(:-(xtl_regular_term,','(xtl_regular_term(123,'.'(49,'.'(50,'.'(51,[]))),[])
 :-(xtl_op(1150,fy,include),true).
 :-(xtl_op(1150,fy,fun),true).
 :-(xtl_op(700,xfx,:=),true).
-:-(xtl_op(700,xfx,=:),true).
+:-(xtl_op(1125,xfx,if),true).
 :-(=...(A,B),','(assert(;(compound(A),;(atom(A),','(=(B,'.'(C,D)),atom(C))))),','('__contract_free_=...'(A,B),assert(true)))).
 :-('__contract_free_=...'(A,B),=..(A,B)).
 :-(xtl_slim_declaration(test(:(A,B)),[]),true).
@@ -377,7 +377,7 @@ test(:-(xtl_to_pl_dcg_regression,','(=(A,prolog(-->(c_declaration(declare(B,C,D)
 :-(xtl_contract_to_pl(dcg(A),B,contract(C,D,E),F),','(comma_list(C,G),','(append(G,'.'(H,'.'(I,[])),J),','(comma_list(K,J),xtl_contract_to_pl(pred(A),B,contract(K,D,E),F))))).
 :-(xtl_to_pl_fun(A,:(B,C),:-(D,E)),','(comma_list(B,F),','(append(F,'.'(G,[]),H),','(=...(D,'.'(A,H)),','(xtl_to_pl_funexpr(G,C,I),;(','(=(I,[]),=(E,true)),comma_list(E,I))))))).
 :-(xtl_to_pl_funexpr(A,A,[]),','(var(A),!)).
-:-(xtl_to_pl_funexpr(A,=:(A,B),'.'(C,[])),','(!,xtl_to_pl_goal(B,C))).
+:-(xtl_to_pl_funexpr(A,if(A,B),'.'(C,[])),','(!,xtl_to_pl_goal(B,C))).
 :-(xtl_to_pl_funexpr(A,A,[]),','(number(A),!)).
 :-(xtl_to_pl_funexpr(A,A,[]),','(atom(A),!)).
 :-(xtl_to_pl_funexpr(A,B,C),','(compound(B),','(!,','(=...(B,'.'(D,E)),','(maplist(xtl_to_pl_funexpr,F,E,G),','(append(G,H),','(append(F,'.'(A,[]),I),','(=...(J,'.'(D,I)),append(H,'.'(J,[]),C))))))))).
