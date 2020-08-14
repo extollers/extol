@@ -92,13 +92,13 @@ prolog xtl_def_to_pl(dcg(Pred), (Head: Body), (HeadPL :- GoalPL)) :-
     copy_term(Head-Body, HeadVars-Goal),
     comma_list(HeadVars, HeadArgs),
     append(HeadArgs, [I,O], HeadIO),
-    HeadPL =.. [Pred | HeadIO],
+    HeadPL =... [Pred | HeadIO],
     xtl_to_pl_dcg(Goal, GoalPL, I, O),
     numbervars(HeadPL-GoalPL).
 prolog xtl_def_to_pl(pred(Pred), (Head: Body), (HeadPL :- GoalPL)) :-
     copy_term(Head-Body, HeadVars-Goal),
     comma_list(HeadVars, HeadArgs),
-    HeadPL =.. [Pred | HeadArgs],
+    HeadPL =... [Pred | HeadArgs],
     xtl_to_pl_goal(Goal, GoalPL),
     numbervars(HeadPL-GoalPL).
 
@@ -210,6 +210,9 @@ pred xtl_to_pl_funexpr:
         !, xtl_to_pl_goal(Goal, PL)),
     ((Number, Number, []): number(Number), !),
     ((Atom, Atom, []): atom(Atom), !),
+    (([], [], []): true),
+    (([X | Xs], [Y | Ys], PL):
+        PL := append(xtl_to_pl_funexpr(X, Y), xtl_to_pl_funexpr(Xs, Ys))),
     ((Result, Functor, PL): compound(Functor), !,
         Functor =... [Name | ListFun],
         maplist(xtl_to_pl_funexpr, Results, ListFun, DepsPLs),

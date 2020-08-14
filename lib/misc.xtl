@@ -60,3 +60,7 @@ pred error_unless:
     ((Goal, _) : call(Goal), !),
     ((_, Error) : throw(error(Error))),
     ((Goal) : error_unless(Goal, goal_failed(Goal))).
+
+pred '=...':
+contract((F, A), (compound(F); atom(F); A = [G | _], atom(G)), true),
+((F, A) : F =.. A).

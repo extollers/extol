@@ -190,7 +190,7 @@ prolog xtl_regular_term(Term) -->
     xtl_atom(Atom), !,
     ( xtl_token("("), !,
       xtl_comma_separated(Args, [], xtl_token(")")),
-      { Term =.. [Atom | Args] }
+      { Term =... [Atom | Args] }
     ; xtl_skipwhite,
       { Term = Atom }).
 prolog xtl_regular_term('()') -->
@@ -267,7 +267,7 @@ prolog xtl_expression(none, Prec, Term) -->
     { member(Assoc-N, [fx-0, fy-1]),
       RightPrec is OpPrec + N },
     try(xtl_expression(none, RightPrec, Right)),
-    { Combined =.. [Op, Right] },
+    { Combined =... [Op, Right] },
     xtl_expression(just(Combined), Prec, Term).
 prolog xtl_expression(none, Prec, Term) --> !,
     require(xtl_op_or_term(Left, term)),
@@ -278,7 +278,7 @@ prolog xtl_expression(just(Left), Prec, Term) -->
       LeftPrec is OpPrec + N,
       LeftPrec < Prec,
       !,
-      Combined =.. [Op, Left] },
+      Combined =... [Op, Left] },
     xtl_expression(just(Combined), Prec, Term).
 prolog xtl_expression(just(Left), Prec, Term) -->
     xtl_op_or_term(Op, op(OpPrec, Assoc)),
@@ -288,7 +288,7 @@ prolog xtl_expression(just(Left), Prec, Term) -->
       !,
       RightPrec is OpPrec + M },
     require(xtl_expression(none, RightPrec, Right)),
-    { Combined =.. [Op, Left, Right] },
+    { Combined =... [Op, Left, Right] },
     xtl_expression(just(Combined), Prec, Term).
 prolog xtl_expression(just(Term), _, Term) --> !.
 
@@ -336,10 +336,6 @@ prolog xtl_op(1150, fy, include) :- true.
 prolog xtl_op(1150, fy, fun) :- true.
 prolog xtl_op(700, xfx, ':=') :- true.
 prolog xtl_op(1125, xfx, 'if') :- true.
-
-pred '=...':
-contract((F, A), (compound(F); atom(F); A = [G | _], atom(G)), true),
-((F, A) : F =.. A).
 
 % test parse_self :-
 %     read_file('main.xtl', Bytes), !,

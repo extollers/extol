@@ -115,7 +115,7 @@ prolog pl_regular_term(Term) -->
     pl_atom(Atom), !,
     ( pl_token("("), !,
       pl_comma_separated(Args, [], pl_token(")")),
-      { Term =.. [Atom | Args] }
+      { Term =... [Atom | Args] }
     ; pl_skipwhite,
       { Term = Atom }).
 prolog pl_regular_term(Term) -->
@@ -190,7 +190,7 @@ prolog pl_expression(none, Prec, Term) -->
     { member(Assoc-N, [fx-0, fy-1]),
       RightPrec is OpPrec + N },
     try(pl_expression(none, RightPrec, Right)),
-    { Combined =.. [Op, Right] },
+    { Combined =... [Op, Right] },
     pl_expression(just(Combined), Prec, Term).
 prolog pl_expression(none, Prec, Term) --> !,
     require(pl_op_or_term(Left, term)),
@@ -201,7 +201,7 @@ prolog pl_expression(just(Left), Prec, Term) -->
       LeftPrec is OpPrec + N,
       LeftPrec < Prec,
       !,
-      Combined =.. [Op, Left] },
+      Combined =... [Op, Left] },
     pl_expression(just(Combined), Prec, Term).
 prolog pl_expression(just(Left), Prec, Term) -->
     pl_op_or_term(Op, op(OpPrec, Assoc)),
@@ -211,7 +211,7 @@ prolog pl_expression(just(Left), Prec, Term) -->
       !,
       RightPrec is OpPrec + M },
     require(pl_expression(none, RightPrec, Right)),
-    { Combined =.. [Op, Left, Right] },
+    { Combined =... [Op, Left, Right] },
     pl_expression(just(Combined), Prec, Term).
 prolog pl_expression(just(Term), _, Term) --> !.
 

@@ -89,8 +89,8 @@ prolog ticall(G, X, A, B) :-
     g_read(tindent, I),
     II is I + 1,
     g_assignb(tindent, II),
-    G =.. L,
+    G =... L,
     append(L, [X], LL),
-    GX =.. LL,
+    GX =... LL,
     dcg_call(GX, A, B),
     g_assignb(tindent, I).
