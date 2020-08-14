@@ -23,21 +23,23 @@ pred assert:
 
 %% Lists
 
-pred foldl:
-contract((F, Z, L, RR), (callable(F), list_or_partial_list(L)), list(L)),
-((_, R, [], R): true),
-((F, Z, [X | Xs], RR): call(F, Z, X, R), '__contract_free_foldl'(F, R, Xs, RR)).
+fun foldl:
+% contract((F, Z, L), (callable(F), list_or_partial_list(L)), list(L)),
+((_, R, []): R),
+((F, Z, [X | Xs]): foldl(F, call(F, Z, X), Xs)).
 
 fun append:
     ([] : []),
     ([X | Xs] : append(X, append(Xs))).
 
-pred comma_list:
-    ((Var, [Var]) : var(Var), !),
-    ((V, [X]) : var(V), !, V = X),
-    (((X, XCs), [X | Xs]) : !, comma_list(XCs, Xs), !),
-    (('()', []) : !),
-    ((X, [X]) : !).
+fun comma_list:
+    ((Var) : [X] =: (var(Var), !, X = Var)),
+    ((V) : [V] =: (var(V), !)),
+    (((X, XCs), ()): Y =: (Y = [X | Xs], !, comma_list(XCs, Xs), !)),
+    (((), ()) : []),
+    ((X) : [X]).
+
+pred '.': (X, Xs, [X | Xs]): true.
 
 test comma_list :-
     comma_list('()', []),

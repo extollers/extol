@@ -2,7 +2,7 @@
 
 pred xtl_include: ((File, DeclsXTL):
     % t('Loading file:'(File)),
-    read_file(File, BytesIn), !,
+    BytesIn := read_file(File), !,
     xtl_top_level(DeclsXTL, BytesIn, [])).
 
 prolog xtl_token(N) --> N, xtl_skipwhite, !.
@@ -334,6 +334,8 @@ prolog xtl_op(1150, fy, dcg) :- true.
 prolog xtl_op(1150, fy, pred) :- true.
 prolog xtl_op(1150, fy, include) :- true.
 prolog xtl_op(1150, fy, fun) :- true.
+prolog xtl_op(700, xfx, ':=') :- true.
+prolog xtl_op(700, xfx, '=:') :- true.
 
 pred '=...':
 contract((F, A), (compound(F); atom(F); A = [G | _], atom(G)), true),

@@ -118,6 +118,9 @@ prolog xtl_to_pl_goal((A -> B), (APL -> BPL)) :- !,
     xtl_to_pl_goal(A, APL),
     xtl_to_pl_goal(B, BPL).
 prolog xtl_to_pl_goal('!', '!') :- !.
+prolog xtl_to_pl_goal((Var := Fun), Goal) :- !,
+    xtl_to_pl_funexpr(Var, Fun, List),
+    comma_list(Goal, List).
 prolog xtl_to_pl_goal(G, GPL) :-
     G = GPL.
 
@@ -203,7 +206,7 @@ pred xtl_to_pl_fun:
 
 pred xtl_to_pl_funexpr:
     ((Var, Var, []): var(Var), !),
-    ((Result, pred(Result, Goal), [PL]):
+    ((Result, (Result =: Goal), [PL]):
         !, xtl_to_pl_goal(Goal, PL)),
     ((Number, Number, []): number(Number), !),
     ((Atom, Atom, []): atom(Atom), !),
