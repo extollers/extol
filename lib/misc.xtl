@@ -16,9 +16,10 @@ pred byte: (Byte) : number(Byte), Byte >= 0, Byte < 256.
 pred bytes: (Bytes) : ground(Bytes), maplist(byte, Bytes).
 
 pred assert:
-    (((A, B)) : assert(A), assert(B)),
-    ((G) : G, !),
-    ((G) : throw(assert_failed(G))).
+    (((A, B), ()) : !, assert(A), assert(B)),
+    ((maplist(G, [])) : !),
+    ((maplist(G, [X | Xs])): !, assert(call(G, X)), !, assert(maplist(G, Xs))),
+    ((G) : G, ! ; throw(assert_failed(G))).
 
 %% Lists
 

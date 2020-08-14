@@ -11,9 +11,7 @@ dcg many1:
 contract((Predicate, List), (callable(Predicate), list_or_partial_list(List)), list(List)),
 ((P, [X | Xs]): call(P, X), !, many(P, Xs)).
 
-pred eof:
-contract((In, Out), (list_or_partial_list(In), list_or_partial_list(Out)), true),
-(([], []): true).
+dcg eof: (): peek([]).
 
 pred peek:
 contract((Rest, In, Out), (list_or_partial_list(In), list_or_partial_list(Out), list_or_partial_list(Rest)), true),

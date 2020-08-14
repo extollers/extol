@@ -17,7 +17,7 @@ pred xtl_to_pl_declaration:
         copy_term(HeadXTL-GoalXTL, HeadPL-Goal),
         xtl_to_pl_goal(Goal, GoalPL),
         numbervars(HeadPL-GoalPL)),
-    (((test XTL), [test PL]) : !,
+    (((test(Name, XTL)), [(test Name :- PL)]) : !,
         xtl_to_pl_goal(XTL, PL),
         numbervars(PL)),
     ((prolog((N --> L)), [(NPL :- LPL)]) : !,
@@ -26,44 +26,47 @@ pred xtl_to_pl_declaration:
         NPL =... [F|AIO],
         xtl_to_pl_dcg(L, LPL, I, O),
         numbervars(NPL-LPL)),
-    (((fun(Name) : Clauses), ClausesPL) : !,
-        comma_list(Clauses, ClausesList),
-        maplist(xtl_to_pl_fun(Name), ClausesList, ClausesPL),
+    ((fun(Name, Clauses), ClausesPL) : !,
+        maplist(xtl_to_pl_fun(Name), Clauses, ClausesPL),
         numbervars(ClausesPL)),
-    (((Pred: Defs), Decls) : !,
-        comma_list(Defs, Xs),
-        ( xtl_def_contract(Xs, Contract, Rest),
-          Pred =... [Type, Name],
-          atom_concat('__contract_free_', Name, InnerName),
-          Head =... [Type, InnerName],
-          maplist(xtl_def_to_pl(Head), Rest, InnerDecls),
-          xtl_contract_to_pl(Pred, InnerName, Contract, OuterDecls),
-          append(OuterDecls, InnerDecls, Decls)
-        ; maplist(xtl_def_to_pl(Pred), Xs, Decls))),
+    ((pred(Name, Contract, Defs), Decls) : !,
+        ( Contract = none,
+            maplist(xtl_def_to_pl(pred(Name)), Defs, Decls)
+        ; atom_concat('__contract_free_', Name, InnerName),
+            maplist(xtl_def_to_pl(pred(InnerName)), Defs, InnerDecls),
+            xtl_contract_to_pl(pred(Name), InnerName, Contract, OuterDecls),
+            append(OuterDecls, InnerDecls, Decls))),
+    ((dcg(Name, Contract, Defs), Decls) : !,
+        ( Contract = none,
+            maplist(xtl_def_to_pl(dcg(Name)), Defs, Decls)
+        ; atom_concat('__contract_free_', Name, InnerName),
+            maplist(xtl_def_to_pl(dcg(InnerName)), Defs, InnerDecls),
+            xtl_contract_to_pl(dcg(Name), InnerName, Contract, OuterDecls),
+            append(OuterDecls, InnerDecls, Decls))),
     ((X, _) : !, throw(error(unknown_declaration(X)))).
 
 test xtl_to_pl_declaration :-
     xtl_to_pl_declaration(
-        (pred odd:
+        pred(odd, none,[
          (0: false),
          (1: true),
-         (N: M is N - 2, odd(M))),
+         (N: M is N - 2, odd(M))]),
         Res1),
     Res1 = [(odd(0) :- false),
            (odd(1) :- true),
            (odd(NN) :- MM is NN - 2, odd(MM))],
 
-    xtl_to_pl_declaration((dcg(f): (x: [x])), Res2),
+    xtl_to_pl_declaration(dcg(f, none, [(x: [x])]), Res2),
     Res2 = [(f(x,I,O) :- append([x],O,I))],
 
-    xtl_to_pl_declaration((pred f: contract(a, b, c), (d: e)), Res3),
+    xtl_to_pl_declaration(pred(f, contract(a, b, c), [(d: e)]), Res3),
     Res3 = [
         (f(a) :- assert(b),
                  '__contract_free_f'(a),
                  assert(c)),
         ('__contract_free_f'(d) :- e)],
 
-    xtl_to_pl_declaration((dcg f: contract(a, b, c), (d: e)), Res4),
+    xtl_to_pl_declaration(dcg(f, contract(a, b, c), [(d: e)]), Res4),
     Res4 = [
         (f(a,A,B) :-
              assert(b),
@@ -71,10 +74,10 @@ test xtl_to_pl_declaration :-
              assert(c)),
         ('__contract_free_f'(d,A,B) :- e(A,B))],
 
-    xtl_to_pl_declaration((pred f: ((): g, h)), Res5),
+    xtl_to_pl_declaration(pred(f, none, [((): g, h)]), Res5),
     Res5 = [(f :- g, h)],
 
-    xtl_to_pl_declaration((fun(fib) : ((0 : 1), (1 : 1), (N : fib(N - 1) + fib(N - 2)))), Res6),
+    xtl_to_pl_declaration(fun(fib, [(0 : 1), (1 : 1), (N : fib(N - 1) + fib(N - 2))]), Res6),
     Res6 = [
         (fib(0,1):-true),
         (fib(1,1):-true),
@@ -84,8 +87,6 @@ test xtl_to_pl_declaration :-
             '-'(A,2,E),
             fib(E,F),
             '+'(D,F,B))].
-
-pred xtl_def_contract: (([Contract|Rest], Contract, Rest): Contract = contract(_,_,_)).
 
 prolog xtl_def_to_pl(dcg(Pred), (Head: Body), (HeadPL :- GoalPL)) :-
     copy_term(Head-Body, HeadVars-Goal),

@@ -50,7 +50,7 @@ pred command: ((Command, _): write(unknown_command(Command)), false).
 prolog run_test(done) :- !, write(success), nl.
 prolog run_test((A, B)) :- !,
     (call(A)
-     -> run_test(B)
+     -> !, run_test(B)
      ; nl, write('  failed: '), write(A), nl, throw(test_failed)).
 prolog run_test(B) :-
     run_test((B, done)).

@@ -40,30 +40,54 @@ contract((Decls), true, list(Decls)),
 
 pred xtl_declaration:
     ((prolog _): true),
-    ((pred Name: Clauses): atom(Name), map_comma_list(pred_clause, Clauses)),
-    ((dcg Name: Clauses): atom(Name), map_comma_list(dcg_clause, Clauses)),
-    ((fun Name: Clauses): atom(Name), map_comma_list(fun_clause, Clauses)),
-    ((test (Name :- Goals)): atom(Name), map_comma_list(xtl_goal, Goals)).
+    ((pred(Name, Contract, Clauses)): atom(Name), contract(Contract), maplist(pred_clause, Clauses)),
+    ((dcg(Name, Contract, Clauses)): atom(Name), contract(Contract), maplist(dcg_clause, Clauses)),
+    ((fun(Name, Clauses)): atom(Name), maplist(fun_clause, Clauses)),
+    ((test(Name, Goals)): atom(Name), xtl_goal(Goals)).
 
 pred pred_clause: _: true.
 pred dcg_clause: _: true.
 pred fun_clause: _: true.
 pred xtl_goal: _: true.
+pred contract:
+    (none: true),
+    ((contract(Head, Requires, Ensures)): comma_list(Head, _), xtl_goal(Requires), xtl_goal(Ensures)).
 
 dcg xtl_declaration:
 contract(Decls, true, maplist(xtl_declaration, Decls)),
 ((_): eof, !, {fail}),
 ((Decls):
     xtl_expression(DeclV),
-    require(xtl_token(".")),
-    { DeclV = include(Other),
-      xtl_include(Other, Decls)
-    ; xtl_makevars(DeclV, Decl, _),
-      Decls = [Decl] }).
+    require(xtl_token(".")), !,
+    { DeclV = include(Other), !,
+        xtl_include(Other, Decls)
+    ; !, xtl_makevars(DeclV, DeclP, _), !,
+        xtl_term_to_declaration(DeclP, Decl), !,
+        Decls = [Decl] }).
+
+% TODO: @-pattern
+
+pred xtl_term_to_declaration:
+    ((prolog(X), prolog(X)): true),
+    (((pred Name : contract(Head, Requires, Ensures), Clauses), pred(Name, contract(Head, Requires, Ensures), ClauseList)):
+        comma_list(Clauses, ClauseList)),
+    (((pred Name : Clauses), pred(Name, none, ClauseList)):
+        comma_list(Clauses, ClauseList)),
+    (((dcg Name : contract(Head, Requires, Ensures), Clauses), dcg(Name, contract(Head, Requires, Ensures), ClauseList)):
+        comma_list(Clauses, ClauseList)),
+    (((dcg Name : Clauses), dcg(Name, none, ClauseList)):
+        comma_list(Clauses, ClauseList)),
+    (((fun Name : Clauses), fun(Name, ClauseList)):
+        comma_list(Clauses, ClauseList)),
+    (((test Name :- Goal), test(Name, Goal)): !),
+    ((T, _): throw(failed(xtl_term_to_declaration(T)))).
 
 test xtl_declaration :-
-    xtl_declaration(Decl, "pred f: (x: 1), (y: 2, 3).", ""),
-    Decl = [(pred f: ((x: 1), (y: (2, 3))))].
+    xtl_declaration(Decl1, "pred f: (x: 1), (y: 2, 3).", ""),
+    Decl1 = [pred(f, none, [(x: 1), (y: (2, 3))])],
+
+    xtl_declaration(Decl2, "test t:- g, h.", ""),
+    Decl2 = [test(t, (g,h))].
 
 prolog xtl_makevars(V, _, _) :-
     V =.. ['XTL$VARNAME', '_'], !.

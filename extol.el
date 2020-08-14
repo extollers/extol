@@ -31,15 +31,15 @@
     (indent-line-to (save-excursion (forward-line 1) (current-indentation))))
    (t
     (indent-line-to
-     (let ((nesting (car (syntax-ppss))))
+     (let ((nesting (car (syntax-ppss))) (unindent (looking-at " *;")))
        (save-excursion
          (re-search-backward "^ *[^ \r\n%]")
          (beginning-of-line)
          (let* ((prev-indent (current-indentation))
                 (prev-nesting (car (syntax-ppss)))
                 (nesting-indent (* 4 (- nesting prev-nesting)))
-                (extra-indent (if (looking-at ".*\\(:-?\\|-->\\)$") (cond ((<= nesting-indent 0) (+ (- nesting-indent) 4)) (t 0)) 0)))
-           (+ prev-indent nesting-indent extra-indent))))))))
+                (extra-indent (if (looking-at ".*\\(:-?\\|-->\\)$\\| *;") (cond ((<= nesting-indent 0) (+ (- nesting-indent) 4)) (t 0)) 0)))
+           (+ prev-indent nesting-indent extra-indent (if unindent -4 0)))))))))
 
 (defvar extol-mode-syntax-table
   (let ((st (make-syntax-table)))
