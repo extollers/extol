@@ -87,20 +87,21 @@ test xtl_declaration :-
     xtl_declaration(Decl2, "test t:- g, h.", ""),
     Decl2 = [test(t, (g,h))].
 
-prolog xtl_makevars(V, _, _) :-
-    V =.. ['XTL$VARNAME', '_'], !.
-prolog xtl_makevars(V, Var, Vars) :-
-    V =.. ['XTL$VARNAME', Name], !,
-    member(Name-Var, Vars), !.
-prolog xtl_makevars(Atomic, Atomic, _) :-
-    atomic(Atomic), !.
-prolog xtl_makevars([X|Xs], [Y|Ys], Vars) :- !,
-    xtl_makevars(X, Y, Vars),
-    xtl_makevars(Xs, Ys, Vars).
-prolog xtl_makevars(In, Out, Vars) :-
-    In =... InL, !,
-    xtl_makevars(InL, OutL, Vars),
-    Out =... OutL.
+pred xtl_makevars:
+    ((V, _, _) :
+        V =.. ['XTL$VARNAME', '_'], !),
+    ((V, Var, Vars) :
+        V =.. ['XTL$VARNAME', Name], !,
+        member(Name-Var, Vars), !),
+    ((Atomic, Atomic, _) :
+        atomic(Atomic), !),
+    (([X|Xs], [Y|Ys], Vars) : !,
+        xtl_makevars(X, Y, Vars),
+        xtl_makevars(Xs, Ys, Vars)),
+    ((In, Out, Vars) :
+        In =... InL, !,
+        xtl_makevars(InL, OutL, Vars),
+        Out =... OutL).
 
 test xtl_makevars :-
     A =.. ['XTL$VARNAME', 'A'],
@@ -290,52 +291,53 @@ prolog xtl_expression(just(Left), Prec, Term) -->
     xtl_expression(just(Combined), Prec, Term).
 prolog xtl_expression(just(Term), _, Term) --> !.
 
-prolog xtl_op(1200, xfx, ':-') :- true.
-prolog xtl_op(1200, xfx, '-->') :- true.
-prolog xtl_op(1200, fx, ':-') :- true.
-prolog xtl_op(1105, xfy, '|') :- true.
-prolog xtl_op(1100, xfy, ';') :- true.
-prolog xtl_op(1050, xfy, '->') :- true.
-prolog xtl_op(1000, xfy, ',') :- true.
-prolog xtl_op(900, fy, '\\+') :- true.
-prolog xtl_op(700, xfx, '=') :- true.
-prolog xtl_op(700, xfx, '\\=') :- true.
-prolog xtl_op(700, xfx, '=..') :- true.
-prolog xtl_op(700, xfx, '==') :- true.
-prolog xtl_op(700, xfx, '\\==') :- true.
-prolog xtl_op(700, xfx, 'is') :- true.
-prolog xtl_op(700, xfx, '<') :- true.
-prolog xtl_op(700, xfx, '>') :- true.
-prolog xtl_op(700, xfx, '=<') :- true.
-prolog xtl_op(700, xfx, '>=') :- true.
-prolog xtl_op(700, xfx, '=\\=') :- true.
-prolog xtl_op(500, yfx, '+') :- true.
-prolog xtl_op(500, yfx, '-') :- true.
-prolog xtl_op(400, yfx, '*') :- true.
-prolog xtl_op(400, yfx, '/') :- true.
-prolog xtl_op(400, yfx, 'rem') :- true.
-prolog xtl_op(400, yfx, 'mod') :- true.
-prolog xtl_op(400, yfx, 'div') :- true.
-prolog xtl_op(400, yfx, '<<') :- true.
-prolog xtl_op(400, yfx, '>>') :- true.
-prolog xtl_op(200, xfx, '**') :- true.
-prolog xtl_op(200, xfx, '^') :- true.
-prolog xtl_op(200, fy, '+') :- true.
-prolog xtl_op(200, fy, '-') :- true.
+pred xtl_op:
+    ((1200, xfx, ':-') : true),
+    ((1200, xfx, '-->') : true),
+    ((1200, fx, ':-') : true),
+    ((1105, xfy, '|') : true),
+    ((1100, xfy, ';') : true),
+    ((1050, xfy, '->') : true),
+    ((1000, xfy, ',') : true),
+    ((900, fy, '\\+') : true),
+    ((700, xfx, '=') : true),
+    ((700, xfx, '\\=') : true),
+    ((700, xfx, '=..') : true),
+    ((700, xfx, '==') : true),
+    ((700, xfx, '\\==') : true),
+    ((700, xfx, 'is') : true),
+    ((700, xfx, '<') : true),
+    ((700, xfx, '>') : true),
+    ((700, xfx, '=<') : true),
+    ((700, xfx, '>=') : true),
+    ((700, xfx, '=\\=') : true),
+    ((500, yfx, '+') : true),
+    ((500, yfx, '-') : true),
+    ((400, yfx, '*') : true),
+    ((400, yfx, '/') : true),
+    ((400, yfx, 'rem') : true),
+    ((400, yfx, 'mod') : true),
+    ((400, yfx, 'div') : true),
+    ((400, yfx, '<<') : true),
+    ((400, yfx, '>>') : true),
+    ((200, xfx, '**') : true),
+    ((200, xfx, '^') : true),
+    ((200, fy, '+') : true),
+    ((200, fy, '-') : true),
 
-prolog xtl_op(1200, fy, test) :- true.
-prolog xtl_op(1200, fy, prolog) :- true.
-prolog xtl_op(999, fx, tc) :- true.
-prolog xtl_op(700, xfx, '=...') :- true.
-prolog xtl_op(1200, xfy, ':') :- true.
-prolog xtl_op(1150, fy, dcg) :- true.
-prolog xtl_op(1150, fy, pred) :- true.
-prolog xtl_op(1150, fy, include) :- true.
-prolog xtl_op(1150, fy, fun) :- true.
-prolog xtl_op(700, xfx, ':=') :- true.
-prolog xtl_op(1125, xfx, 'if') :- true.
-prolog xtl_op(100, fy, '`') :- true.
-prolog xtl_op(700, fx, ':=') :- true.
+    ((1200, fy, test) : true),
+    ((1200, fy, prolog) : true),
+    ((999, fx, tc) : true),
+    ((700, xfx, '=...') : true),
+    ((1200, xfy, ':') : true),
+    ((1150, fy, dcg) : true),
+    ((1150, fy, pred) : true),
+    ((1150, fy, include) : true),
+    ((1150, fy, fun) : true),
+    ((700, xfx, ':=') : true),
+    ((1125, xfx, 'if') : true),
+    ((100, fy, '`') : true),
+    ((700, fx, ':=') : true).
 
 % test parse_self :-
 %     read_file('main.xtl', Bytes), !,

@@ -27,14 +27,14 @@ contract((D), true, number(D)),
     [C],
     { member(C - D, [0'0 - 0, 0'1 - 1, 0'2 - 2, 0'3 - 3, 0'4 - 4, 0'5 - 5, 0'6 - 6, 0'7 - 7, 0'8 - 8, 0'9 - 9]) }).
 
-prolog dcg_call(Var) --> { var(Var), !, fail }.
-prolog dcg_call([]) --> !, [].
-prolog dcg_call([X | Xs]) --> !, [X], Xs.
-prolog dcg_call((A, B)) --> !, A, B.
-prolog dcg_call((A ; _)) --> A.
-prolog dcg_call((_ ; B)) --> !, B.
-prolog dcg_call({A}) --> !, { A }.
-prolog dcg_call(G, I, O) :- !, call(G, I, O).
+pred dcg_call:
+    ((Var, _, _) : var(Var), !, fail),
+    (([], I, I) : !),
+    (([X | Xs], I, P) : !, I = [X | O], dcg_call(Xs, O, P)),
+    (((A, B), I, P) : !, dcg_call(A, I, O), dcg_call(B, O, P)),
+    (((A ; B), I, O) : !, (dcg_call(A, I, O) ; dcg_call(B, I, O))),
+    (({A}, I, I) : !, A),
+    ((G, I, O) : !, call(G, I, O)).
 
 prolog require(N, Xs, Rest) :-
     ( dcg_call(N, Xs, Rest), !
