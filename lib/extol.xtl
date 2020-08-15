@@ -1,9 +1,7 @@
 %% Extol
 
 pred xtl_include: ((File, DeclsXTL):
-    % t('Loading file:'(File)),
-    BytesIn := read_file(File), !,
-    xtl_top_level(DeclsXTL, BytesIn, [])).
+    xtl_top_level(DeclsXTL, := read_file(File), [])).
 
 prolog xtl_token(N) --> N, xtl_skipwhite, !.
 
