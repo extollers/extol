@@ -344,3 +344,32 @@ prolog xtl_op(700, fx, ':=') :- true.
 fun xtl_slim_declaration:
 (((test _ : _)) : []),
 ((Decl) : Decl).
+
+%% Modules
+
+fun xtlm_new: (): `module(Declarations).
+
+pred xtlm_find:
+    ((Module, Name/N, Res): xtlm_find(Module, Name/N/pred, Res)),
+    ((Module, Name/N, Res): M is N - 1, xtlm_find(Module, Name/M/fun, Res)),
+    ((Module, Name/N, Res): M is N - 1, xtlm_find(Module, Name/M/dcg, Res)),
+    ((Module, Name/N, Res): xtlm_find(Module, Name/N/prolog, Res)).
+
+pred xtlm_find_: (module(Declarations), Name/N/Type, Declaration):
+    member(Name/N/Type-Declaration, Declarations),
+    (var(Declaration), !, false; true).
+
+pred xtlm_add: (Module, Declaration):
+    Name/N/Type := xtlm_declaration_key(Declaration),
+    ( xtlm_find(Module, Name/N/_, Res),
+        throw(conflicting_declaration(Name/N))
+    ; xtlm_add_(Module, Key, Declaration)).
+
+pred xtlm_add_: (module(Declarations), Key, Declaration):
+    member(Key-Declaration, Declarations).
+
+fun xtlm_declaration_key:
+    (pred(Name, _, (Head : _)): `(Name/(:= length(comma_list(Head)))/pred)),
+    (fun(Name, _, (Head : _)): `(Name/(:= 1 + length(comma_list(Head)))/pred)),
+    (dcg(Name, _, (Head : _)): `(Name/(:= 2 + length(comma_list(Head)))/pred)),
+    (test(Name, _): `(Name/test/test)).

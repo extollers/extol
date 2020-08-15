@@ -64,3 +64,5 @@ pred error_unless:
 pred '=...':
 contract((F, A), (compound(F); atom(F); A = [G | _], atom(G)), true),
 ((F, A) : F =.. A).
+
+fun '+': (A, B): C if C is A + B.
