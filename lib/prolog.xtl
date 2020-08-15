@@ -216,39 +216,40 @@ prolog pl_expression(just(Left), Prec, Term) -->
 prolog pl_expression(just(Term), _, Term) --> !.
 
 
-prolog pl_op(1200, xfx, ':-') :- true.
-prolog pl_op(1200, xfx, '-->') :- true.
-prolog pl_op(1200, fx, ':-') :- true.
-prolog pl_op(1105, xfy, '|') :- true.
-prolog pl_op(1100, xfy, ';') :- true.
-prolog pl_op(1050, xfy, '->') :- true.
-prolog pl_op(1000, xfy, ',') :- true.
-prolog pl_op(900, fy, '\\+') :- true.
-prolog pl_op(700, xfx, '=') :- true.
-prolog pl_op(700, xfx, '\\=') :- true.
-prolog pl_op(700, xfx, '=..') :- true.
-prolog pl_op(700, xfx, '==') :- true.
-prolog pl_op(700, xfx, '\\==') :- true.
-prolog pl_op(700, xfx, 'is') :- true.
-prolog pl_op(700, xfx, '<') :- true.
-prolog pl_op(700, xfx, '>') :- true.
-prolog pl_op(700, xfx, '=<') :- true.
-prolog pl_op(700, xfx, '>=') :- true.
-prolog pl_op(700, xfx, '=\\=') :- true.
-prolog pl_op(600, xfy, ':') :- true.
-prolog pl_op(500, yfx, '+') :- true.
-prolog pl_op(500, yfx, '-') :- true.
-prolog pl_op(400, yfx, '*') :- true.
-prolog pl_op(400, yfx, '/') :- true.
-prolog pl_op(400, yfx, 'rem') :- true.
-prolog pl_op(400, yfx, 'mod') :- true.
-prolog pl_op(400, yfx, 'div') :- true.
-prolog pl_op(400, yfx, '<<') :- true.
-prolog pl_op(400, yfx, '>>') :- true.
-prolog pl_op(200, xfx, '**') :- true.
-prolog pl_op(200, xfx, '^') :- true.
-prolog pl_op(200, fy, '+') :- true.
-prolog pl_op(200, fy, '-') :- true.
+pred pl_op:
+((1200, xfx, ':') :- true),
+((1200, xfx, '-->') : true),
+((1200, fx, ':-') : true),
+((1105, xfy, '|') : true),
+((1100, xfy, ';') : true),
+((1050, xfy, '->') : true),
+((1000, xfy, ',') : true),
+((900, fy, '\\+') : true),
+((700, xfx, '=') : true),
+((700, xfx, '\\=') : true),
+((700, xfx, '=..') : true),
+((700, xfx, '==') : true),
+((700, xfx, '\\==') : true),
+((700, xfx, 'is') : true),
+((700, xfx, '<') : true),
+((700, xfx, '>') : true),
+((700, xfx, '=<') : true),
+((700, xfx, '>=') : true),
+((700, xfx, '=\\=') : true),
+((600, xfy, ':') : true),
+((500, yfx, '+') : true),
+((500, yfx, '-') : true),
+((400, yfx, '*') : true),
+((400, yfx, '/') : true),
+((400, yfx, 'rem') : true),
+((400, yfx, 'mod') : true),
+((400, yfx, 'div') : true),
+((400, yfx, '<<') : true),
+((400, yfx, '>>') : true),
+((200, xfx, '**') : true),
+((200, xfx, '^') : true),
+((200, fy, '+') : true),
+((200, fy, '-') : true).
 
 %test parse_stage1 :-
 %    read_file('stage1.pl', Bytes), !,

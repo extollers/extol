@@ -36,7 +36,7 @@ pred dcg_call:
     (({A}, I, I) : !, A),
     ((G, I, O) : !, call(G, I, O)).
 
-prolog require(N, Xs, Rest) :-
+pred require: (N, Xs, Rest) :
     ( dcg_call(N, Xs, Rest), !
     ; pretty_init(Xs, C), throw(parse_failed(N, C)) ).
 
@@ -49,4 +49,4 @@ pred must:
 pred must:
 ((G, A, B, C): undo(throw(failed(call(G, A, B, C)))), call(G, A, B, C)).
 
-prolog try(N, Xs, Rest) :- catch(dcg_call(N, Xs, Rest), parse_failed(_, _), Failed=true), !, Failed=false.
+pred try: (N, Xs, Rest) :- catch(dcg_call(N, Xs, Rest), parse_failed(_, _), Failed=true), !, Failed=false.
