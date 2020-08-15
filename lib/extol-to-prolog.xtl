@@ -13,19 +13,9 @@ pred xtl_to_pl_toplevel: (XTL, PL):
 
 pred xtl_to_pl_declaration:
     contract((XTL, PL), xtl_declaration(XTL), true),
-    ((prolog((HeadXTL :- GoalXTL)), [(HeadPL :- GoalPL)]) : !,
-        copy_term(HeadXTL-GoalXTL, HeadPL-Goal),
-        xtl_to_pl_goal(Goal, GoalPL),
-        numbervars(HeadPL-GoalPL)),
     (((test(Name, XTL)), [(test Name :- PL)]) : !,
         xtl_to_pl_goal(XTL, PL),
         numbervars(PL)),
-    ((prolog((N --> L)), [(NPL :- LPL)]) : !,
-        N =... [F|A],
-        append(A, [I, O], AIO),
-        NPL =... [F|AIO],
-        xtl_to_pl_dcg(L, LPL, I, O),
-        numbervars(NPL-LPL)),
     ((fun(Name, Clauses), ClausesPL) : !,
         maplist(xtl_to_pl_fun(Name), Clauses, ClausesPL),
         numbervars(ClausesPL)),
@@ -160,29 +150,6 @@ test xtl_to_pl_dcg :-
     PL1 == dcg_call(V, i, o),
     xtl_to_pl_dcg({V}, PL2, i, o),
     PL2 == (call(V), i = o).
-
-test xtl_to_pl_dcg_regression :-
-    XTL = (
-        prolog((c_declaration(declare(Name, Type, Value)) -->
-            c_type(Type),
-            [symbol(Name)],
-            ( [operator('=')],
-              c_value(Assign),
-              !,
-              { Value = value(Assign) }
-            ; { Value = none } ),
-            [operator(';')]))),
-    xtl_to_pl_declaration(XTL, [PL]),
-    PL = (c_declaration(declare(A,B,C),D,E) :-
-              c_type(B,D,F),
-              append([symbol(A)],G,F),
-              ( append([operator('=')], H, G),
-                c_value(I,H,J),
-                (!, J = K),
-                (C = value(I), K = L)
-              ; C = none,
-                G = L),
-              append([operator(';')], M, L)).
 
 pred xtl_contract_to_pl:
     ((pred(Name), InnerName, contract(Args, Expects, Ensures), [DeclsPL]) :

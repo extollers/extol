@@ -10,7 +10,7 @@
 
 (defvar extol-font-lock-keywords
   (list
-   (cons (concat "\\(\\<" (regexp-opt '("pred" "dcg" "contract" "prolog" "test" "fun")) "\\>\\|[!:]\\)") font-lock-keyword-face)
+   (cons (concat "\\(\\<" (regexp-opt '("pred" "dcg" "contract" "test" "fun")) "\\>\\|[!:]\\)") font-lock-keyword-face)
    '("\\(\\<\\(0'\\\\?.\\|[0-9]+\\)\\>\\|'[^']+'\\)" . font-lock-constant-face)
    '("\\(\\<[a-z][A-Za-z0-9_]*\\>\\)" . font-lock-function-name-face)
    '("\\<\\([A-Z_][A-Za-z0-9_]*\\)\\>" . font-lock-variable-name-face)
@@ -25,7 +25,7 @@
     (indent-line-to 0))
    ((looking-at " *$")
     (indent-line-to 0))
-   ((looking-at " *\\(pred\\|dcg\\|prolog\\|test\\|fun\\) ")
+   ((looking-at " *\\(pred\\|dcg\\|test\\|fun\\) ")
     (indent-line-to 0))
    ((looking-at " *%")
     (indent-line-to (save-excursion (forward-line 1) (current-indentation))))

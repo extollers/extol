@@ -40,7 +40,6 @@ contract((Decls), true, list(Decls)),
     require(eof)).
 
 pred xtl_declaration:
-    ((prolog _): true),
     ((pred(Name, Contract, Clauses)): atom(Name), contract(Contract), maplist(pred_clause, Clauses)),
     ((dcg(Name, Contract, Clauses)): atom(Name), contract(Contract), maplist(dcg_clause, Clauses)),
     ((fun(Name, Clauses)): atom(Name), maplist(fun_clause, Clauses)),
@@ -69,7 +68,6 @@ contract(Decls, true, maplist(xtl_declaration, Decls)),
 % TODO: @-pattern
 
 pred xtl_term_to_declaration:
-    ((prolog(X), prolog(X)): true),
     (((pred Name : contract(Head, Requires, Ensures), Clauses), pred(Name, contract(Head, Requires, Ensures), ClauseList)):
         comma_list(Clauses, ClauseList)),
     (((pred Name : Clauses), pred(Name, none, ClauseList)):
@@ -337,7 +335,6 @@ pred xtl_op:
     ((200, fy, '-') : true),
 
     ((1200, fy, test) : true),
-    ((1200, fy, prolog) : true),
     ((999, fx, tc) : true),
     ((700, xfx, '=...') : true),
     ((1200, xfy, ':') : true),
@@ -365,8 +362,7 @@ fun xtlm_new: (): `module(Declarations).
 pred xtlm_find:
     ((Module, Name/N, Res): xtlm_find(Module, Name/N/pred, Res)),
     ((Module, Name/N, Res): M is N - 1, xtlm_find(Module, Name/M/fun, Res)),
-    ((Module, Name/N, Res): M is N - 1, xtlm_find(Module, Name/M/dcg, Res)),
-    ((Module, Name/N, Res): xtlm_find(Module, Name/N/prolog, Res)).
+    ((Module, Name/N, Res): M is N - 1, xtlm_find(Module, Name/M/dcg, Res)).
 
 pred xtlm_find_: (module(Declarations), Name/N/Type, Declaration):
     member(Name/N/Type-Declaration, Declarations),
