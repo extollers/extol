@@ -336,6 +336,8 @@ prolog xtl_op(1150, fy, include) :- true.
 prolog xtl_op(1150, fy, fun) :- true.
 prolog xtl_op(700, xfx, ':=') :- true.
 prolog xtl_op(1125, xfx, 'if') :- true.
+prolog xtl_op(100, fy, '`') :- true.
+prolog xtl_op(700, fx, ':=') :- true.
 
 % test parse_self :-
 %     read_file('main.xtl', Bytes), !,

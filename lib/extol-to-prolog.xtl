@@ -122,7 +122,13 @@ prolog xtl_to_pl_goal((Var := Fun), Goal) :- !,
     xtl_to_pl_funexpr(Var, Fun, List),
     comma_list(Goal, List).
 prolog xtl_to_pl_goal(G, GPL) :-
-    G = GPL.
+    G =... [Name | Args],
+    maplist(xtl_to_pl_quoted, QuotedArgs, Args, ExtraGoalsListList),
+    ExtraGoalsList := append(ExtraGoalsListList),
+    comma_list(ExtraGoals, ExtraGoalsList),
+    MainGoalPL =... [Name | QuotedArgs],
+    ( ExtraGoals = (), GPL = MainGoalPL
+    ; GPL = (ExtraGoals, MainGoalPL)).
 
 prolog xtl_to_pl_dcg(Var, dcg_call(Var, I, O), I, O) :-
     var(Var), !.
@@ -213,6 +219,8 @@ pred xtl_to_pl_funexpr:
     (([], [], []): true),
     (([X | Xs], [Y | Ys], PL):
         PL := append(xtl_to_pl_funexpr(X, Y), xtl_to_pl_funexpr(Xs, Ys))),
+    ((Res, (`Quoted), PL):
+        PL := xtl_to_pl_quoted(Res, Quoted)),
     ((Result, Functor, PL): compound(Functor), !,
         Functor =... [Name | ListFun],
         maplist(xtl_to_pl_funexpr, Results, ListFun, DepsPLs),
@@ -231,3 +239,17 @@ test xtl_to_pl_funexpr :-
         '-'(A,2,D),
         fib(D,E),
         '+'(C,E,res)].
+
+pred xtl_to_pl_quoted:
+    ((Res, Var, []): var(Var), !, Res = Var),
+    ((Res, (:= Fun), Goals): !, xtl_to_pl_funexpr(Res, Fun, Goals)),
+    ((Num, Num, []): number(Num), !),
+    ((Atom, Atom, []): atom(Atom), !),
+    ((Res, Term, Goals):
+        compound(Term), !,
+        Term =... [Name | Args],
+        maplist(xtl_to_pl_quoted, ArgsQuoted, Args, Goalss),
+        Goals := append(Goalss),
+        Res =... [Name | ArgsQuoted]).
+
+pred ':=': (X, G): call(G, X).
