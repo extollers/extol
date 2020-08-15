@@ -49,4 +49,4 @@ pred must:
 pred must:
 ((G, A, B, C): undo(throw(failed(call(G, A, B, C)))), call(G, A, B, C)).
 
-pred try: (N, Xs, Rest) :- catch(dcg_call(N, Xs, Rest), parse_failed(_, _), Failed=true), !, Failed=false.
+pred try: (N, Xs, Rest) : catch(dcg_call(N, Xs, Rest), parse_failed(_, _), Failed=true), !, Failed=false.

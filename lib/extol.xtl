@@ -3,29 +3,32 @@
 pred xtl_include: ((File, DeclsXTL):
     xtl_top_level(DeclsXTL, := read_file(File), [])).
 
-prolog xtl_token(N) --> N, xtl_skipwhite, !.
+dcg xtl_token: (N) : N, xtl_skipwhite, !.
 
 test xtl_token :-
     xtl_token("x", "x  ", ""),
     xtl_token("x", "x % comment", ""),
     xtl_token("x", "x % comment\n  \t", "").
 
-prolog xtl_skipwhite --> xtl_white, !.
-prolog xtl_skipwhite --> [].
+dcg xtl_skipwhite:
+    ((): xtl_white, !),
+    ((): []).
 
 test xtl_skipwhite :-
     xtl_skipwhite("", "").
 
-prolog xtl_white --> "%", !, xtl_line_comment_, xtl_skipwhite.
-prolog xtl_white --> (" "; "\t"; "\r" ; "\n" ), !, xtl_skipwhite.
+dcg xtl_white:
+    ((): "%", !, xtl_line_comment_, xtl_skipwhite),
+    ((): (" "; "\t"; "\r" ; "\n" ), !, xtl_skipwhite).
 
 test xtl_white :-
     xtl_white(" ", ""),
     xtl_white("%", ""),
     xtl_white("% comment \n\t  ", "").
 
-prolog xtl_line_comment_ --> ("\n" ; eof), !.
-prolog xtl_line_comment_ --> [_], xtl_line_comment_.
+dcg xtl_line_comment_:
+    ((): ("\n" ; eof), !),
+    ((): [_], xtl_line_comment_).
 
 dcg xtl_top_level:
 contract((Decls), true, list(Decls)),
@@ -115,19 +118,20 @@ contract((Byte), true, number(Byte)),
     [C], !,
     { member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789$?") }).
 
-prolog xtl_atom(Atom) -->
-    "'",
-    xtl_quoted_atom_chars_(Cs),
-    { atom_codes(Atom, Cs) }.
-prolog xtl_atom(AtomVar) -->
-    many1(xtl_atom_char, Cs), !,
-    { atom_codes(Atom, Cs),
-      Cs = [C|_],
-      ( C = 0'_, !,
-        AtomVar =.. ['XTL$VARNAME', '_']
-      ; member(C, "ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
-        !, AtomVar =.. ['XTL$VARNAME', Atom]
-      ; AtomVar = Atom )}.
+dcg xtl_atom:
+    ((Atom):
+        "'",
+        xtl_quoted_atom_chars_(Cs),
+        { atom_codes(Atom, Cs) }),
+    ((AtomVar) :
+        many1(xtl_atom_char, Cs), !,
+        { atom_codes(Atom, Cs),
+            Cs = [C|_],
+            ( C = 0'_, !,
+                AtomVar =.. ['XTL$VARNAME', '_']
+            ; member(C, "ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
+                !, AtomVar =.. ['XTL$VARNAME', Atom]
+            ; AtomVar = Atom )}).
 
 test xtl_atom :-
     xtl_atom(a, "'a'", ""),
@@ -149,15 +153,16 @@ dcg xtl_quoted_char:
                  AsIs - AsIs
     ]) }, !).
 
-prolog xtl_quoted_atom_chars_([]) --> "'", !.
-prolog xtl_quoted_atom_chars_([C | Cs]) -->
+dcg xtl_quoted_atom_chars_:
+(([]) : "'", !),
+(([C | Cs]) :
     xtl_quoted_char(C), !,
-    xtl_quoted_atom_chars_(Cs).
-prolog xtl_quoted_atom_chars_([C | Cs]) -->
+    xtl_quoted_atom_chars_(Cs)),
+(([C | Cs]) :
     [C],
-    xtl_quoted_atom_chars_(Cs).
+    xtl_quoted_atom_chars_(Cs)).
 
-prolog xtl_expression(Expr) -->
+dcg xtl_expression: (Expr) :
     xtl_expression(1201, Expr).
 
 dcg xtl_expression:
@@ -179,35 +184,36 @@ test xtl_expression :-
 test comma_expr :-
     xtl_expression((p :- (a, b)), "p :- a, b", []).
 
-prolog xtl_regular_term(Char) --> "0'", !, require(xtl_string_char(Char)), xtl_skipwhite.
-prolog xtl_regular_term(Integer) -->
+dcg xtl_regular_term:
+((Char) : "0'", !, require(xtl_string_char(Char)), xtl_skipwhite),
+((Integer) :
     many1(digit, Ds), !,
     { foldl(add_digit, 0, Ds, Integer) },
-    xtl_skipwhite.
-prolog xtl_regular_term(String) --> "\"", !, require(many(xtl_string_char, String)), require("\""), xtl_skipwhite.
-prolog xtl_regular_term(Term) -->
+    xtl_skipwhite),
+((String) : "\"", !, require(many(xtl_string_char, String)), require("\""), xtl_skipwhite),
+((Term) :
     xtl_atom(Atom), !,
     ( xtl_token("("), !,
       xtl_comma_separated(Args, [], xtl_token(")")),
       { Term =... [Atom | Args] }
     ; xtl_skipwhite,
-      { Term = Atom }).
-prolog xtl_regular_term('()') -->
+      { Term = Atom })),
+(('()', ()) :
     xtl_token("("),
-    xtl_token(")"), !.
-prolog xtl_regular_term(Term) -->
+    xtl_token(")"), !),
+((Term) :
     xtl_token("("),
     xtl_expression(Term),
-    require(xtl_token(")")).
-prolog xtl_regular_term('{}'(Term)) -->
+    require(xtl_token(")"))),
+(('{}'(Term)) :
     xtl_token("{"),
     xtl_expression(Term),
-    require(xtl_token("}")).
-prolog xtl_regular_term(Term) -->
+    require(xtl_token("}"))),
+((Term) :
     xtl_token("["),
     xtl_comma_separated(Term, Tail,
                        ( xtl_token("]"), {Tail=[]}
-                       ; xtl_token("|"), xtl_expression(Tail), xtl_token("]"))), !.
+                       ; xtl_token("|"), xtl_expression(Tail), xtl_token("]"))), !).
 
 dcg xtl_string_char:
 contract((Byte), true, byte(Byte)),
@@ -225,61 +231,66 @@ test xtl_regular_term :-
     xtl_regular_term([], "[]", ""),
     xtl_regular_term([1,2,3], "[1,2,3]", "").
 
-prolog xtl_comma_separated(As, Tail, End) -->
+dcg xtl_comma_separated: (As, Tail, End):
     xtl_comma_seperated_first(As, Tail, End).
 
-prolog xtl_comma_seperated_first(Tail, Tail, End) -->
-    End, !.
-prolog xtl_comma_seperated_first([A | As], Tail, End) -->
+dcg xtl_comma_seperated_first:
+((Tail, Tail, End) :
+    End, !),
+(([A | As], Tail, End) :
     xtl_expression(1000, A), !,
-    xtl_comma_separated_next(As, Tail, End).
+    xtl_comma_separated_next(As, Tail, End)).
 
-prolog xtl_comma_separated_next(Tail, Tail, End) -->
-    End, !.
-prolog xtl_comma_separated_next([A | As], Tail, End) -->
+dcg xtl_comma_separated_next:
+((Tail, Tail, End) :
+    End, !),
+(([A | As], Tail, End) :
     require(xtl_token(",")), !,
     xtl_expression(1000, A), !,
-    xtl_comma_separated_next(As, Tail, End).
+    xtl_comma_separated_next(As, Tail, End)).
 
-prolog xtl_op_or_term('!', term) --> "!", xtl_skipwhite.
-prolog xtl_op_or_term(X, Info) -->
+dcg xtl_op_or_term:
+(('!', term) : "!", xtl_skipwhite),
+((X, Info) :
     xtl_regular_term(X), !,
     ( { xtl_op(Prec, Assoc, X), Info = op(Prec, Assoc) }
-    ; { Info = term } ).
-prolog xtl_op_or_term(X, Info) -->
+    ; { Info = term } )),
+((X, Info) :
     many1(xtl_op_char, Cs),
     ( xtl_known_op(Cs, X, Prec, Assoc),
       { Info = op(Prec, Assoc) }
     % ; { atom_codes(X, Cs),
     %     Info = term }
     ),
-    xtl_skipwhite.
+    xtl_skipwhite).
 
-prolog xtl_known_op(Cs, Op, Prec, Assoc) --> { atom_codes(Op, Cs), xtl_op(_, _, Op), !, xtl_op(Prec, Assoc, Op) }.
-prolog xtl_known_op(Cs, Op, Prec, Assoc) --> { append(Shorter, [C], Cs) }, append([C]), xtl_known_op(Shorter, Op, Prec, Assoc).
+dcg xtl_known_op:
+    ((Cs, Op, Prec, Assoc) : { atom_codes(Op, Cs), xtl_op(_, _, Op), !, xtl_op(Prec, Assoc, Op) }),
+    ((Cs, Op, Prec, Assoc) : { append(Shorter, [C], Cs) }, append([C]), xtl_known_op(Shorter, Op, Prec, Assoc)).
 
-prolog xtl_op_char(C) -->
+dcg xtl_op_char: (C):
     [C], { member(C, "`~!@#%^&*<>/;:-_=+,|\\.") }, !.
 
-prolog xtl_expression(none, Prec, Term) -->
+dcg xtl_expression:
+((none, Prec, Term) :
     xtl_op_or_term(Op, op(OpPrec, Assoc)),
     { member(Assoc-N, [fx-0, fy-1]),
       RightPrec is OpPrec + N },
     try(xtl_expression(none, RightPrec, Right)),
     { Combined =... [Op, Right] },
-    xtl_expression(just(Combined), Prec, Term).
-prolog xtl_expression(none, Prec, Term) --> !,
+    xtl_expression(just(Combined), Prec, Term)),
+((none, Prec, Term) : !,
     require(xtl_op_or_term(Left, term)),
-    xtl_expression(just(Left), Prec, Term).
-prolog xtl_expression(just(Left), Prec, Term) -->
+    xtl_expression(just(Left), Prec, Term)),
+((just(Left), Prec, Term) :
     xtl_op_or_term(Op, op(OpPrec, Assoc)),
     { member(Assoc-N, [xf-0, yf-1]),
       LeftPrec is OpPrec + N,
       LeftPrec < Prec,
       !,
       Combined =... [Op, Left] },
-    xtl_expression(just(Combined), Prec, Term).
-prolog xtl_expression(just(Left), Prec, Term) -->
+    xtl_expression(just(Combined), Prec, Term)),
+((just(Left), Prec, Term) :
     xtl_op_or_term(Op, op(OpPrec, Assoc)),
     { member(Assoc-N-M, [xfx-0-0, xfy-0-1, yfx-1-0]),
       LeftPrec is OpPrec + N,
@@ -288,8 +299,8 @@ prolog xtl_expression(just(Left), Prec, Term) -->
       RightPrec is OpPrec + M },
     require(xtl_expression(none, RightPrec, Right)),
     { Combined =... [Op, Left, Right] },
-    xtl_expression(just(Combined), Prec, Term).
-prolog xtl_expression(just(Term), _, Term) --> !.
+    xtl_expression(just(Combined), Prec, Term)),
+((just(Term), _, Term) : !).
 
 pred xtl_op:
     ((1200, xfx, ':-') : true),

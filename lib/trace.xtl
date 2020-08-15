@@ -71,21 +71,21 @@ pred ti: (():
     atom_codes(S, L),
     write(S)).
 
-prolog ticall(G) :-
+pred ticall: (G) :
     g_read(tindent, I),
     II is I + 1,
     g_assignb(tindent, II),
     call(G),
     g_assignb(tindent, I).
 
-prolog ticall(G, A, B) :-
+pred ticall: (G, A, B) :
     g_read(tindent, I),
     II is I + 1,
     g_assignb(tindent, II),
     dcg_call(G, A, B),
     g_assignb(tindent, I).
 
-prolog ticall(G, X, A, B) :-
+pred ticall: (G, X, A, B) :
     g_read(tindent, I),
     II is I + 1,
     g_assignb(tindent, II),
