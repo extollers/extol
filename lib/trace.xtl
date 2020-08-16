@@ -34,31 +34,31 @@ dcg prep_char:
 (X: [X]).
 
 % Trace and fail
-pred tf: (X: t(X), fail).
+pred 'tf': (X: t(X), fail).
 
-pred tf: (X, A, B: tf(X, A, B), fail).
+pred 'tf': ((X, A, B): tf(X, A, B), fail).
 
 % Trace call
-pred tc: (F:
+pred 'tc': (F:
           undo(t(failed(F))),
           t(enter(F)),
           ticall(F),
           undo(t(redo(F))),
           t(exit(F))).
 
-dcg tc: ((F):
+dcg 'tc': F:
     undo(t(failed(F))),
     t(enter(F)),
     ticall(F),
     undo(t(redo(F))),
-    t(exit(F))).
+    t(exit(F)).
 
-dcg tc: ((F, X):
+dcg tc: (F, X):
     undo(t(failed(F))),
     t(enter(F)),
     ticall(F, X),
     undo(t(redo(F))),
-    t(exit(F))).
+    t(exit(F)).
 
 % Trace indent
 
@@ -94,3 +94,26 @@ pred ticall: (G, X, A, B) :
     GX =... LL,
     dcg_call(GX, A, B),
     g_assignb(tindent, I).
+
+pred stack_trace_initialise: ():
+    g_assignb(stack_trace, []).
+
+pred stack_trace_enter: (Frame):
+    g_read(stack_trace, Stack),
+    g_assignb(stack_trace, [Frame | Stack]).
+
+pred stack_trace_get: (Stack):
+    g_read(stack_trace, Stack).
+
+pred write_trace_line: X: write('at: '), writeq(X), nl.
+
+pred throw_with_trace: Error:
+    tc stack_trace_get(Trace),
+    tc throw(traced_exception(Error, Trace)).
+
+pred print_exception:
+    (traced_exception(Error, Trace):
+        !,
+        print_exception(Error),
+        maplist(write_trace_line, Trace)),
+    (Error: write(Error), nl).

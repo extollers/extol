@@ -11,12 +11,13 @@ include 'lib/extol-to-prolog.xtl'.
 
 pred main : ():
     catch((
+            stack_trace_initialise(),
                  current_prolog_flag(argv, [_, Command | Args]),
                  command(Command, Args),
                  halt
              ), Exception, (
               write('failed: '),
-              write(Exception), nl,
+              print_exception(Exception),
               halt(1)
           )).
 
@@ -67,7 +68,7 @@ pred xtl_repl:
         (GoalPL = (); call(GoalPL)),
         write(Result), nl
       ), Exception, (
-        write('failed: '), write(Exception), nl
+        write('failed: '), print_exception(Exception)
       ))
     ; write(error), nl),
     !, xtl_repl),
