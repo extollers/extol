@@ -7,6 +7,7 @@
 - [Rosetta Code](https://rosettacode.org/wiki/Category:Extol)
 - [Stack Overflow](https://stackoverflow.com/questions/tagged/extol)
 - [Trending on GitHub](https://github.com/trending/extol)
+- [Reddit](https://www.reddit.com/r/extollers/)
 
 # Repl.it Programming Languages Jam
 
