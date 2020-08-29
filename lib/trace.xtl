@@ -99,8 +99,18 @@ pred stack_trace_initialise: ():
     g_assignb(stack_trace, []).
 
 pred stack_trace_enter: (Frame):
-    g_read(stack_trace, Stack),
-    g_assignb(stack_trace, [Frame | Stack]).
+    must((
+            copy_term(Frame, Trace),
+            term_variables(Trace, Vars),
+            numbervars(Vars),
+            g_read(stack_trace, Stack),
+            g_assignb(stack_trace, [Trace | Stack]))), !.
+
+pred stack_trace_leave: ():
+    must((
+            g_read(stack_trace, [_|Stack]),
+            g_assignb(stack_trace, Stack))), !.
+
 
 pred stack_trace_get: (Stack):
     g_read(stack_trace, Stack).

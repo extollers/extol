@@ -186,7 +186,7 @@ dcg xtl_regular_term:
 ((Char) : "0'", !, require(xtl_string_char(Char)), xtl_skipwhite),
 ((Integer) :
     many1(digit, Ds), !,
-    { foldl(add_digit, 0, Ds, Integer) },
+    { foldl(add_digit, 0, Ds, Integer), ! },
     xtl_skipwhite),
 ((String) : "\"", !, require(many(xtl_string_char, String)), require("\""), xtl_skipwhite),
 ((Term) :

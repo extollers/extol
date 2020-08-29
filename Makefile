@@ -2,8 +2,8 @@ MAKEFLAGS += --no-builtin-rules --no-builtin-variables --warn-undefined-variable
 
 # LOCALSZ=102400
 # export LOCALSZ
-# GLOBALSZ=1048576
-# export GLOBALSZ
+GLOBALSZ=128000
+export GLOBALSZ
 
 BUILD ?= ./build
 / := $(BUILD)/
@@ -13,20 +13,20 @@ fulltest: test1 test2 diff23
 
 define make_stage
 
-diff$(2)$(1): $/stage$(2).pl $/stage$(1).pl
+diff$(1)$(2): $/stage$(1).pl $/stage$(2).pl
 	diff -U2 $$^
 
-test$(1): $/stage$(1)
+test$(2): $/stage$(2)
 	$$< test
 
-test$(1)-%: $/stage$(1)
+test$(2)-%: $/stage$(2)
 	$$< test $$*
 
-$/stage$(1).pl: $/stage$(2) main.xtl lib/*.xtl
+$/stage$(2).pl: $/stage$(1) main.xtl lib/*.xtl
 	@rm -f $$@
 	$$< extoltoprolog main.xtl $$@
 
-$/stage$(2): $/stage$(2).pl
+$/stage$(1): $/stage$(1).pl
 	gplc $$< -o $$@
 
 $(1): $/stage$(1)
@@ -37,9 +37,10 @@ $/stage0.pl: bootstrap/stage0.pl
 	mkdir -p $/
 	cp $< $@
 
-$(eval $(call make_stage,1,0))
-$(eval $(call make_stage,2,1))
-$(eval $(call make_stage,3,2))
+$(eval $(call make_stage,0,1))
+$(eval $(call make_stage,1,2))
+$(eval $(call make_stage,2,3))
+$(eval $(call make_stage,3,4))
 
 reboot: 2
 	$/stage2 extoltoprolog main.xtl $/stage0.pl --slim

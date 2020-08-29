@@ -173,6 +173,7 @@ pred xtl_contract_to_pl:
 pred xtl_to_pl_fun:
     ((Name, (Args : Body), (HeadPL :- BodyPL)):
         comma_list(Args, ArgsList),
+        Frame =... [Name | ArgsList],
         append(ArgsList, [Result], ArgsPL),
         HeadPL =... [Name | ArgsPL],
         xtl_to_pl_funexpr(Result, Body, BodyListPL),
