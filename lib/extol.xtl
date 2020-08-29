@@ -5,7 +5,7 @@ pred xtl_include: ((File, DeclsXTL):
 
 dcg xtl_token: (N) : N, xtl_skipwhite, !.
 
-test xtl_token :-
+test xtl_token :
     xtl_token("x", "x  ", ""),
     xtl_token("x", "x % comment", ""),
     xtl_token("x", "x % comment\n  \t", "").
@@ -14,14 +14,14 @@ dcg xtl_skipwhite:
     ((): xtl_white, !),
     ((): []).
 
-test xtl_skipwhite :-
+test xtl_skipwhite :
     xtl_skipwhite("", "").
 
 dcg xtl_white:
     ((): "%", !, xtl_line_comment_, xtl_skipwhite),
     ((): (" "; "\t"; "\r" ; "\n" ), !, xtl_skipwhite).
 
-test xtl_white :-
+test xtl_white :
     xtl_white(" ", ""),
     xtl_white("%", ""),
     xtl_white("% comment \n\t  ", "").
@@ -79,6 +79,7 @@ contract(Decls, true, maplist(xtl_declaration, Decls)),
 % TODO: @-pattern
 
 pred xtl_term_to_declaration:
+    (((test Name : Goal), test(Name, Goal)): !),
     (((pred Name : contract(Head, Requires, Ensures), Clauses), pred(Name, contract(Head, Requires, Ensures), ClauseList)):
         comma_list(Clauses, ClauseList)),
     (((pred Name : Clauses), pred(Name, none, ClauseList)):
@@ -89,14 +90,14 @@ pred xtl_term_to_declaration:
         comma_list(Clauses, ClauseList)),
     (((fun Name : Clauses), fun(Name, ClauseList)):
         comma_list(Clauses, ClauseList)),
-    (((test Name :- Goal), test(Name, Goal)): !),
+    (((test Name :- Goal), test(Name, Goal)): !), % TODO ATN
     ((T, _): throw(failed(xtl_term_to_declaration(T)))).
 
-test xtl_declaration :-
+test xtl_declaration :
     xtl_declaration(Decl1, "pred f: (x: 1), (y: 2, 3).", ""),
     Decl1 = [pred(f, none, [(x: 1), (y: (2, 3))])],
 
-    xtl_declaration(Decl2, "test t:- g, h.", ""),
+    xtl_declaration(Decl2, "test t: g, h.", ""),
     Decl2 = [test(t, (g,h))].
 
 pred xtl_makevars:
@@ -115,7 +116,7 @@ pred xtl_makevars:
         xtl_makevars(InL, OutL, Vars),
         Out =... OutL).
 
-test xtl_makevars :-
+test xtl_makevars :
     A =.. ['XTL$VARNAME', 'A'],
     xtl_makevars(foo(A, A), foo(1, Z), V),
     atomic(Z),
@@ -142,7 +143,7 @@ dcg xtl_atom:
                 !, AtomVar =.. ['XTL$VARNAME', Atom]
             ; AtomVar = Atom )}).
 
-test xtl_atom :-
+test xtl_atom :
     xtl_atom(a, "'a'", ""),
     xtl_atom('+', "'+'", ""),
     xtl_atom('9', "'\\9'", ""),
@@ -179,7 +180,7 @@ contract((Prec, Expr), number(Prec), true),
 ((Prec, Expr):
     xtl_expression(none, Prec, Expr)).
 
-test xtl_expression :-
+test xtl_expression :
     xtl_expression(1, "1", []),
     xtl_expression(a, "a", []),
     xtl_expression(a + b, "a + b", []),
@@ -190,7 +191,7 @@ test xtl_expression :-
     xtl_expression('()', "( )", []),
     xtl_expression(':'(x, ':'('()', y)), "x: ((): y)", []).
 
-test comma_expr :-
+test comma_expr :
     xtl_expression((p :- (a, b)), "p :- a, b", []).
 
 dcg xtl_regular_term:
@@ -230,7 +231,7 @@ contract((Byte), true, byte(Byte)),
 ((C): xtl_quoted_char(C), !),
 ((C): [C]).
 
-test xtl_regular_term :-
+test xtl_regular_term :
     xtl_regular_term(123, "123", ""),
     xtl_regular_term(hi, "hi", ""),
     xtl_regular_term(hi(1), "hi(1)", ""),
@@ -360,7 +361,7 @@ pred xtl_op:
     ((100, fy, '`') : true),
     ((700, fx, ':=') : true).
 
-% test parse_self :-
+% test parse_self :
 %     read_file('main.xtl', Bytes), !,
 %     xtl_top_level(_Decls, Bytes, []).
 

@@ -41,7 +41,7 @@ fun comma_list:
 
 pred '.': (X, Xs, [X | Xs]): true.
 
-test comma_list :-
+test comma_list :
     comma_list('()', []),
     comma_list((1), [1]),
     comma_list((1,2), [1,2]),

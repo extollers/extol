@@ -38,7 +38,7 @@
          (let* ((prev-indent (current-indentation))
                 (prev-nesting (car (syntax-ppss)))
                 (nesting-indent (* 4 (- nesting prev-nesting)))
-                (extra-indent (if (looking-at ".*\\(:-?\\|-->\\)$\\| *;") (cond ((<= nesting-indent 0) (+ (- nesting-indent) 4)) (t 0)) 0)))
+                (extra-indent (if (looking-at ".*\\(:\\|-->\\)$\\| *;") (cond ((<= nesting-indent 0) (+ (- nesting-indent) 4)) (t 0)) 0)))
            (+ prev-indent nesting-indent extra-indent (if unindent -4 0)))))))))
 
 (defvar extol-mode-syntax-table

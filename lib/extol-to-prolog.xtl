@@ -35,7 +35,7 @@ pred xtl_to_pl_declaration:
             append(OuterDecls, InnerDecls, Decls))),
     ((X, _) : !, throw(error(unknown_declaration(X)))).
 
-test xtl_to_pl_declaration :-
+test xtl_to_pl_declaration :
     xtl_to_pl_declaration(
         pred(odd, none,[
          (0: false),
@@ -143,7 +143,7 @@ pred xtl_to_pl_dcg:
     ((D,_,_,_) :
         throw(error(xtl_to_pl_dcg, D))).
 
-test xtl_to_pl_dcg :-
+test xtl_to_pl_dcg :
     xtl_to_pl_dcg(((f; g), h), ((f(a, b); g(a, b)), h(b, c)), a, c),
     xtl_to_pl_dcg((e, (f, i; g), h), (e(a, b), (f(b, c), i(c, d); g(b, d)), h(d, e)), a, e),
     xtl_to_pl_dcg(V, PL1, i, o),
@@ -200,7 +200,7 @@ pred xtl_to_pl_funexpr:
         FunctorPL =... [Name | ArgsPL],
         append(DepsPL, [FunctorPL], PL)).
 
-test xtl_to_pl_funexpr :-
+test xtl_to_pl_funexpr :
     xtl_to_pl_funexpr(res, f(1,g(2,3)), X),
     X = [g(2,3,A),f(1,A,res)],
 

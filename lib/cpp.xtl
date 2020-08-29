@@ -95,7 +95,7 @@ dcg c_value:
     ((variable(Name)): [symbol(Name)]),
     ((integer(N)): [integer(N)]).
 
-test 'test_c' :-
+test 'test_c' :
     read_file('test.c', Bytes), !,
     c_pp([], Tokens, Bytes, []), !,
     c_top_level(Decls, Tokens, []),
