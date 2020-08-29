@@ -23,8 +23,7 @@ pred main : ():
 
 pred command:
     ((test, Args) :
-        (write('Running tests'), nl,
-            test((Name :- Goals)),
+        (   test((Name :- Goals)),
             ([Name] = Args ; Args = []),
             write(Name), write('...'),
             once(run_test(Goals)),

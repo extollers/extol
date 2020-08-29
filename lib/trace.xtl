@@ -135,8 +135,8 @@ pred 'sf': (F:
           undo(stack_trace_enter(F)),
           stack_trace_leave).
 
-%pred test_sf1: ((): 'sf'(test_sf2)).
-%pred test_sf2: ((): throw_with_trace(boop)).
+pred test_sf1: ((): 'sf'(test_sf2)).
+pred test_sf2: ((): throw_with_trace(boop)).
 
-%test 'sf' :-
-%    catch(('sf'(test_sf1)), E, E = traced_exception(boop,[test_sf2,test_sf1])).
+test 'trace' :-
+    catch(('sf'(test_sf1)), E, E = traced_exception(boop,[test_sf2,test_sf1])).
