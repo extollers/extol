@@ -90,7 +90,6 @@ pred xtl_term_to_declaration:
         comma_list(Clauses, ClauseList)),
     (((fun Name : Clauses), fun(Name, ClauseList)):
         comma_list(Clauses, ClauseList)),
-    (((test Name :- Goal), test(Name, Goal)): !), % TODO ATN
     ((T, _): throw(failed(xtl_term_to_declaration(T)))).
 
 test xtl_declaration :
