@@ -3,10 +3,10 @@
 - [Source Code](https://github.com/extollers/extol)
 - [Online REPL](https://extol.extollers.repl.run/)
 - [Repl.it](https://repl.it/github/extollers/extol)
-- [Wikipedia](https://en.wikipedia.org/wiki/Extol_(programming_language))
-- [Rosetta Code](https://rosettacode.org/wiki/Category:Extol)
-- [Stack Overflow](https://stackoverflow.com/questions/tagged/extol)
-- [Trending on GitHub](https://github.com/trending/extol)
+- [~Wikipedia~](https://en.wikipedia.org/wiki/Extol_(programming_language))
+- [~Rosetta Code~](https://rosettacode.org/wiki/Category:Extol)
+- [~Stack Overflow~](https://stackoverflow.com/questions/tagged/extol)
+- [~Trending on GitHub~](https://github.com/trending/extol)
 - [Reddit](https://www.reddit.com/r/extollers/)
 
 # Repl.it Programming Languages Jam
@@ -26,6 +26,7 @@
 - [ ] anonymous predicates and lambdas
 - [ ] first-class predicates and functions
 - [ ] modules and namespaces
+- [ ] open sets and maps
 
 # Inspiration
 
@@ -65,3 +66,7 @@
 - SMT
 - parallelism
 - effects
+- compilation by evaluation
+- use type names as implicit variables of that type
+- correctness proofs
+- types as predicates, values as proofs
