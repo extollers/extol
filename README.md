@@ -23,6 +23,7 @@
 - [Picat](http://picat-lang.org/)
 - [Lean](https://leanprover.github.io/)
 - [Rosette](https://docs.racket-lang.org/rosette-guide/index.html)
+- [Cecil](http://projectsweb.cs.washington.edu/research/projects/cecil/www/Release/index.html)
 
 # Existing Features
 
