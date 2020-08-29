@@ -31,7 +31,8 @@ pred command:
         ; true)),
     ((extoltoprolog, [In, Out | Flags]) :
         xtl_include(In, DeclsXTL), !,
-        ( member('--slim', Flags),
+        (member('--slim', Flags), Slim = true, ! ; Slim = false),
+        ( Slim,
             maplist(xtl_slim_declaration, DeclsXTL, DeclsSlim),
             append(DeclsSlim, DeclsXTLNew)
         ; DeclsXTL = DeclsXTLNew),

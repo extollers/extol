@@ -18,8 +18,8 @@ fulltest: test1 test2 diff23
 define make_stage
 
 diff$(1)$(2): $/stage$(1).pl $/stage$(2).pl
-	@echo [$(2)] DIFF $$^
-	diff -U2 $$^
+	@echo [$(2)] DIFF
+	diff --unified=2 --report-identical-files $$^
 
 test$(2): $/stage$(2)
 	@echo [$(2)] TEST $$<
@@ -53,7 +53,7 @@ $(eval $(call make_stage,2,3))
 $(eval $(call make_stage,3,4))
 
 reboot: 2
-	@echo [3] TOPL-SLIM bootstrap/stage0.pl
+	@echo [3] BOOT bootstrap/stage0.pl
 	$/stage2 extoltoprolog main.xtl $/stage0.pl --slim
 	cp $/stage0.pl bootstrap/stage0.pl
 

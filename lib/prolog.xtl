@@ -37,7 +37,7 @@ dcg pl_top_level: (Decls):
 dcg pl_write_top_level:
 (([]) : []),
 (([Decl | Decls]) :
-    pl_write_term(Decl), ".\n",
+    pl_write_term(Decl), ". ",
     pl_write_top_level(Decls)).
 
 dcg pl_write_term: (X):
