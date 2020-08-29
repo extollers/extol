@@ -33,6 +33,13 @@ pred xtl_to_pl_declaration:
             maplist(xtl_def_to_pl(dcg(InnerName)), Defs, InnerDecls),
             xtl_contract_to_pl(dcg, Name, InnerName, Contract, OuterDecls),
             append(OuterDecls, InnerDecls, Decls))),
+    ((define(Name, Annots, Clauses), DeclsPL):
+        AnnotsState := maplist(xtl_annot_prepare, Annots),
+        xtl_define_clauses_to_params(Clauses, Params),
+        NewParams := foldl(xtl_annot_extend_params, Params, AnnotsState),
+        (WrapperPL, InnerName) := xtl_annot_wrap(Name, NewParams, AnnotsState),
+        ClausesPL := maplist(xtl_annot_clause_to_pl(InnerName, AnnotsState), Clauses),
+        DeclsPL := append(WrapperPL, ClausesPL))
     ((X, _) : !, throw(error(unknown_declaration(X)))).
 
 test xtl_to_pl_declaration :
@@ -224,3 +231,25 @@ pred xtl_to_pl_quoted:
         Res =... [Name | ArgsQuoted]).
 
 pred ':=': (X, G): call(G, X).
+
+fun xtl_define_clauses_to_params:
+    ([(Head : Body) | Rest]:
+        append(Params, [Result]) if
+        List := comma_list(Head),
+        N := length(List),
+        length(Params, N)).
+
+fun xtl_annot_prepare:
+    ((Annot): Annot).
+
+pred xtl_annot_extend_params:
+    ((Params, predicate):
+        NewParams if append(NewParams, [_], Params)),
+    ((Params, dcg): append(Params, [I, O])),
+    ((Params, _): Params)
+
+fun xtl_annot_wrap:
+    (Name, Params, AnnotState)
+
+%(WrapperPL, InnerName))
+% xtl_annot_clause_to_pl(Name, AnnotsState, Clauses, ClausesPL)
