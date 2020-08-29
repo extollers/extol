@@ -11,20 +11,21 @@
 
 # Repl.it Programming Languages Jam
 
-[This Jam](https://blog.repl.it/langjam) is a great excuse for me to work on Extol again. I've created a team [here](https://repl.it/@Extollers) and I'm looking for teammates (prolog experience required). I plan to add:
+[This Jam](https://blog.repl.it/langjam) is a great excuse for me to work on Extol again. I've created a team [here](https://repl.it/@Extollers). I plan to add:
 
-  - [x] repl
-  - [x] syntax improvements
-  - [x] Emacs mode
-  - [x] include statement
-  - [x] functions and expressions
-  - [x] stack traces
-  - [ ] proper AST instead of raw Prolog terms
-  - [ ] compile-time type checking
-  - [ ] custom prelude to wrap Prolog predicates
-  - [ ] anonymous predicates and lambdas
-  - [ ] first-class predicates and functions
-  - [ ] modules and namespaces
+- [x] repl
+- [x] syntax improvements
+- [x] Emacs mode
+- [x] include statement
+- [x] functions and expressions
+- [x] stack traces
+- [ ] clause transformation by annotation
+- [ ] proper AST instead of raw Prolog terms
+- [ ] compile-time type checking
+- [ ] custom prelude to wrap Prolog predicates
+- [ ] anonymous predicates and lambdas
+- [ ] first-class predicates and functions
+- [ ] modules and namespaces
 
 # Inspiration
 

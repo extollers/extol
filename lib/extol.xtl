@@ -43,12 +43,23 @@ pred xtl_declaration:
     ((pred(Name, Contract, Clauses)): atom(Name), contract(Contract), maplist(pred_clause, Clauses)),
     ((dcg(Name, Contract, Clauses)): atom(Name), contract(Contract), maplist(dcg_clause, Clauses)),
     ((fun(Name, Clauses)): atom(Name), maplist(fun_clause, Clauses)),
+    ((def(Name, Annots, Clauses)): atom(Name), maplist(annotation, Annots), maplist(def_clause, Clauses)),
     ((test(Name, Goals)): atom(Name), xtl_goal(Goals)).
+
+pred annotation:
+    (nondet: true),
+    (returns(Var): true),
+    (ensures(Pred): xtl_goal(Pred)),
+    (requires(Pred): xtl_goal(Pred)),
+    (traced: true),
+    (dcg: true),
+    (Params: Params =... ['parameters' | _]).
 
 pred pred_clause: _: true.
 pred dcg_clause: _: true.
 pred fun_clause: _: true.
 pred xtl_goal: _: true.
+pred def_goal: _: true.
 pred contract:
     (none: true),
     ((contract(Head, Requires, Ensures)): comma_list(Head, _), xtl_goal(Requires), xtl_goal(Ensures)).
@@ -343,6 +354,7 @@ pred xtl_op:
     ((1150, fy, pred) : true),
     ((1150, fy, include) : true),
     ((1150, fy, fun) : true),
+    ((1150, fy, def) : true),
     ((700, xfx, ':=') : true),
     ((1125, xfx, 'if') : true),
     ((100, fy, '`') : true),
