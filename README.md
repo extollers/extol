@@ -1,8 +1,8 @@
 # Links
 
-- [Source Code](https://github.com/atnnn/extol)
+- [Source Code](https://github.com/extollers/extol)
 - [Online REPL](https://extol.extollers.repl.run/)
-- [Repl.it](https://repl.it/github/atnnn/extol)
+- [Repl.it](https://repl.it/github/extollers/extol)
 - [Wikipedia](https://en.wikipedia.org/wiki/Extol_(programming_language))
 - [Rosetta Code](https://rosettacode.org/wiki/Category:Extol)
 - [Stack Overflow](https://stackoverflow.com/questions/tagged/extol)
