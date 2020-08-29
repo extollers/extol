@@ -1,5 +1,12 @@
-- [Edit on Repl.it](https://repl.it/github/atnnn/extol)
-- [Run on Repl.it](https://extol.extollers.repl.run/)
+# Links
+
+- [Source Code](https://github.com/atnnn/extol)
+- [Online REPL](https://extol.extollers.repl.run/)
+- [Repl.it](https://repl.it/github/atnnn/extol)
+- [Wikipedia](https://en.wikipedia.org/wiki/Extol_(programming_language))
+- [Rosetta Code](https://rosettacode.org/wiki/Category:Extol)
+- [Stack Overflow](https://stackoverflow.com/questions/tagged/extol)
+- [Trending on GitHub](https://github.com/trending/extol)
 
 # Repl.it Programming Languages Jam
 
@@ -9,9 +16,9 @@
   - ☑ Emacs mode
   - ☑ include statement
   - ☑ functions and expressions
-  - □ stack traces
-  - □ compile-time type checking
+  - ☑ stack traces
   - □ proper AST instead of raw Prolog terms
+  - □ compile-time type checking
   - □ custom prelude to wrap Prolog predicates
   - □ anonymous predicates and lambdas
   - □ first-class predicates and functions
@@ -56,3 +63,4 @@
 - theorem proving
 - SMT
 - parallelism
+- effects
