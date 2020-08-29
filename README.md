@@ -1,4 +1,5 @@
-\[[Edit on Repl.it [edit](https://repl.it/badge/github/atnnn/extol)](https://repl.it/github/atnnn/extol) - [Run on Repl.it](https://extol.extollers.repl.run/)]
+- [Edit on Repl.it](https://repl.it/github/atnnn/extol)
+- [Run on Repl.it](https://extol.extollers.repl.run/)
 
 # Repl.it Programming Languages Jam
 
