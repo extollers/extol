@@ -40,14 +40,12 @@ contract((Decls), true, list(Decls)),
     require(eof)).
 
 pred xtl_declaration:
-    ((pred(Name, Contract, Clauses)): atom(Name), contract(Contract), maplist(pred_clause, Clauses)),
-    ((dcg(Name, Contract, Clauses)): atom(Name), contract(Contract), maplist(dcg_clause, Clauses)),
-    ((fun(Name, Clauses)): atom(Name), maplist(fun_clause, Clauses)),
-    ((def(Name, Annots, Clauses)): atom(Name), maplist(annotation, Annots), maplist(def_clause, Clauses)),
+    ((define(Name, Annots, Clauses)): atom(Name), maplist(annotation, Annots), maplist(define_clause, Clauses)),
     ((test(Name, Goals)): atom(Name), xtl_goal(Goals)).
 
 pred annotation:
     (nondet: true),
+    (predicate: true),
     (returns(Var): true),
     (ensures(Pred): xtl_goal(Pred)),
     (requires(Pred): xtl_goal(Pred)),
@@ -55,14 +53,8 @@ pred annotation:
     (dcg: true),
     (Params: Params =... ['parameters' | _]).
 
-pred pred_clause: _: true.
-pred dcg_clause: _: true.
-pred fun_clause: _: true.
 pred xtl_goal: _: true.
-pred def_goal: _: true.
-pred contract:
-    (none: true),
-    ((contract(Head, Requires, Ensures)): comma_list(Head, _), xtl_goal(Requires), xtl_goal(Ensures)).
+pred define_clause: (_: _): true.
 
 dcg xtl_declaration:
 contract(Decls, true, maplist(xtl_declaration, Decls)),
@@ -80,24 +72,36 @@ contract(Decls, true, maplist(xtl_declaration, Decls)),
 
 pred xtl_term_to_declaration:
     (((test Name : Goal), test(Name, Goal)): !),
-    (((pred Name : contract(Head, Requires, Ensures), Clauses), pred(Name, contract(Head, Requires, Ensures), ClauseList)):
+    (((pred Name : contract(Head, Requires, Ensures), Clauses), define(Name, [nondet, predicate, parameters(Head), requires(Requires), ensures(Ensures)], ClauseList)):
         comma_list(Clauses, ClauseList)),
-    (((pred Name : Clauses), pred(Name, none, ClauseList)):
+    (((pred Name : Clauses), define(Name, [nondet, predicate], ClauseList)):
         comma_list(Clauses, ClauseList)),
-    (((dcg Name : contract(Head, Requires, Ensures), Clauses), dcg(Name, contract(Head, Requires, Ensures), ClauseList)):
+    (((dcg Name : contract(Head, Requires, Ensures), Clauses), define(Name, [dcg, nondet, predicate, parameters(Head), requires(Requires), ensures(Ensures)], ClauseList)):
         comma_list(Clauses, ClauseList)),
-    (((dcg Name : Clauses), dcg(Name, none, ClauseList)):
+    (((dcg Name : Clauses), define(Name, [dcg, nondet, predicate], ClauseList)):
         comma_list(Clauses, ClauseList)),
-    (((fun Name : Clauses), fun(Name, ClauseList)):
+    (((fun Name : Clauses), define(Name, [nondet], ClauseList)):
         comma_list(Clauses, ClauseList)),
+    (((define(Name) : Definition), define(Name, Annots, Clauses)):
+        xtl_split_annots(Definition, Annots, Clauses)),
     ((T, _): throw(failed(xtl_term_to_declaration(T)))).
+
+pred xtl_split_annots:
+    ((Def, Annots, Clauses):
+        comma_list(Def, List),
+        append(Annots, Clauses, List),
+        maplist(define_clause, Clauses),
+        maplist(annotation, Annots)).
 
 test xtl_declaration :
     xtl_declaration(Decl1, "pred f: (x: 1), (y: 2, 3).", ""),
-    Decl1 = [pred(f, none, [(x: 1), (y: (2, 3))])],
+    Decl1 = [define(f, [nondet, predicate], [(x: 1), (y: (2, 3))])],
 
     xtl_declaration(Decl2, "test t: g, h.", ""),
-    Decl2 = [test(t, (g,h))].
+    Decl2 = [test(t, (g,h))],
+
+    xtl_declaration(Decl3, "define d: dcg, (a : b).", ""),
+    Decl3 = ['define'(d, ['dcg'], [(a : b)])].
 
 pred xtl_makevars:
     ((V, _, _) :
@@ -354,7 +358,7 @@ pred xtl_op:
     ((1150, fy, pred) : true),
     ((1150, fy, include) : true),
     ((1150, fy, fun) : true),
-    ((1150, fy, def) : true),
+    ((1150, fy, define) : true),
     ((700, xfx, ':=') : true),
     ((1125, xfx, 'if') : true),
     ((100, fy, '`') : true),

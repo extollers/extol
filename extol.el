@@ -10,7 +10,7 @@
 
 (defvar extol-font-lock-keywords
   (list
-   (cons (concat "\\(\\<" (regexp-opt '("pred" "dcg" "contract" "test" "fun")) "\\>\\|[!:]\\)") font-lock-keyword-face)
+   (cons (concat "\\(\\<" (regexp-opt '("pred" "dcg" "contract" "test" "fun" "define")) "\\>\\|[!:]\\)") font-lock-keyword-face)
    '("\\(\\<\\(0'\\\\?.\\|[0-9]+\\)\\>\\|'[^']+'\\)" . font-lock-constant-face)
    '("\\(\\<[a-z][A-Za-z0-9_]*\\>\\)" . font-lock-function-name-face)
    '("\\<\\([A-Z_][A-Za-z0-9_]*\\)\\>" . font-lock-variable-name-face)
