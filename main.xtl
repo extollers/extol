@@ -11,7 +11,6 @@ include 'lib/extol-to-prolog.xtl'.
 
 pred main : ():
     catch((
-            stack_trace_initialise(),
                  current_prolog_flag(argv, [_, Command | Args]),
                  command(Command, Args),
                  halt
@@ -46,9 +45,9 @@ pred command:
 pred run_test:
     ((done) : !, write(success), nl),
     (((A, B), ()) : !,
-        (call(A)
+        (sf(A)
             -> !, run_test(B)
-        ; nl, write('  failed: '), write(A), nl, throw(test_failed))),
+        ; nl, write('  failed: '), write_term(A, [numbervars(false), namevars(false)]), nl, throw(test_failed))),
     ((B) :
         run_test((B, done))).
 

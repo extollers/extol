@@ -40,6 +40,10 @@ $/stage$(1): $/stage$(1).pl
 
 $(1): $/stage$(1)
 
+repl$(1): $(1)
+	@echo [$(1)] REPL
+	$/stage$(1) repl
+
 endef
 
 $/stage0.pl: bootstrap/stage0.pl
@@ -61,9 +65,7 @@ clean:
 	@echo [-] CLEAN
 	rm -f $/stage0.pl $/stage1.pl $/stage2.pl $/stage3.pl $/stage0 $/stage1 $/stage2 $/stage3
 
-repl: 2
-	@echo [2] REPL
-	$/stage2 repl
+repl: repl2
 
 test-%: test1-% test2-%
 	@true

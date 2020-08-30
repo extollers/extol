@@ -62,7 +62,13 @@ pred error_unless:
     ((Goal) : error_unless(Goal, goal_failed(Goal))).
 
 pred '=...':
-contract((F, A), (compound(F); atom(F); A = [G | _], atom(G)), true),
+contract((F, A), ((compound(F); atom(F); A = [G | _], atom(G)), list_or_partial_list(A)), true),
 ((F, A) : F =.. A).
 
 fun '+': (A, B): C if C is A + B.
+fun '-': (A, B): C if C is A - B.
+
+fun fib:
+  (0 : 1),
+  (1 : 1),
+  (N : fib(N - 1) + fib(N - 2)).

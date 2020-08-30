@@ -426,3 +426,12 @@ test(:-(xtl_to_pl_funexpr,','(xtl_to_pl_funexpr(res,f(1,g(2,3)),A),','(=(A,'.'(g
 :-(run_test(A),run_test(','(A,done))).
 :-(xtl_repl,','(write('Extol> '),','(flush_output,','(read_line(A),','(;(=(A,'.'(10,[])),;(catch(','(;(xtl_expression(B,A,[]),throw('parse failed')),','(xtl_makevars(B,C,D),','(xtl_to_pl_funexpr(E,C,F),','(comma_list(G,F),','(;(=(G,'()'),call(G)),','(write(E),nl)))))),H,','(write('failed: '),print_exception(H))),','(write(error),nl))),','(!,xtl_repl)))))).
 :-(xtl_repl,','(write(end),nl)).
+
+fib(0,1).
+fib(1,1).
+fib(N, X) :-
+    A is N - 1,
+    B is N - 2,
+    fib(A, F),
+    fib(B, G),
+    X is F + G.

@@ -95,48 +95,29 @@ pred ticall: (G, X, A, B) :
     dcg_call(GX, A, B),
     g_assignb(tindent, I).
 
-pred stack_trace_initialise: ():
-    g_assignb(stack_trace, []).
-
-pred stack_trace_enter: (Frame):
-    must((
-            copy_term(Frame, Trace),
-            term_variables(Trace, Vars),
-            numbervars(Vars),
-            g_read(stack_trace, Stack),
-            g_assignb(stack_trace, [Trace | Stack]))), !.
-
-pred stack_trace_leave: ():
-    must((
-            g_read(stack_trace, [_|Stack]),
-            g_assignb(stack_trace, Stack))), !.
-
-pred stack_trace_get: (Stack):
-    g_read(stack_trace, Stack).
-
 pred write_trace_line: X: write('at: '), writeq(X), nl.
 
-pred throw_with_trace: Error:
-    stack_trace_get(Trace),
-    throw(traced_exception(Error, Trace)).
+pred throw_with_trace:
+    ((traced_exception(Error, Trace), Frame): !, throw(traced_exception(Error, [Frame | Trace]))),
+    ((Error, Frame): throw(traced_exception(Error, [Frame]))).
 
 pred print_exception:
     (traced_exception(Error, Trace):
         !,
         print_exception(Error),
-        maplist(write_trace_line, Trace)),
+        maplist(write_trace_line, := reverse(Trace))),
     (Error: write(Error), nl).
 
 % Explicit stack frame
 pred 'sf': (F:
-          undo(stack_trace_leave),
-          stack_trace_enter(F),
-          call(F),
-          undo(stack_trace_enter(F)),
-          stack_trace_leave).
+    catch(
+        F,
+        Exception,
+        throw_with_trace(Exception, F))).
 
 pred test_sf1: ((): 'sf'(test_sf2)).
-pred test_sf2: ((): throw_with_trace(boop)).
+pred test_sf2: ((): throw(boop)).
 
 test 'trace' :
-    catch(('sf'(test_sf1)), E, E = traced_exception(boop,[test_sf2,test_sf1])).
+    catch(('sf'(test_sf1)), E, true),
+    E = traced_exception(boop,[test_sf1,test_sf2]).

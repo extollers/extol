@@ -51,7 +51,7 @@ pred annotation:
     (requires(Pred): xtl_goal(Pred)),
     (traced: true),
     (dcg: true),
-    (Params: Params =... ['parameters' | _]).
+    (parameters(List): maplist(var, List)).
 
 pred xtl_goal: _: true.
 pred define_clause: (_: _): true.
@@ -72,12 +72,14 @@ contract(Decls, true, maplist(xtl_declaration, Decls)),
 
 pred xtl_term_to_declaration:
     (((test Name : Goal), test(Name, Goal)): !),
-    (((pred Name : contract(Head, Requires, Ensures), Clauses), define(Name, [nondet, predicate, parameters(Head), requires(Requires), ensures(Ensures)], ClauseList)):
-        comma_list(Clauses, ClauseList)),
+    (((pred Name : contract(Head, Requires, Ensures), Clauses), define(Name, [nondet, predicate, parameters(HeadList), requires(Requires), ensures(Ensures)], ClauseList)):
+        comma_list(Clauses, ClauseList),
+        comma_list(Head, HeadList)),
     (((pred Name : Clauses), define(Name, [nondet, predicate], ClauseList)):
         comma_list(Clauses, ClauseList)),
-    (((dcg Name : contract(Head, Requires, Ensures), Clauses), define(Name, [dcg, nondet, predicate, parameters(Head), requires(Requires), ensures(Ensures)], ClauseList)):
-        comma_list(Clauses, ClauseList)),
+    (((dcg Name : contract(Head, Requires, Ensures), Clauses), define(Name, [dcg, nondet, predicate, parameters(HeadList), requires(Requires), ensures(Ensures)], ClauseList)):
+        comma_list(Clauses, ClauseList),
+        comma_list(Head, HeadList)),
     (((dcg Name : Clauses), define(Name, [dcg, nondet, predicate], ClauseList)):
         comma_list(Clauses, ClauseList)),
     (((fun Name : Clauses), define(Name, [nondet], ClauseList)):
@@ -89,25 +91,29 @@ pred xtl_term_to_declaration:
 pred xtl_split_annots:
     ((Def, Annots, Clauses):
         comma_list(Def, List),
-        append(Annots, Clauses, List),
+        append(AnnotsRaw, Clauses, List),
         maplist(define_clause, Clauses),
-        maplist(annotation, Annots)).
+        maplist(xtl_make_annotation, AnnotsRaw, Annots)).
+
+fun xtl_make_annotation:
+    (Params: parameters(List) if Params =... ['parameters' | List], !),
+    (Annot: Annot).
 
 test xtl_declaration :
     xtl_declaration(Decl1, "pred f: (x: 1), (y: 2, 3).", ""),
-    Decl1 = [define(f, [nondet, predicate], [(x: 1), (y: (2, 3))])],
+    Decl1 = ['define'(f, ['nondet', 'predicate'], [(x: 1), (y: (2, 3))])],
 
     xtl_declaration(Decl2, "test t: g, h.", ""),
-    Decl2 = [test(t, (g,h))],
+    Decl2 = ['test'(t, (g,h))],
 
     xtl_declaration(Decl3, "define d: dcg, (a : b).", ""),
     Decl3 = ['define'(d, ['dcg'], [(a : b)])].
 
 pred xtl_makevars:
     ((V, _, _) :
-        V =.. ['XTL$VARNAME', '_'], !),
+        V =... ['XTL$VARNAME', '_'], !),
     ((V, Var, Vars) :
-        V =.. ['XTL$VARNAME', Name], !,
+        V =... ['XTL$VARNAME', Name], !,
         member(Name-Var, Vars), !),
     ((Atomic, Atomic, _) :
         atomic(Atomic), !),
@@ -120,7 +126,7 @@ pred xtl_makevars:
         Out =... OutL).
 
 test xtl_makevars :
-    A =.. ['XTL$VARNAME', 'A'],
+    A =... ['XTL$VARNAME', 'A'],
     xtl_makevars(foo(A, A), foo(1, Z), V),
     atomic(Z),
     Z = 1.
@@ -141,9 +147,9 @@ dcg xtl_atom:
         { atom_codes(Atom, Cs),
             Cs = [C|_],
             ( C = 0'_, !,
-                AtomVar =.. ['XTL$VARNAME', '_']
+                AtomVar =... ['XTL$VARNAME', '_']
             ; member(C, "ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
-                !, AtomVar =.. ['XTL$VARNAME', Atom]
+                !, AtomVar =... ['XTL$VARNAME', Atom]
             ; AtomVar = Atom )}).
 
 test xtl_atom :

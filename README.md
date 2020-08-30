@@ -11,22 +11,31 @@
 
 # Repl.it Programming Languages Jam
 
-[This Jam](https://blog.repl.it/langjam) is a great excuse for me to work on Extol again. I've created a team [here](https://repl.it/@Extollers). I plan to add:
+[This Jam](https://blog.repl.it/langjam) is a great excuse for me to work on Extol again. I've created a team [here](https://repl.it/@Extollers).
 
+# Roadmap
+
+- [x] a Prolog parser in Prolog that can parse itself
+- [x] a Prolog generator for the parsed declarations
+- [x] runtime type checking
 - [x] repl
 - [x] syntax improvements
 - [x] Emacs mode
 - [x] include statement
-- [x] functions and expressions
+- [x] functions and expressions instead of predicates and goals
 - [x] stack traces
 - [ ] clause transformation by annotation
-- [ ] proper AST instead of raw Prolog terms
-- [ ] compile-time type checking
-- [ ] custom prelude to wrap Prolog predicates
-- [ ] anonymous predicates and lambdas
-- [ ] first-class predicates and functions
+- [ ] indentation-sensitive syntax (get rid of those parentheses)
+- [ ] proper AST instead of raw terms
+- [ ] `nondet` clause annotations
+- [ ] Replace `,` with `do` blocks
+- [ ] Add `where` clauses
+- [ ] static type checking
+- [ ] explicit import of external functions
+- [ ] anonymous functions, lambdas and closures
+- [ ] first-class functions
 - [ ] modules and namespaces
-- [ ] open sets and maps
+- [ ] improved error messages
 
 # Inspiration
 
@@ -37,18 +46,12 @@
 - [Rosette](https://docs.racket-lang.org/rosette-guide/index.html)
 - [Cecil](http://projectsweb.cs.washington.edu/research/projects/cecil/www/Release/index.html)
 
-# Existing Features
-
-- [x] a Prolog parser in Prolog that can parse itself
-- [x] a Prolog generator for the parsed declarations
-- [x] runtime type checking
-
 # Further ideas
 
 - explicit lexical elements
 - extensible lexical elements
 - middle-out parsing
-- → parser for C
+- parser for C
 - types and constraints
 - Unicode
 - rich library of data types
