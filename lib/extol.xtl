@@ -5,7 +5,7 @@ pred xtl_include: ((File, DeclsXTL):
 
 dcg xtl_token:
     contract(N, callable(N), true),
-    (N : N, xtl_skipwhite, !).
+    (N: N, xtl_skipwhite).
 
 test xtl_token :
     xtl_token("x", "x  ", ""),
