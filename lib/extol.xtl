@@ -3,7 +3,9 @@
 pred xtl_include: ((File, DeclsXTL):
     xtl_top_level(DeclsXTL, := read_file(File), [])).
 
-dcg xtl_token: (N) : N, xtl_skipwhite, !.
+dcg xtl_token:
+    contract(N, callable(N), true),
+    (N : N, xtl_skipwhite, !).
 
 test xtl_token :
     xtl_token("x", "x  ", ""),
