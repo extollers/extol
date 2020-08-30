@@ -1,2 +1,2 @@
 language = "polygott"
-run = "if [ $REPL_OWNER = five-nine ]; then make repl; else make; fi"
+run = "make repl"
