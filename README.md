@@ -11,23 +11,23 @@
 
 # Repl.it Programming Languages Jam
 
-[This Jam](https://blog.repl.it/langjam) is a great excuse for me to work on Extol again. I've created a team [here](https://repl.it/@Extollers).
+[This Jam](https://blog.repl.it/langjam) was a great excuse for me to work on Extol again. I've created a team [here](https://repl.it/@Extollers).
 
 # Roadmap
 
 - [x] a Prolog parser in Prolog that can parse itself
 - [x] a Prolog generator for the parsed declarations
-- [x] runtime type checking
-- [x] repl
+- [x] runtime type and contract checking
+- [x] a REPL
 - [x] syntax improvements
 - [x] Emacs mode
 - [x] include statement
 - [x] functions and expressions instead of predicates and goals
 - [x] stack traces
-- [ ] clause transformation by annotation
+- [x] clause transformation by annotation
 - [ ] indentation-sensitive syntax (get rid of those parentheses)
-- [ ] proper AST instead of raw terms
-- [ ] `nondet` clause annotations
+- [ ] proper AST instead of raw terms (to allow better type checking)
+- [ ] `nondet` clause annotations (to improve performance and reasoning)
 - [ ] Replace `,` with `do` blocks
 - [ ] Add `where` clauses
 - [ ] static type checking
