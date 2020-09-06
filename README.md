@@ -51,6 +51,8 @@ Hello, world!
 - [~Stack Overflow~](https://stackoverflow.com/questions/tagged/extol)
 - [~Trending on GitHub~](https://github.com/trending/extol)
 - [~rise4fun~](https://rise4fun.com/Extol)
+- [License](LICENSE.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
 
 ## Inspiration
 
