@@ -1,75 +1,64 @@
-# Links
+# Extol
+
+Extol is a fifth-generation programming language being bootstrapped on top of Prolog.
+
+## Links
 
 - [Source Code](https://github.com/extollers/extol)
-- [Online REPL](https://extol.extollers.repl.run/)
 - [Repl.it](https://repl.it/github/extollers/extol)
+- [Reddit](https://www.reddit.com/r/extollers/)
 - [~Wikipedia~](https://en.wikipedia.org/wiki/Extol_(programming_language))
 - [~Rosetta Code~](https://rosettacode.org/wiki/Category:Extol)
 - [~Stack Overflow~](https://stackoverflow.com/questions/tagged/extol)
 - [~Trending on GitHub~](https://github.com/trending/extol)
-- [Reddit](https://www.reddit.com/r/extollers/)
-
-# Repl.it Programming Languages Jam
-
-[This Jam](https://blog.repl.it/langjam) was a great excuse for me to work on Extol again. I've created a team [here](https://repl.it/@Extollers).
-
-# Roadmap
-
-- [x] a Prolog parser in Prolog that can parse itself
-- [x] a Prolog generator for the parsed declarations
-- [x] runtime type and contract checking
-- [x] a REPL
-- [x] syntax improvements
-- [x] Emacs mode
-- [x] include statement
-- [x] functions and expressions instead of predicates and goals
-- [x] stack traces
-- [x] clause transformation by annotation
-- [ ] indentation-sensitive syntax (get rid of those parentheses)
-- [ ] proper AST instead of raw terms (to allow better type checking)
-- [ ] `nondet` clause annotations (to improve performance and reasoning)
-- [ ] Replace `,` with `do` blocks
-- [ ] Add `where` clauses
-- [ ] static type checking
-- [ ] explicit import of external functions
-- [ ] anonymous functions, lambdas and closures
-- [ ] first-class functions
-- [ ] modules and namespaces
-- [ ] improved error messages
+- [~rise4fun~](https://rise4fun.com/Extol)
 
 # Inspiration
 
-- [Mercury](http://www.mercurylang.org/)
-- [Ciao](https://ciao-lang.org/)
-- [Picat](http://picat-lang.org/)
-- [Lean](https://leanprover.github.io/)
-- [Rosette](https://docs.racket-lang.org/rosette-guide/index.html)
-- [Cecil](http://projectsweb.cs.washington.edu/research/projects/cecil/www/Release/index.html)
+- [Mercury](http://www.mercurylang.org/):
+  Combining the power of Haskell and Prolog
 
-# Further ideas
+- [CiaoPP](https://ciao-lang.org/):
+  Type inference, static debugging and program transformation as a preprocessor
 
-- explicit lexical elements
-- extensible lexical elements
-- middle-out parsing
-- parser for C
-- types and constraints
-- Unicode
-- rich library of data types
-- non-binary const, open sets and maps
-- parser for Python
-- parser for JavaScript
-- parser for Bash
-- constraint and logic programming
-- compiling interpreted scripts by tree shaking down to C
-- convert between languages
-- polyglot library for common types and functions
-- polyglot FFI and messaging
-- Convert C++ to C-ish: instantiate all templates, explicit construct, destroy, copy, move, convert and return
-- theorem proving
-- SMT
-- parallelism
-- effects
-- compilation by evaluation
-- use type names as implicit variables of that type
-- correctness proofs
-- types as predicates, values as proofs
+- [Picat](http://picat-lang.org/) and [Rosette](https://docs.racket-lang.org/rosette-guide/index.html):
+  Constraint solving as a primitive
+
+- [Lean](https://leanprover.github.io/):
+  A common language for programming, metaprogramming and theorem proving
+
+- [Cecil](http://projectsweb.cs.washington.edu/research/projects/cecil/www/Release/index.html):
+  Predicate objects
+
+# Roadmap
+
+- [x] A Prolog parser in Prolog that can parse itself
+- [x] A Prolog generator for the parsed declarations
+- [x] Improved syntax and semantics
+- [x] Runtime type and contract checking
+- [x] A REPL
+- [x] Emacs mode
+- [x] Include statement
+- [x] Functions and expressions instead of predicates and goals
+- [x] Stack traces
+- [x] Clause transformation by annotation
+- [ ] Indentation-sensitive syntax (get rid of those parentheses)
+- [ ] Proper AST instead of raw terms (to allow better type checking)
+- [ ] `nondet` clause annotations (to improve performance and reasoning)
+- [ ] Replace `,` with `do` blocks
+- [ ] Add `where` clauses
+- [ ] Static type checking
+- [ ] Explicit import of external functions
+- [ ] Anonymous functions, lambdas and closures
+- [ ] First-class functions
+- [ ] Modules and namespaces
+- [ ] Improved error messages
+- [ ] Compile-time type checking
+- [ ] Unicode
+- [ ] Open sets
+- [ ] Constraint solving
+- [ ] Termination checking
+- [ ] Theorem proving
+- [ ] Parallelism
+- [ ] Effects
+- [ ] A faster backend
