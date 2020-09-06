@@ -94,5 +94,6 @@ todo:
 
 .PHONY: install
 install: $/stage2
-	install -v $/stage2 -DT $(DESTDIR)$(BINDIR)/$(NAME)
-	install -v README.md LICENSE.md NOTICE -Dt $(DESTDIR)$(DOCDIR)
+	@echo [2] INSTALL $(DESTDIR)$(PREFIX)
+	install -Cvm 755 $/stage2 -DT $(DESTDIR)$(BINDIR)/$(NAME)
+	install -Cvm 644 README.md LICENSE.md NOTICE -Dt $(DESTDIR)$(DOCDIR)
