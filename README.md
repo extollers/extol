@@ -85,6 +85,7 @@ Hello, world!
 - [x] Functions and expressions instead of predicates and goals
 - [x] Stack traces
 - [x] Clause transformation by annotation
+- [ ] Modules and namespaces
 - [ ] Indentation-sensitive syntax (get rid of those parentheses)
 - [ ] Proper AST instead of raw terms (to allow better type checking)
 - [ ] `nondet` clause annotations (to improve performance and reasoning)
@@ -94,7 +95,6 @@ Hello, world!
 - [ ] Explicit import of external functions
 - [ ] Anonymous functions, lambdas and closures
 - [ ] First-class functions
-- [ ] Modules and namespaces
 - [ ] Improved error messages
 - [ ] Compile-time type checking
 - [ ] Unicode

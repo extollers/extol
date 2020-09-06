@@ -72,6 +72,7 @@ contract(Decls, true, maplist(xtl_declaration, Decls)),
 
 % TODO: @-pattern
 
+% TODO: parse declarations directly instead of parsing terms and converting
 pred xtl_term_to_declaration:
     (((test Name : Goal), test(Name, Goal)): !),
     (((pred Name : contract(Head, Requires, Ensures), Clauses), define(Name, [nondet, predicate, parameters(HeadList), requires(Requires), ensures(Ensures)], ClauseList)):
