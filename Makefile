@@ -12,7 +12,7 @@ export GLOBALSZ
 BUILD ?= ./build
 / := $(BUILD)/
 
-fulltest: test1 test2 diff23
+test: test1 test2 diff23
 	@echo [-] ALL TESTS PASSED
 
 define make_stage

@@ -2,6 +2,45 @@
 
 Extol is a fifth-generation programming language being bootstrapped on top of Prolog.
 
+## Documentation
+
+<details><summary><b>Quick Start</b></summary><blockquote>
+
+#### Setup Extol
+
+Get the latest source code:
+
+```
+git clone https://github.com/extollers/extol
+cd extol
+```
+
+Install GNU Prolog. For example, on Ubuntu:
+
+```
+sudo apt install gprolog
+```
+
+Build the compiler:
+
+```
+make 2
+```
+
+#### Using the REPL
+
+```
+$ ./build/stage2 repl
+
+Extol> 1 + 1
+2
+
+Extol> 'Hello, world!'
+Hello, world!
+```
+
+</blockquote></details>
+
 ## Links
 
 - [Source Code](https://github.com/extollers/extol)
@@ -13,7 +52,7 @@ Extol is a fifth-generation programming language being bootstrapped on top of Pr
 - [~Trending on GitHub~](https://github.com/trending/extol)
 - [~rise4fun~](https://rise4fun.com/Extol)
 
-# Inspiration
+## Inspiration
 
 - [Mercury](http://www.mercurylang.org/):
   Combining the power of Haskell and Prolog
@@ -30,7 +69,9 @@ Extol is a fifth-generation programming language being bootstrapped on top of Pr
 - [Cecil](http://projectsweb.cs.washington.edu/research/projects/cecil/www/Release/index.html):
   Predicate objects
 
-# Roadmap
+---
+
+<details><summary><b>Roadmap</b></summary><blockquote>
 
 - [x] A Prolog parser in Prolog that can parse itself
 - [x] A Prolog generator for the parsed declarations
@@ -62,3 +103,5 @@ Extol is a fifth-generation programming language being bootstrapped on top of Pr
 - [ ] Parallelism
 - [ ] Effects
 - [ ] A faster backend
+
+</blockquote></details>
