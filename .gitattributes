@@ -1,5 +1,5 @@
 bootstrap/* linguist-generated
-*.xtl linguist-language=Extol
+*.xtl linguist-language=Extol linguist-detectable
 
 [attr]strict-text text eol=lf diff whitespace encoding=utf-8
 * strict-text
