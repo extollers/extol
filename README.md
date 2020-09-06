@@ -4,7 +4,7 @@ Extol is a fifth-generation programming language being bootstrapped on top of Pr
 
 ## Documentation
 
-<details><summary><b>Quick Start</b></summary><blockquote>
+<details><summary><b>Quick Start</b></summary><figure>
 
 #### Setup Extol
 
@@ -39,7 +39,7 @@ Extol> 'Hello, world!'
 Hello, world!
 ```
 
-</blockquote></details>
+</figure></details>
 
 ## Links
 
@@ -71,7 +71,7 @@ Hello, world!
 
 ---
 
-<details><summary><b>Roadmap</b></summary><blockquote>
+<details><summary><b>Roadmap</b></summary><figure>
 
 - [x] A Prolog parser in Prolog that can parse itself
 - [x] A Prolog generator for the parsed declarations
@@ -104,4 +104,4 @@ Hello, world!
 - [ ] Effects
 - [ ] A faster backend
 
-</blockquote></details>
+</figure></details>
