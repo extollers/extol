@@ -383,16 +383,43 @@ fun xtl_slim_declaration:
 
 %% Modules
 
-fun xtlm_new: (): `module(Declarations).
+pred module: module(Name, Declarations):
+    atom(Name),
+    (ground(Declarations), !, maplist(module_item, Declarations) ; list_or_partial_list(Declarations)).
+
+pred module_item: (Key - Declaration):
+    module_key(Key),
+    module_declaration(Declaration).
+
+pred module_key: (Name / N / Type):
+    name(Name),
+    (number(N) ; member(N, [alias, test, import])),
+    member(Type, [alias, test, import, pred, dcg, fun]).
+
+pred module_declaration:
+    (import(Module): module(Module)),
+    (alias(Name): name(Name)),
+    (Declaration: xtl_declaration(Declaration)).
+
+pred name:
+    ('.'(A,B): !, atom(A), name(B)),
+    (A: atom(A)).
+
+% TODO: store attributes instead of just `/pred'
+% TODO: modules should just do name mapping. imports should be centralised
+fun xtlm_new: (Name): `module(Name, Imports, Declarations).
 
 pred xtlm_find:
-    ((Module, Name/N, Res): xtlm_find(Module, Name/N/pred, Res)),
-    ((Module, Name/N, Res): M is N - 1, xtlm_find(Module, Name/M/fun, Res)),
-    ((Module, Name/N, Res): M is N - 1, xtlm_find(Module, Name/M/dcg, Res)).
+    ((Module, Name/N, pred): xtlm_find_(Module, Name/N/pred)),
+    ((Module, Name/N, fun): M is N - 1, xtlm_find_(Module, Name/M/fun)),
+    ((Module, Name/N, dcg): M is N - 2, xtlm_find_(Module, Name/M/dcg)).
 
-pred xtlm_find_: (module(Declarations), Name/N/Type, Declaration):
-    member(Name/N/Type-Declaration, Declarations),
-    (var(Declaration), !, false; true).
+% TODO: find imports too
+pred xtlm_find_: (module(_, _, Declarations), Decl):
+    Decl = A-B,
+    var(B),
+    member(A-B, Declarations),
+    \+var(B).
 
 pred xtlm_add: (Module, Declaration):
     Name/N/Type := xtlm_declaration_key(Declaration),
@@ -400,11 +427,25 @@ pred xtlm_add: (Module, Declaration):
         throw(conflicting_declaration(Name/N))
     ; xtlm_add_(Module, Key, Declaration)).
 
-pred xtlm_add_: (module(Declarations), Key, Declaration):
-    member(Key-Declaration, Declarations).
+pred xtlm_add_: (module(_, Declarations), Key, Declaration):
+    member(Key-Declaration, Declarations) ; throw(error('xtlm_add_: module is already sealed')).
 
 fun xtlm_declaration_key:
     (pred(Name, _, (Head : _)): `(Name/(:= length(comma_list(Head)))/pred)),
     (fun(Name, _, (Head : _)): `(Name/(:= 1 + length(comma_list(Head)))/pred)),
     (dcg(Name, _, (Head : _)): `(Name/(:= 2 + length(comma_list(Head)))/pred)),
-    (test(Name, _): `(Name/test/test)).
+    (test(Name, _): `(Name/test/test)),
+    (Other: _ if throw('TODO'(xtlm_Declaration_key(Other)))).
+
+pred xtlm_seal: module(_, Imports, Decls):
+    length(Imports, _),
+    length(Decls, _).
+
+pred xtlm_import: (Module, Imported):
+    Imported = module(Name, Declarations),
+    xtlm_add_(Module, Name/import/import, Imported),
+    maplist(xtlm_add_alias_(Module, Name), Declarations).
+
+pred xtlm_add_alias_: (Module, Prefix, Declaration):
+    Name/N/Type := xtlm_declaration_key(Declaration),
+    xtlm_add_(Module, Name/alias/alias, alias('.'(Prefix, Name))).

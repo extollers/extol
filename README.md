@@ -86,13 +86,13 @@ Hello, world!
 - [x] Stack traces
 - [x] Clause transformation by annotation
 - [ ] Modules and namespaces
+- [ ] Explicit import of external functions
 - [ ] Indentation-sensitive syntax (get rid of those parentheses)
 - [ ] Proper AST instead of raw terms (to allow better type checking)
 - [ ] `nondet` clause annotations (to improve performance and reasoning)
 - [ ] Replace `,` with `do` blocks
 - [ ] Add `where` clauses
 - [ ] Static type checking
-- [ ] Explicit import of external functions
 - [ ] Anonymous functions, lambdas and closures
 - [ ] First-class functions
 - [ ] Improved error messages
