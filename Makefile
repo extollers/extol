@@ -89,8 +89,7 @@ test-%: test1-% test2-%
 
 .PHONY: todo
 todo:
-	git grep 'TOD[O]'
-	grep -- '- \[ \] ' README.md
+	git grep -En 'TOD[O]|- \[ \]'
 
 .PHONY: install
 install: $/stage2
