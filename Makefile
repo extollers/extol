@@ -60,7 +60,7 @@ repl$(1): $(1)
 
 endef
 
-$/stage0.pl: bootstrap/stage0-prolog
+$/stage0.pl: bootstrap/stage0.pl
 	@echo [0] COPY $@
 	mkdir -p $/
 	cp $< $@
@@ -72,9 +72,9 @@ $(eval $(call make_stage,3,4))
 
 .PHONY: reboot
 reboot: 2
-	@echo [3] BOOT bootstrap/stage0-prolog
+	@echo [3] BOOT bootstrap/stage0.pl
 	$/stage2 extoltoprolog main.xtl $/stage0.pl --slim
-	cp $/stage0.pl bootstrap/stage0-prolog
+	cp $/stage0.pl bootstrap/stage0.pl
 
 .PHONY: clean
 clean:
