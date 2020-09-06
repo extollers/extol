@@ -50,3 +50,8 @@ pred must:
 ((G, A, B, C): undo(throw(failed(call(G, A, B, C)))), call(G, A, B, C)).
 
 pred try: (N, Xs, Rest) : catch(dcg_call(N, Xs, Rest), parse_failed(_, _), Failed=true), !, Failed=false.
+
+pred add_digit: (N, D, R):
+    member(D, [0,1,2,3,4,5,6,7,8,9]),
+    ( var(N), N is R div D; true),
+    R is N * 10 + D.

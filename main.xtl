@@ -2,8 +2,6 @@ include 'lib/trace.xtl'.
 include 'lib/misc.xtl'.
 include 'lib/parsing.xtl'.
 include 'lib/streams.xtl'.
-include 'lib/cpp.xtl'.
-include 'lib/prolog.xtl'.
 include 'lib/extol.xtl'.
 include 'lib/extol-to-prolog.xtl'.
 
