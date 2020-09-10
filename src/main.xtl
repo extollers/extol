@@ -66,7 +66,6 @@ pred xtl_repl:
         ( xtl_expression(ExpV, Line, [])
         ; throw('parse failed')),
         xtl_makevars(ExpV, Exp, Vars),
-        
         xtl_to_pl_funexpr(Result, Exp, ExpPL),
         comma_list(GoalPL, ExpPL),
         (GoalPL = (); call(GoalPL)),

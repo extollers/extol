@@ -239,17 +239,29 @@ test(:-(xtl_regular_term,','(xtl_regular_term(123,'.'(49,'.'(50,'.'(51,[]))),[])
 :-(xtl_op(700,fx,:=),true).
 :-(xtl_slim_declaration(test(:(A,B)),[]),true).
 :-(xtl_slim_declaration(C,C),true).
-:-(xtlm_new(module(A)),true).
-:-(xtlm_find(A,/(B,C),D),xtlm_find(A,/(/(B,C),pred),D)).
-:-(xtlm_find(A,/(B,C),D),','(is(E,-(C,1)),xtlm_find(A,/(/(B,E),fun),D))).
-:-(xtlm_find(A,/(B,C),D),','(is(E,-(C,1)),xtlm_find(A,/(/(B,E),dcg),D))).
-:-(xtlm_find_(module(A),/(/(B,C),D),E),','(member(-(/(/(B,C),D),E),A),;(','(var(E),','(!,false)),true))).
+:-(module(module(A,B)),','(atom(A),;(','(ground(B),','(!,maplist(module_item,B))),list_or_partial_list(B)))).
+:-(module_item(-(A,B)),','(module_key(A),module_declaration(B))).
+:-(module_key(/(/(A,B),C)),','(name(A),','(;(number(B),member(B,'.'(alias,'.'(test,'.'(import,[]))))),member(C,'.'(alias,'.'(test,'.'(import,'.'(pred,'.'(dcg,'.'(fun,[])))))))))).
+:-(module_declaration(import(A)),module(A)).
+:-(module_declaration(alias(A)),name(A)).
+:-(module_declaration(A),xtl_declaration(A)).
+:-(name('.'(A,B)),','(!,','(atom(A),name(B)))).
+:-(name(A),atom(A)).
+:-(xtlm_new(A,module(A,B,C)),true).
+:-(xtlm_find(A,/(B,C),pred),xtlm_find_(A,/(/(B,C),pred))).
+:-(xtlm_find(A,/(B,C),fun),','(is(D,-(C,1)),xtlm_find_(A,/(/(B,D),fun)))).
+:-(xtlm_find(A,/(B,C),dcg),','(is(D,-(C,2)),xtlm_find_(A,/(/(B,D),dcg)))).
+:-(xtlm_find_(module(A,B,C),D),','(=(D,-(E,F)),','(var(F),','(member(-(E,F),C),\+(var(F)))))).
 :-(xtlm_add(A,B),','(xtlm_declaration_key(B,/(/(C,D),E)),;(','(xtlm_find(A,/(/(C,D),F),G),throw(conflicting_declaration(/(C,D)))),xtlm_add_(A,H,B)))).
-:-(xtlm_add_(module(A),B,C),member(-(B,C),A)).
+:-(xtlm_add_(module(A,B),C,D),;(member(-(C,D),B),throw(error('xtlm_add_: module is already sealed')))).
 :-(xtlm_declaration_key(pred(A,B,:(C,D)),/(/(A,E),pred)),','(comma_list(C,F),length(F,E))).
 :-(xtlm_declaration_key(fun(A,G,:(C,H)),/(/(A,I),pred)),','(comma_list(C,J),','(length(J,K),+(1,K,I)))).
 :-(xtlm_declaration_key(dcg(A,L,:(C,M)),/(/(A,N),pred)),','(comma_list(C,O),','(length(O,P),+(2,P,N)))).
 :-(xtlm_declaration_key(test(A,Q),/(/(A,test),test)),true).
+:-(xtlm_declaration_key(R,S),throw('TODO'(xtlm_Declaration_key(R)))).
+:-(xtlm_seal(module(A,B,C)),','(length(B,D),length(C,E))).
+:-(xtlm_import(A,B),','(=(B,module(C,D)),','(xtlm_add_(A,/(/(C,import),import),B),maplist(xtlm_add_alias_(A,C),D)))).
+:-(xtlm_add_alias_(A,B,C),','(xtlm_declaration_key(C,/(/(D,E),F)),xtlm_add_(A,/(/(D,alias),alias),alias('.'(B,D))))).
 :-(xtl_to_pl_toplevel(A,B),','(maplist(must(xtl_to_pl_declaration),A,C),','(append(C,D),append('.'(:-(set_prolog_flag(singleton_warning,off)),'.'(:-(discontiguous(/(test,1))),'.'(:-(initialization(;(main,','(write('error: unexpected failure in main'),','(nl,halt(1)))))),[]))),D,B)))).
 :-(xtl_to_pl_declaration(A,B),','(assert(xtl_declaration(A)),','('__contract_free_xtl_to_pl_declaration'(A,B),assert(true)))).
 :-('__contract_free_xtl_to_pl_declaration'(test(A,B),'.'(test(:-(A,C)),[])),','(!,','(xtl_to_pl_goal(B,C),numbervars(C)))).

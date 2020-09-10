@@ -75,7 +75,7 @@ $(eval $(call make_stage,3,4))
 .PHONY: reboot
 reboot: 2
 	@echo [3] BOOT bootstrap/stage0.pl
-	$/stage2 extoltoprolog main.xtl $/stage0.pl --slim
+	$/stage2 extoltoprolog src/main.xtl $/stage0.pl --slim
 	cp $/stage0.pl bootstrap/stage0.pl
 
 .PHONY: clean
