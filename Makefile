@@ -20,6 +20,8 @@ export GLOBALSZ
 
 / := $(BUILD)/
 
+all_sources = $(shell find src -type f)
+
 .PHONY: test
 .DEFAULT: test
 test: test1 test2 diff23
@@ -41,10 +43,10 @@ test$(2)-%: $/stage$(2)
 	@echo [$(2)] TEST $$< $$*
 	$$< test $$*
 
-$/stage$(2).pl: $/stage$(1) main.xtl lib/*.xtl
+$/stage$(2).pl: $/stage$(1) $(all_sources)
 	@echo [$(2)] TOPL $$@
 	@rm -f $$@
-	$$< extoltoprolog main.xtl $$@
+	$$< extoltoprolog src/main.xtl $$@
 
 $/stage$(1): $/stage$(1).pl
 	@echo [$(1)] GPLC $$@
@@ -96,3 +98,4 @@ install: $/stage2
 	@echo [2] INSTALL $(DESTDIR)$(PREFIX)
 	install -Cvm 755 $/stage2 -DT $(DESTDIR)$(BINDIR)/$(NAME)
 	install -Cvm 644 README.md LICENSE.md NOTICE -Dt $(DESTDIR)$(DOCDIR)
+	install -Cvm 644 integrations/emacs/extol.el -DT $(DESTDIR)$(DATADIR)/emacs/site-lisp/$(NAME).el
