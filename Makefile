@@ -1,7 +1,10 @@
 MAKEFLAGS += --no-builtin-rules --no-builtin-variables --warn-undefined-variables
 
-V ?= 0
 BUILD ?= ./build
+
+-include $(BUILD)/config.mk
+
+V ?= 0
 DESTDIR ?=
 NAME ?= extol
 PREFIX ?= $(CURDIR)/local
@@ -62,9 +65,13 @@ repl$(1): $(1)
 
 endef
 
-$/stage0.pl: bootstrap/stage0.pl
+$/.:
+	mkdir -p $@
+	touch $/config.mk
+	echo $$'%:\n\t$$(MAKE) -C $(CURDIR) BUILD=$$(CURDIR) $$@' > $/Makefile
+
+$/stage0.pl: bootstrap/stage0.pl | $/.
 	@echo [0] COPY $@
-	mkdir -p $/
 	cp $< $@
 
 $(eval $(call make_stage,0,1))
@@ -74,7 +81,7 @@ $(eval $(call make_stage,3,4))
 
 .PHONY: reboot
 reboot: 2
-	@echo [3] BOOT bootstrap/stage0.pl
+	@echo [-] BOOT bootstrap/stage0.pl
 	$/stage2 extoltoprolog src/main.xtl $/stage0.pl --slim
 	cp $/stage0.pl bootstrap/stage0.pl
 
@@ -87,7 +94,7 @@ clean:
 repl: repl2
 
 test-%: test1-% test2-%
-	@true
+	@echo [-] TEST "'$*'" PASSED
 
 .PHONY: todo
 todo:
