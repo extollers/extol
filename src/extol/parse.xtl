@@ -1,7 +1,8 @@
 %% Extol
 
-pred xtl_include: ((File, DeclsXTL):
-    xtl_top_level(DeclsXTL, := read_file(File), [])).
+% TODO: path relative to source instead of cwd
+pred xtl_include: ((File, Module):
+    sf xtl_top_level(Module, := read_file(File), [])).
 
 dcg xtl_token:
     contract(N, callable(N), true),
@@ -32,14 +33,14 @@ dcg xtl_line_comment_:
     ((): ("\n" ; eof), !),
     ((): [_], xtl_line_comment_).
 
+% TODO: now takes a Module
 dcg xtl_top_level:
-contract((Decls), true, list(Decls)),
-((Declss):
-    ( "#!", !, xtl_line_comment_; { true }),
-    xtl_skipwhite,
-    many(xtl_declaration, Decls),
-    { append(Decls, Declss) },
-    require(eof)).
+    contract((Module), module(Module), module(Module)),
+    ((Module):
+	( "#!", !, xtl_line_comment_; { true }),
+	xtl_skipwhite,
+	sf many(xtl_declaration(Module)),
+	require(eof)).
 
 pred xtl_declaration:
     ((define(Name, Annots, Clauses)): atom(Name), maplist(annotation, Annots), maplist(define_clause, Clauses)),
@@ -59,16 +60,16 @@ pred xtl_goal: _: true.
 pred define_clause: (_: _): true.
 
 dcg xtl_declaration:
-contract(Decls, true, maplist(xtl_declaration, Decls)),
-((_): eof, !, {fail}),
-((Decls):
-    xtl_expression(DeclV),
-    require(xtl_token(".")), !,
-    { DeclV = include(Other), !,
-        xtl_include(Other, Decls)
-    ; !, xtl_makevars(DeclV, DeclP, _), !,
-        xtl_term_to_declaration(DeclP, Decl), !,
-        Decls = [Decl] }).
+    contract(Module, module(Module), module(Module)),
+    ((_): eof, !, {fail}),
+    ((Decls):
+	sf xtl_expression(DeclV),
+	require(xtl_token(".")), !,
+	{ DeclV = include(Other), !,
+            sf xtl_include(Other, Module)
+	; !, xtl_makevars(DeclV, DeclP, _), !,
+             sf xtl_term_to_declaration(DeclP, Decl), !,
+             sf xtlm_add(Module, Decl) }).
 
 % TODO: @-pattern
 
@@ -102,15 +103,16 @@ fun xtl_make_annotation:
     (Params: parameters(List) if Params =... ['parameters' | List], !),
     (Annot: Annot).
 
-test xtl_declaration :
-    xtl_declaration(Decl1, "pred f: (x: 1), (y: 2, 3).", ""),
-    Decl1 = ['define'(f, ['nondet', 'predicate'], [(x: 1), (y: (2, 3))])],
+% TODO: rewrite tests using modules
+% test xtl_declaration :
+%     xtl_declaration(Decl1, "pred f: (x: 1), (y: 2, 3).", ""),
+%     Decl1 = ['define'(f, ['nondet', 'predicate'], [(x: 1), (y: (2, 3))])],
 
-    xtl_declaration(Decl2, "test t: g, h.", ""),
-    Decl2 = ['test'(t, (g,h))],
+%     xtl_declaration(Decl2, "test t: g, h.", ""),
+%     Decl2 = ['test'(t, (g,h))],
 
-    xtl_declaration(Decl3, "define d: dcg, (a : b).", ""),
-    Decl3 = ['define'(d, ['dcg'], [(a : b)])].
+%     xtl_declaration(Decl3, "define d: dcg, (a : b).", ""),
+%     Decl3 = ['define'(d, ['dcg'], [(a : b)])].
 
 pred xtl_makevars:
     ((V, _, _) :
@@ -373,6 +375,7 @@ pred xtl_op:
     ((100, fy, '`') : true),
     ((700, fx, ':=') : true).
 
+% TODO: parse_self test
 % test parse_self :
 %     read_file('main.xtl', Bytes), !,
 %     xtl_top_level(_Decls, Bytes, []).
@@ -404,48 +407,3 @@ pred module_declaration:
 pred name:
     ('.'(A,B): !, atom(A), name(B)),
     (A: atom(A)).
-
-% TODO: store attributes instead of just `/pred'
-% TODO: modules should just do name mapping. imports should be centralised
-fun xtlm_new: (Name): `module(Name, Imports, Declarations).
-
-pred xtlm_find:
-    ((Module, Name/N, pred): xtlm_find_(Module, Name/N/pred)),
-    ((Module, Name/N, fun): M is N - 1, xtlm_find_(Module, Name/M/fun)),
-    ((Module, Name/N, dcg): M is N - 2, xtlm_find_(Module, Name/M/dcg)).
-
-% TODO: find imports too
-pred xtlm_find_: (module(_, _, Declarations), Decl):
-    Decl = A-B,
-    var(B),
-    member(A-B, Declarations),
-    \+var(B).
-
-pred xtlm_add: (Module, Declaration):
-    Name/N/Type := xtlm_declaration_key(Declaration),
-    ( xtlm_find(Module, Name/N/_, Res),
-        throw(conflicting_declaration(Name/N))
-    ; xtlm_add_(Module, Key, Declaration)).
-
-pred xtlm_add_: (module(_, Declarations), Key, Declaration):
-    member(Key-Declaration, Declarations) ; throw(error('xtlm_add_: module is already sealed')).
-
-fun xtlm_declaration_key:
-    (pred(Name, _, (Head : _)): `(Name/(:= length(comma_list(Head)))/pred)),
-    (fun(Name, _, (Head : _)): `(Name/(:= 1 + length(comma_list(Head)))/pred)),
-    (dcg(Name, _, (Head : _)): `(Name/(:= 2 + length(comma_list(Head)))/pred)),
-    (test(Name, _): `(Name/test/test)),
-    (Other: _ if throw('TODO'(xtlm_Declaration_key(Other)))).
-
-pred xtlm_seal: module(_, Imports, Decls):
-    length(Imports, _),
-    length(Decls, _).
-
-pred xtlm_import: (Module, Imported):
-    Imported = module(Name, Declarations),
-    xtlm_add_(Module, Name/import/import, Imported),
-    maplist(xtlm_add_alias_(Module, Name), Declarations).
-
-pred xtlm_add_alias_: (Module, Prefix, Declaration):
-    Name/N/Type := xtlm_declaration_key(Declaration),
-    xtlm_add_(Module, Name/alias/alias, alias('.'(Prefix, Name))).

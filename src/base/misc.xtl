@@ -72,3 +72,8 @@ fun fib:
   (0 : 1),
   (1 : 1),
   (N : fib(N - 1) + fib(N - 2)).
+
+fun snd: (A - B): B.
+
+test misc:
+    1 := snd(2-1).

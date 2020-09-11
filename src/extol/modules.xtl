@@ -1,0 +1,53 @@
+% TODO: store attributes instead of just `/pred'
+% TODO: modules should just do name mapping. imports should be centralised
+fun xtlm_new: (Name): `module(Name, Imports, Declarations).
+
+pred xtlm_find:
+    ((Module, Name/N, pred): xtlm_find_(Module, Name/N/pred)),
+    ((Module, Name/N, fun): M is N - 1, xtlm_find_(Module, Name/M/fun)),
+    ((Module, Name/N, dcg): M is N - 2, xtlm_find_(Module, Name/M/dcg)).
+
+% TODO: find imports too
+pred xtlm_find_: (module(_, _, Declarations), Decl):
+    Decl = A-B,
+    var(B),
+    member(A-B, Declarations),
+    \+var(B).
+
+pred xtlm_add: (Module, Declaration):
+    Name/N/Type := xtlm_declaration_key(Declaration),
+    ( xtlm_find(Module, Name/N/_, Res),
+        throw(conflicting_declaration(Name/N))
+    ; xtlm_add_(Module, Key, Declaration)).
+
+pred xtlm_add_: (module(_, Declarations), Key, Declaration):
+    member(Key-Declaration, Declarations) ; throw(error('xtlm_add_: module is already sealed')).
+
+pred xtlm_declaration_key:
+    ((define(Name, Annots, Clauses), Key):
+        ( member(fun, Annots), !,
+            Key := (Name/(:= 1 + length(comma_list(Head)))/fun)
+        ; member(dcg, Annots), !,
+            Key := (Name/(:= 2 + length(comma_list(Head)))/dcg)
+        ; Key := (Name/(:= length(comma_list(Head)))/pred))),
+    ((test(Name, _), (Name/test/test)): true),
+    ((Other, _): _ if throw('TODO'(xtlm_Declaration_key(Other)))).
+
+test xtlm_declaration_key:
+    xtlm_declaration_key(define(foo, [fun], (N: N + 1)), foo/2/fun).
+
+pred xtlm_seal: module(_, Imports, Decls):
+    length(Imports, _),
+    length(Decls, _).
+
+pred xtlm_import: (Module, Imported):
+    Imported = module(Name, Declarations),
+    xtlm_add_(Module, Name/import/import, Imported),
+    maplist(xtlm_add_alias_(Module, Name), Declarations).
+
+pred xtlm_add_alias_: (Module, Prefix, Declaration):
+    Name/N/Type := xtlm_declaration_key(Declaration),
+    xtlm_add_(Module, Name/alias/alias, alias('.'(Prefix, Name))).
+
+fun xtlm_all_declarations: (module(_, _, Decls)):
+    maplist(snd, Decls).

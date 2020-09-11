@@ -12,6 +12,7 @@ PREFIX ?= $(SRC)/local
 BINDIR ?= $(PREFIX)/bin
 DATADIR ?= $(PREFIX)/share
 DOCDIR ?= $(PREFIX)/share/doc/$(NAME)
+PLC ?= gplc
 
 ifneq ($(V),1)
 MAKEFLAGS += --silent
@@ -64,7 +65,7 @@ $!stage$(2).pl: $!stage$(1) $(all_sources)
 
 $!stage$(1): $!stage$(1).pl
 	@echo [$(1)] GPLC $$@
-	gplc $$< -o $$@
+	$(PLC) $$< -o $$@
 
 .PHONY: $(1)
 $(1): $!stage$(1)
@@ -76,14 +77,20 @@ repl$(1): $(1)
 
 endef
 
-$!: | $!Makefile
-	@true
-
-$!.:
+%/.:
+	@echo [-] MKDIR $@
 	mkdir -p $@
-	touch config.mk
+
+$!config.mk: | $!Makefile
+	test \! -e $!config.mk
+	@echo [-] CONFIG $@
+	grep -A 100 'include.*config.mk$$' $/Makefile \
+	  | egrep '^[A-Z_]+ \?=' \
+	  | sed -E 's/(.*?) \?=.*/# \1 =/' \
+	  > $!config.mk
 
 $!Makefile: | $!.
+	@echo [-] CREATE $@
 	echo $$'BUILD=.\nSRC=$(realpath $(SRC))\ninclude $$(SRC)/Makefile' > $@
 
 $!stage0.pl: $/bootstrap/stage0.pl | $!
@@ -114,7 +121,7 @@ test-%: test1-% test2-%
 
 .PHONY: todo
 todo:
-	cd $/ && git -- grep -En 'TOD[O]|- \[ \]'
+	cd $/. && git grep -En 'TOD[O]|- \[ \]'
 
 .PHONY: install
 install: $!stage2

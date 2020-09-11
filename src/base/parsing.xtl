@@ -7,6 +7,10 @@ dcg many:
 ((P, [X | Xs]): call(P, X), many(P, Xs), !),
 ((_, []): []).
 
+dcg many:
+    ((P): call(P), many(P), !),
+    ((_): true).
+
 dcg many1:
 contract((Predicate, List), (callable(Predicate), list_or_partial_list(List)), list(List)),
 ((P, [X | Xs]): call(P, X), !, many(P, Xs)).
