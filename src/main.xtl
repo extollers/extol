@@ -4,7 +4,7 @@ include 'src/base/parsing.xtl'.
 include 'src/base/streams.xtl'.
 include 'src/extol/parse.xtl'.
 include 'src/extol/compile.xtl'.
-include 'src/extol/modules.xtl'
+include 'src/extol/modules.xtl'.
 
 %% Main
 
@@ -38,7 +38,7 @@ pred command:
             fail
         ; true)),
             ((extoltoprolog, [In, Out | Flags]) :
-                xtlm_new(Module),
+                Module := xtlm_new(main), % TODO what to name the default module?
                 xtl_include(In, Module), !,
                 xtlm_all_declarations(Module, DeclsXTL),
                 (member('--slim', Flags), Slim = true, ! ; Slim = false),

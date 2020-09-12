@@ -76,4 +76,4 @@ fun fib:
 fun snd: (A - B): B.
 
 test misc:
-    1 := snd(2-1).
+    snd(2-1, 1).

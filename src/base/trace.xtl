@@ -115,6 +115,8 @@ pred 'sf': (F:
         Exception,
         throw_with_trace(Exception, F))).
 
+pred sf: (F, I, O): sf call(F, I, O).
+
 pred test_sf1: ((): 'sf'(test_sf2)).
 pred test_sf2: ((): throw(boop)).
 

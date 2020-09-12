@@ -2,4 +2,10 @@ bootstrap/* linguist-generated
 *.xtl linguist-language=Cool
 
 [attr]strict-text text eol=lf diff whitespace encoding=utf-8
-* strict-text
+*.xtl strict-text
+Makefile strict-text
+*.md strict-text
+NOTICE strict-text
+*.el strict-text
+
+bootstrap/* binary

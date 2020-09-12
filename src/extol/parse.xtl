@@ -62,12 +62,12 @@ pred define_clause: (_: _): true.
 dcg xtl_declaration:
     contract(Module, module(Module), module(Module)),
     ((_): eof, !, {fail}),
-    ((Decls):
+    ((Module):
 	sf xtl_expression(DeclV),
 	require(xtl_token(".")), !,
 	{ DeclV = include(Other), !,
             sf xtl_include(Other, Module)
-	; !, xtl_makevars(DeclV, DeclP, _), !,
+	; !, sf xtl_makevars(DeclV, DeclP, _), !,
              sf xtl_term_to_declaration(DeclP, Decl), !,
              sf xtlm_add(Module, Decl) }).
 
@@ -383,27 +383,3 @@ pred xtl_op:
 fun xtl_slim_declaration:
 (((test _ : _)) : []),
 ((Decl) : Decl).
-
-%% Modules
-
-pred module: module(Name, Declarations):
-    atom(Name),
-    (ground(Declarations), !, maplist(module_item, Declarations) ; list_or_partial_list(Declarations)).
-
-pred module_item: (Key - Declaration):
-    module_key(Key),
-    module_declaration(Declaration).
-
-pred module_key: (Name / N / Type):
-    name(Name),
-    (number(N) ; member(N, [alias, test, import])),
-    member(Type, [alias, test, import, pred, dcg, fun]).
-
-pred module_declaration:
-    (import(Module): module(Module)),
-    (alias(Name): name(Name)),
-    (Declaration: xtl_declaration(Declaration)).
-
-pred name:
-    ('.'(A,B): !, atom(A), name(B)),
-    (A: atom(A)).

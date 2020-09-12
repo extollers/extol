@@ -9,7 +9,7 @@ dcg many:
 
 dcg many:
     ((P): call(P), many(P), !),
-    ((_): true).
+    ((_): { true }).
 
 dcg many1:
 contract((Predicate, List), (callable(Predicate), list_or_partial_list(List)), list(List)),
