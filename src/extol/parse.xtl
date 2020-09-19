@@ -46,10 +46,10 @@ dcg xtl_top_level:
     contract((Module), module(Module), module(Module)),
     ((Module):
         {log(parsing_top_level)},
-	( "#!", !, xtl_line_comment_; { true }),
-	xtl_skipwhite,
-	sf many(xtl_declaration(Module)),
-	require(eof)).
+        ( "#!", !, xtl_line_comment_; { true }),
+        xtl_skipwhite,
+        sf many(xtl_declaration(Module)),
+        require(eof)).
 
 pred xtl_declaration:
     ((define(Name, Annots, Clauses)): atom(Name), maplist(annotation, Annots), maplist(define_clause, Clauses)),
@@ -72,14 +72,14 @@ dcg xtl_declaration:
     contract(Module, module(Module), module(Module)),
     ((_): eof, !, {fail}),
     ((Module):
-	sf xtl_expression(DeclV),
-	require(xtl_token(".")), !,
-	{log(parsed_expression(DeclV))},
-	{ DeclV = include(Other), !,
+        sf xtl_expression(DeclV),
+        require(xtl_token(".")), !,
+        {log(parsed_expression(DeclV))},
+        { DeclV = include(Other), !,
             sf xtl_include(Other, Module)
-	; DeclV = import(Other, Spec), !,
+        ; DeclV = import(Other, Spec), !,
             sf xtl_import(Other, Spec, Module)
-	; !, sf xtl_makevars(DeclV, DeclP, _), !,
+        ; !, sf xtl_makevars(DeclV, DeclP, _), !,
              sf xtl_term_to_declaration(DeclP, Decl), !,
              sf xtlm_add(Module, Decl) }).
 

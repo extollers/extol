@@ -1,3 +1,4 @@
+%import('src/base/trace.xtl', as('trace')).
 include 'src/base/trace.xtl'.
 include 'src/base/misc.xtl'.
 include 'src/base/parsing.xtl'.
