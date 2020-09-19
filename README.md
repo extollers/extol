@@ -1,26 +1,28 @@
-# Extol
+# The Extol Programming Language
 
-Extol is a programming language being bootstrapped on top of Prolog.
+We are building a programming that will have:
 
-The language is incomplete and the syntax and semantics are still
-closely tied to Prolog.
+- A uniform language for values, expressions, types, kinds, macros, patterns and tactics
+- Unrestricted predicates, constraint-solving, proofs and first-class patterns as core building blocks
+- A composable effects system that allows chosing abstraction levels and hides all lower abstractions
+- An extensible grammar that allows heavily bikeshedded coding styles
+- A compiler and a parser which are entirely generated from the interpreter and the AST data type
+- An FFI that can import and export to and from C, C++, Python, JavaScript, Ruby, Perl, sh, Java, .NET, Go, Rust and R
 
 ## Documentation
 
 <details><summary><b>Examples</b></summary><figure>
 
-Extol will eventually check types at compile time with declarations
-that may look like this:
+Some day Extol code might look like this, with inferred types checked at compile-time:
 
 ```
-define fib :: number -> number
+define fib
   0: 1
   1: 1
   n: fib (n - 1) + fib(n - 2)
 ```
 
-However, the types are currently only checked at runtime and
-declarations look like this:
+But today look like this, and the types are checked at runtime:
 
 ```
 define fib:
@@ -58,7 +60,7 @@ pred annotation:
     (parameters(List): maplist(var, List)).
 ```
 
-Extol features declarative grammars:
+There is support for declarative grammars such as this parser for Extol terms:
 
 ```
 dcg xtl_regular_term:
@@ -132,7 +134,7 @@ Extol> 'Hello, world!'
 Hello, world!
 ```
 
-### Using the compiler
+#### Using the compiler
 
 ```
 $ cat > hello.xtl
@@ -165,6 +167,8 @@ Hello, world!
 
 ## Inspiration
 
+Extol is inspired in part by the following languages and tools:
+
 - [Mercury](http://www.mercurylang.org/):
   Combining the power of Haskell and Prolog
 
@@ -179,6 +183,9 @@ Hello, world!
 
 - [Cecil](http://projectsweb.cs.washington.edu/research/projects/cecil/www/Release/index.html):
   Predicate objects
+
+- [Swig](http://www.swig.org/):
+  Automatically generated glue code for interfacing with other languages.
 
 ---
 
