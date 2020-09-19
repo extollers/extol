@@ -185,7 +185,7 @@ Extol is inspired in part by the following languages and tools:
   Predicate objects
 
 - [Swig](http://www.swig.org/):
-  Automatically generated glue code for interfacing with other languages.
+  Automatically generated glue code for interfacing with other languages
 
 ---
 
