@@ -1,7 +1,7 @@
 %% Modules
 
 pred module: module(Name, Declarations):
-    atom(Name),
+    name(Name),
     (ground(Declarations), !, maplist(module_item, Declarations) ; list_or_partial_list(Declarations)).
 
 pred module_item: (Key - Declaration):
@@ -10,20 +10,27 @@ pred module_item: (Key - Declaration):
 
 pred module_key: (Name / N / Type):
     name(Name),
-    (number(N) ; member(N, [alias, test, import])),
-    member(Type, [alias, test, import, pred, dcg, fun]).
+    (number(N) ; member(N, ['-'])),
+    member(Type, [test, imported, pred, dcg, fun]).
 
 pred module_declaration:
-    (import(Module): name(Module)),
-    (alias(Name): name(Name)),
+    (imported(Module, Name): name(Module), name(Name)),
     (Declaration: xtl_declaration(Declaration)).
 
+% TODO: uniform representation for names 
 pred name:
-    ('.'(A,B): !, atom(A), name(B)),
+    (name(Ns): maplist(atom, Ns), \+length(Ns, 1)),
     (A: atom(A)).
 
+pred name_list:
+    ((name(Xs), Xs): \+ (Xs = [_])),
+    ((X, [X]): atom(X)).
+
+pred concat_name: (A, B, Res):
+    Xs := append(name_list(A), name_list(B)),
+    name_list(Res, Xs).
+
 % TODO: store attributes instead of just `/pred'
-% TODO: modules should just do name mapping. imports should be centralised
 fun xtlm_new: (Name): `module(Name, Declarations).
 
 pred xtlm_find:
@@ -64,13 +71,17 @@ test xtlm_declaration_key:
 pred xtlm_seal: module(_, Decls):
     length(Decls, _).
 
-pred xtlm_import_all: (Module, Imported):
+pred xtlm_import: (Module, Imported, As):
     Imported = module(Name, Declarations),
-    maplist(xtlm_add_alias_(Module, Name), Declarations).
+    ( As = qualified, !, Prefix = Name
+    ; As = as(Prefix), !
+    ; As = inline, Prefix = name([])),
+    maplist(xtlm_add_import_(Module, Prefix), Declarations).
 
-pred xtlm_add_alias_: (Module, Prefix, Declaration):
+pred xtlm_add_import_: (Module, Prefix, Import, Declaration):
     (Name/N/Type) := xtlm_declaration_key(Declaration),
-    xtlm_add_(Module, Name/alias/alias, alias('.'(Prefix, Name))).
+    NewName := concat_name(Prefix, Name),
+    xtlm_add_(Module, NewName/N/Type, imported(Import, Name)).
 
 fun xtlm_all_declarations: (module(_, Decls)):
     maplist(snd, Decls).
