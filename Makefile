@@ -13,17 +13,13 @@ BINDIR ?= $(PREFIX)/bin
 DATADIR ?= $(PREFIX)/share
 DOCDIR ?= $(PREFIX)/share/doc/$(NAME)
 PLC ?= gplc
+PLC_FLAGS ?= --global-size 1280001 --local-size 1280002
 
-CONFIG_VARIABLES = VERBOSE DESTDIR NAME PREFIX BINDIR DATADIR DOCDIR PLC
+CONFIG_VARIABLES = VERBOSE DESTDIR NAME PREFIX BINDIR DATADIR DOCDIR PLC PLC_FLAGS
 
 ifneq ($(VERBOSE),1)
 MAKEFLAGS += --silent
 endif
-
-# LOCALSZ=102400
-# export LOCALSZ
-GLOBALSZ=128000
-export GLOBALSZ
 
 / := $(SRC)/
 ! := $(BUILD)/
@@ -54,7 +50,7 @@ check: test
 define make_stage
 
 .PHONY: diff$(1)$(2)
-diff$(1)$(2): $!stage$(1).pl $!stage$(2).pl
+diff$(1)$(2): $!stage$(2).pl $!stage$(1).pl
 	@echo [$(2)] DIFF
 	diff --unified=2 --report-identical-files $$^
 
@@ -74,7 +70,7 @@ $!stage$(2).pl: $!stage$(1) $(all_sources)
 
 $!stage$(1): $!stage$(1).pl
 	@echo [$(1)] GPLC $$@
-	$(PLC) $$< -o $$@
+	$(PLC) $(PLC_FLAGS) $$< -o $$@
 
 .PHONY: $(1)
 $(1): $!stage$(1)
@@ -97,11 +93,6 @@ configure: $!Makefile
 $!Makefile: | $!.
 	@echo [-] CREATE $@
 	echo $$'BUILD=.\nSRC=$(realpath $(SRC))\ninclude $$(SRC)/Makefile' > $@
-
-.PHONY: rm-config
-rm-config:
-	@echo DELETING CONFIG.MK
-	@rm -f $!config.mk
 
 $!stage0.pl: $/bootstrap/stage0.pl | $!.
 	@echo [0] COPY $@

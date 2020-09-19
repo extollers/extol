@@ -9,10 +9,9 @@ pred xtl_to_pl_toplevel: (XTL, PL):
             (:- initialization((main;write('error: unexpected failure in main'),nl,halt(1))))
             ], FlatDeclsPL, PL).
 
-% prolog xtl_to_pl_declaration(XTL, PL) :- t(to_pl_declaration(XTL)), false.
-
 pred xtl_to_pl_declaration:
     contract((XTL, PL), xtl_declaration(XTL), true),
+    ((XTL, PL): log(to_pl_declaration(XTL)), false),
     (((test(Name, XTL)), [(test Name :- PL)]) : !,
         xtl_to_pl_goal(XTL, PL),
         numbervars(PL)),

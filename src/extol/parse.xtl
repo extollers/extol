@@ -2,7 +2,15 @@
 
 % TODO: path relative to source instead of cwd
 pred xtl_include: ((File, Module):
-    sf xtl_top_level(Module, := read_file(File), [])).
+    log(including(File)),
+    % sf
+    xtl_top_level(Module, := read_file(File), [])).
+
+pred xtl_import: ((File, Name, Module):
+    Imports = xtlm_imports(Module),
+    Imported := xtlm_new(Name, Imports),
+    xtl_top_level(Imported, := read_file(File), []),
+    xtlm_import(Module, Imported, inline)).
 
 dcg xtl_token:
     contract(N, callable(N), true),
@@ -37,6 +45,7 @@ dcg xtl_line_comment_:
 dcg xtl_top_level:
     contract((Module), module(Module), module(Module)),
     ((Module):
+        {log(parsing_top_level)},
 	( "#!", !, xtl_line_comment_; { true }),
 	xtl_skipwhite,
 	sf many(xtl_declaration(Module)),
@@ -65,8 +74,11 @@ dcg xtl_declaration:
     ((Module):
 	sf xtl_expression(DeclV),
 	require(xtl_token(".")), !,
+	{log(parsed_expression(DeclV))},
 	{ DeclV = include(Other), !,
             sf xtl_include(Other, Module)
+	; DeclV = import(Other, Spec), !,
+            sf xtl_import(Other, Spec, Module)
 	; !, sf xtl_makevars(DeclV, DeclP, _), !,
              sf xtl_term_to_declaration(DeclP, Decl), !,
              sf xtlm_add(Module, Decl) }).

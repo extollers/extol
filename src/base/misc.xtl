@@ -77,3 +77,29 @@ fun snd: (A - B): B.
 
 test misc:
     snd(2-1, 1).
+
+pred pmaplist:
+    ((_, V): var(V), !),
+    ((_, []): true),
+    ((G, [X | Xs]): call(G, X), pmaplist(G, Xs)).
+
+test pmaplist:
+    pmaplist('='(1), []),
+    pmaplist('='(1), [1 | _]),
+    pmaplist('='(1), [1, 1]),
+    pmaplist('='(1), _).
+
+pred pmember:
+    ((_, V): var(V), !, false),
+    ((_, []): !, false),
+    ((X, [X | Xs]): !, true),
+    ((X, [_ | Xs]): pmember(X, Xs)).
+
+pred pinsert:
+    ((X, Xs): var(Xs), !, Xs = [X | _]),
+    ((X, [_ | Xs]): pinsert(X, Xs)).
+
+fun plength:
+    (V: 0 if var(V), !),
+    ([]: 0),
+    ([_ | Xs]: 1 + plength(Xs)).

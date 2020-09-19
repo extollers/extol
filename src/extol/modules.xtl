@@ -1,8 +1,7 @@
 %% Modules
 
-pred module: module(Name, Declarations):
-    name(Name),
-    (ground(Declarations), !, maplist(module_item, Declarations) ; list_or_partial_list(Declarations)).
+pred module: module(Name, Declarations, Imports):
+    name(Name).
 
 pred module_item: (Key - Declaration):
     module_key(Key),
@@ -31,17 +30,24 @@ pred concat_name: (A, B, Res):
     name_list(Res, Xs).
 
 % TODO: store attributes instead of just `/pred'
-fun xtlm_new: (Name): `module(Name, Declarations).
+
+pred xtlm_new: (Name, Module):
+    log(new_module(Name)),
+    Module = module(Name, _, [Module | _]).
+
+pred xtlm_new: (Name, Imports, Module):
+    log(new(Name, := plength(Imports))),
+    ( pmember(module(Name, _, _), Imports),
+	throw(error(already_imported(Named)))
+    ; true),
+    pinsert(Modules, Imports),
+    Module = module(Name, _, Imports).
 
 pred xtlm_find:
     ((Module, Name/N/K): sf xtlm_find_(Module, (Name/N/K)-_)).
 
-% TODO: find imports and aliases too
-pred xtlm_find_: (module(_, Declarations), Decl):
-    Decl = A-B,
-    var(B),
-    member(A-B, Declarations), !,
-    \+var(B).
+pred xtlm_find_: (module(_, Declarations, _), Decl):
+    pmember(Decl, Declarations).
 
 pred xtlm_add: (Module, Declaration):
     Name/N/Type := xtlm_declaration_key(Declaration),
@@ -49,8 +55,8 @@ pred xtlm_add: (Module, Declaration):
         throw(conflicting_declaration(Name/N,K,Declaration))
     ; xtlm_add_(Module, Name/N/Type, Declaration)).
 
-pred xtlm_add_: (module(_, Declarations), Key, Declaration):
-    ( member(Key-Declaration, Declarations)
+pred xtlm_add_: (module(_, Declarations, _), Key, Declaration):
+    ( pinsert(Key-Declaration, Declarations)
     ; throw(error('xtlm_add_: module is already sealed'))).
 
 pred xtlm_declaration_key:
@@ -68,11 +74,12 @@ pred xtlm_declaration_key:
 test xtlm_declaration_key:
     xtlm_declaration_key(define(foo, [fun], [(N: N + 1)]), foo/2/fun).
 
-pred xtlm_seal: module(_, Decls):
+pred xtlm_seal: module(_, Decls, _):
     length(Decls, _).
 
 pred xtlm_import: (Module, Imported, As):
-    Imported = module(Name, Declarations),
+    Imported = module(Name, Declarations, Imports),
+    Module = module(_, _, Imports),
     ( As = qualified, !, Prefix = Name
     ; As = as(Prefix), !
     ; As = inline, Prefix = name([])),
@@ -83,5 +90,10 @@ pred xtlm_add_import_: (Module, Prefix, Import, Declaration):
     NewName := concat_name(Prefix, Name),
     xtlm_add_(Module, NewName/N/Type, imported(Import, Name)).
 
-fun xtlm_all_declarations: (module(_, Decls)):
+fun xtlm_all_declarations: (module(_, Decls, _)):
     maplist(snd, Decls).
+
+fun xtlm_all_declarations_recursive: (module(_, _, Imports)):
+    append(maplist(xtlm_all_declarations, Imports)).
+
+fun xtlm_imports: module(_, _, Imports): Imports.
