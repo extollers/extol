@@ -4,7 +4,7 @@ BUILD ?= build
 
 -include $(BUILD)/config.mk
 
-V ?= 0
+VERBOSE ?= 0
 SRC ?= $(CURDIR)
 DESTDIR ?=
 NAME ?= extol
@@ -14,7 +14,9 @@ DATADIR ?= $(PREFIX)/share
 DOCDIR ?= $(PREFIX)/share/doc/$(NAME)
 PLC ?= gplc
 
-ifneq ($(V),1)
+CONFIG_VARIABLES = VERBOSE DESTDIR NAME PREFIX BINDIR DATADIR DOCDIR PLC
+
+ifneq ($(VERBOSE),1)
 MAKEFLAGS += --silent
 endif
 
@@ -37,10 +39,17 @@ endif
 
 all_sources = $(shell find $/src -type f)
 
+.PHONY: default
+default: 2
+	@true
+
 .PHONY: test
-.DEFAULT: test
 test: test1 test2 diff23
 	@echo [-] ALL TESTS PASSED
+
+.PHONY: check
+check: test
+	@true
 
 define make_stage
 
@@ -81,19 +90,20 @@ endef
 	@echo [-] MKDIR $@
 	mkdir -p $@
 
-$!config.mk: | $!Makefile
-	test \! -e $!config.mk
-	@echo [-] CONFIG $@
-	grep -A 100 'include.*config.mk$$' $/Makefile \
-	  | egrep '^[A-Z_]+ \?=' \
-	  | sed -E 's/(.*?) \?=.*/# \1 =/' \
-	  > $!config.mk
+configure: $!Makefile
+	@echo [-] CONFIG $!config.mk
+	@echo $$'$(foreach var,$(CONFIG_VARIABLES),\n$(var) := $($(var))\n)' > $!config.mk
 
 $!Makefile: | $!.
 	@echo [-] CREATE $@
 	echo $$'BUILD=.\nSRC=$(realpath $(SRC))\ninclude $$(SRC)/Makefile' > $@
 
-$!stage0.pl: $/bootstrap/stage0.pl | $!
+.PHONY: rm-config
+rm-config:
+	@echo DELETING CONFIG.MK
+	@rm -f $!config.mk
+
+$!stage0.pl: $/bootstrap/stage0.pl | $!.
 	@echo [0] COPY $@
 	cp $< $@
 
