@@ -6,6 +6,7 @@ BUILD ?= build
 
 VERBOSE ?= 0
 SRC ?= $(CURDIR)
+ONLY ?= 01234
 DESTDIR ?=
 NAME ?= extol
 PREFIX ?= $(SRC)/local
@@ -49,8 +50,16 @@ check: test
 
 define make_stage
 
+ifneq (,$$(findstring $(1),$$(ONLY)))
+STAGE$(1)_PL := $!stage$(1).pl
+STAGE$(1) := $!stage$(1)
+else
+STAGE$(1)_PL :=
+STAGE$(1) :=
+endif
+
 .PHONY: diff$(1)$(2)
-diff$(1)$(2): $!stage$(2).pl $!stage$(1).pl
+diff$(1)$(2): $!stage$(2).pl $$(STAGE$(1)_PL)
 	@echo [$(2)] DIFF
 	diff --unified=2 --report-identical-files $$^
 
@@ -63,10 +72,10 @@ test$(2)-%: $!stage$(2)
 	@echo [$(2)] TEST $$< $$*
 	$(./)$$< test $$*
 
-$!stage$(2).pl: $!stage$(1) $(all_sources)
+$!stage$(2).pl: $$(STAGE$(1)) $(all_sources)
 	@echo [$(2)] TOPL $$@
 	@rm -f $$@
-	$(./)$$< extoltoprolog src/main.xtl $$@
+	$(./)$!stage$(1) extoltoprolog src/main.xtl $$@
 
 $!stage$(1): $!stage$(1).pl
 	@echo [$(1)] GPLC $$@
