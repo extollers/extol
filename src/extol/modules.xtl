@@ -33,14 +33,14 @@ pred concat_name: (A, B, Res):
 
 pred xtlm_new: (Name, Module):
     log(new_module(Name)),
-    Module = module(Name, _, [Module | _]).
+    Module = module(Name, Decls, [Name-Decls | _]).
 
 pred xtlm_new: (Name, Imports, Module):
     log(new(Name, := plength(Imports))),
-    ( pmember(module(Name, _, _), Imports),
+    ( pmember(Name-_, Imports),
 	throw(error(already_imported(Named)))
     ; true),
-    pinsert(Modules, Imports),
+    pinsert(Name-Decls, Imports),
     Module = module(Name, _, Imports).
 
 pred xtlm_find:
@@ -90,7 +90,7 @@ pred xtlm_add_import_: (Module, Prefix, Import, Declaration):
     NewName := concat_name(Prefix, Name),
     xtlm_add_(Module, NewName/N/Type, imported(Import, Name)).
 
-fun xtlm_all_declarations: (module(_, Decls, _)):
+fun xtlm_all_declarations: (_-Decls):
     maplist(snd, Decls).
 
 fun xtlm_all_declarations_recursive: (module(_, _, Imports)):
