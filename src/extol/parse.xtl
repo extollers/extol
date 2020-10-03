@@ -4,13 +4,13 @@
 pred xtl_include: ((File, Module):
     log(including(File)),
     % sf
-    xtl_top_level(Module, := read_file(File), [])).
+    must(xtl_top_level(Module, := read_file(File), []))).
 
 pred xtl_import: ((File, Name, Module):
-    Imports = xtlm_imports(Module),
-    Imported := xtlm_new(Name, Imports),
-    xtl_top_level(Imported, := read_file(File), []),
-    xtlm_import(Module, Imported, inline)).
+    must(Imports := xtlm_imports(Module)),
+    must(Imported := xtlm_new(Name, Imports)),
+    must(xtl_top_level(Imported, := read_file(File), [])),
+    must(xtlm_import(Module, Imported, inline))).
 
 dcg xtl_token:
     contract(N, callable(N), true),

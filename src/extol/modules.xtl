@@ -69,7 +69,7 @@ pred xtlm_declaration_key:
             Key = (Name/(:= 2 + length(comma_list(Head)))/dcg)
         ; !, Key = (Name/(:= length(comma_list(Head)))/pred))),
 	    ((test(Name, _), (Name/test/test)): !),
-	    ((Other, _): throw(error(unknown_declaration(Other)))).
+	    ((Other, _): throw(error(unsuported_declaration(Other)))).
 
 test xtlm_declaration_key:
     xtlm_declaration_key(define(foo, [fun], [(N: N + 1)]), foo/2/fun).
@@ -78,17 +78,17 @@ pred xtlm_seal: module(_, Decls, _):
     length(Decls, _).
 
 pred xtlm_import: (Module, Imported, As):
-    Imported = module(Name, Declarations, Imports),
-    Module = module(_, _, Imports),
-    ( As = qualified, !, Prefix = Name
-    ; As = as(Prefix), !
-    ; As = inline, Prefix = name([])),
-    maplist(xtlm_add_import_(Module, Prefix), Declarations).
+    must(Imported = module(Name, Declarations, Imports)),
+    must(Module = module(_, _, Imports)),
+    must(( As = qualified, !, Prefix = Name
+        ; As = as(Prefix), !
+        ; As = inline, Prefix = name([]))),
+    maplist(must(xtlm_add_import_(Module, Prefix, Name)), Declarations).
 
 pred xtlm_add_import_: (Module, Prefix, Import, Declaration):
-    (Name/N/Type) := xtlm_declaration_key(Declaration),
-    NewName := concat_name(Prefix, Name),
-    xtlm_add_(Module, NewName/N/Type, imported(Import, Name)).
+    must((Name/N/Type) := xtlm_declaration_key(Declaration)),
+    must(NewName := concat_name(Prefix, Name)),
+    must(xtlm_add_(Module, NewName/N/Type, imported(Import, Name))).
 
 fun xtlm_all_declarations: (_-Decls):
     maplist(snd, Decls).
