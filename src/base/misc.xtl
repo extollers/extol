@@ -103,3 +103,9 @@ fun plength:
     (V: 0 if var(V), !),
     ([]: 0),
     ([_ | Xs]: 1 + plength(Xs)).
+
+pred filterlist:
+    ((P, [], []): true),
+    ((P, [X | Xs], Ys):
+        call(P, X), !, filterlist(P, Xs, Zs), Ys = [X | Zs]
+    ; filterlist(P, Xs, Ys)).

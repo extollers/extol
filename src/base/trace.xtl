@@ -1,7 +1,7 @@
 % Trace
 
-pred log: _: true.
-% pred log: Debug: t(Debug).
+% pred log: _: true.
+pred log: Debug: t(Debug).
 
 pred t: (X: write('trace: '), ti, write_term(X, [quoted(true), max_depth(4)]), nl).
 
@@ -109,7 +109,7 @@ pred print_exception:
         !,
         print_exception(Error),
         maplist(write_trace_line, := reverse(Trace))),
-    (Error: write(Error), nl).
+    (Error: write_term(Error, [numbervars(false), namevars(false), max_depth(6)]), nl).
 
 % Explicit stack frame
 pred 'sf': (F:

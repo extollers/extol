@@ -10,6 +10,7 @@ pred xtl_import: ((File, Name, Module):
     must(Imports := xtlm_imports(Module)),
     must(Imported := xtlm_new(Name, Imports)),
     must(xtl_top_level(Imported, := read_file(File), [])),
+    must(xtlm_seal(Imported)),
     must(xtlm_import(Module, Imported, inline))).
 
 dcg xtl_token:

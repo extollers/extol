@@ -13,7 +13,7 @@ pred module_key: (Name / N / Type):
     member(Type, [test, imported, pred, dcg, fun]).
 
 pred module_declaration:
-    (imported(Module, Name): name(Module), name(Name)),
+    (imported(Module, Name): !, name(Module), name(Name)),
     (Declaration: xtl_declaration(Declaration)).
 
 % TODO: uniform representation for names 
@@ -74,8 +74,8 @@ pred xtlm_declaration_key:
 test xtlm_declaration_key:
     xtlm_declaration_key(define(foo, [fun], [(N: N + 1)]), foo/2/fun).
 
-pred xtlm_seal: module(_, Decls, _):
-    length(Decls, _).
+pred xtlm_seal: module(_, Decls, Imports):
+    must(length(Decls, _)).
 
 pred xtlm_import: (Module, Imported, As):
     must(Imported = module(Name, Declarations, Imports)),
@@ -85,15 +85,19 @@ pred xtlm_import: (Module, Imported, As):
         ; As = inline, Prefix = name([]))),
     maplist(must(xtlm_add_import_(Module, Prefix, Name)), Declarations).
 
-pred xtlm_add_import_: (Module, Prefix, Import, Declaration):
-    must((Name/N/Type) := xtlm_declaration_key(Declaration)),
+pred xtlm_add_import_: (Module, Prefix, Import, Key-Declaration):
+    must((Name/N/Type) = Key),
     must(NewName := concat_name(Prefix, Name)),
     must(xtlm_add_(Module, NewName/N/Type, imported(Import, Name))).
 
-fun xtlm_all_declarations: (_-Decls):
-    maplist(snd, Decls).
+pred xtlm_all_declarations_: (Name-DeclPairs, Out):
+    log(listing_decls_from(Name, DeclPairs)),
+    maplist(snd, DeclPairs, Decls),
+    filterlist(xtl_declaration, Decls, Out).
 
-fun xtlm_all_declarations_recursive: (module(_, _, Imports)):
-    append(maplist(xtlm_all_declarations, Imports)).
+pred xtlm_all_declarations_recursive: (module(_, _, Imports), Decls):
+    length(Imports, _),
+    maplist(xtlm_all_declarations_, Imports, Declss),
+    append(Declss, Decls).
 
 fun xtlm_imports: module(_, _, Imports): Imports.
