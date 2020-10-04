@@ -7,7 +7,7 @@ We are building a programming that will have:
 - A composable effects system that allows chosing abstraction levels and hides all lower abstractions
 - An extensible grammar that allows heavily bikeshedded coding styles
 - A compiler and a parser which are entirely generated from the interpreter and the AST data type
-- An FFI that can import and export to and from C, C++, Python, JavaScript, Ruby, Perl, sh, Java, .NET, Go, Rust and R
+- An FFI that can import and export to and from C, C++, Python, JavaScript, Ruby, Perl, sh, Java, .NET, Go, Rust, R, ELisp and Nix
 
 ## Documentation
 
