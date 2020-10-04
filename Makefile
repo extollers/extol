@@ -47,11 +47,11 @@ test: unit1 unit2 diff23 testi
 .PHONY: testi
 testi: install
 	echo [I] INTEGRATION TESTS
-	STAGE=I EXTOL=$(BINDIR)/$(NAME) $/test/run
+	STAGE=I EXTOL=$(BINDIR)/$(NAME) $(SHELL) $/test/run
 
 testi-%: install
 	echo [I] INTEGRATION TESTS $*
-	STAGE=I EXTOL=$(BINDIR)/$(NAME) $/test/run "$*"
+	STAGE=I EXTOL=$(BINDIR)/$(NAME) $(SHELL) $/test/run "$*"
 
 .PHONY: check
 check: test

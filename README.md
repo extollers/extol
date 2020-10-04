@@ -113,7 +113,7 @@ sudo apt install gprolog
 Or with Nix:
 
 ```
-nix-shell
+nix develop
 ```
 
 Build the compiler and install it to `./local`:
