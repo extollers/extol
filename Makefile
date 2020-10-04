@@ -117,6 +117,7 @@ reboot: 2
 	@echo [-] BOOT $/bootstrap/stage0.pl
 	$(./)$!stage2 extoltoprolog $/src/main.xtl $!stage0.pl # --slim
 	cp $!stage0.pl $/bootstrap/stage0.pl
+	@echo [-] REBOOT COMPLETE
 
 .PHONY: clean
 clean:

@@ -1,0 +1,5 @@
+capture extol extoltoprolog input/hello.xtl out/hello.prolog
+gplc out/hello.prolog
+capture ./hello
+
+rm out/hello

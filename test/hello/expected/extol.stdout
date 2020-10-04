@@ -1,0 +1,11 @@
+trace: new_module(main)
+trace: revving
+trace: including('input/hello.xtl')
+trace: parsing_top_level
+trace: parsed_expression(pred(main):'()':(write('Hello, world!'),nl,halt))
+trace: parsed
+trace: listing_decls_from(main,[main/0/pred-define(main,[nondet,predicate],['()':(...,...)])])
+trace: listed
+trace: decls_new([define(main,[nondet,predicate],['()':(write(...),...,...)])])
+trace: to_pl_declaration(define(main,[nondet,predicate],['()':(write('Hello, world!'),nl,halt)]))
+trace: translated

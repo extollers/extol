@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+set -eu
+
+run=$1
+
+cd "$(dirname "$0")"
+
+dirs=$(find -type d -name $run)
+
+for dir in $dirs; do
+    expected=${dir/$run/expected}
+    echo updating $expected
+    rm -rf $expected
+    mv $dir/out $expected
+done

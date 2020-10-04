@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+
+test_root=$(cd $(dirname "$0"); pwd)
+
+pattern=${1:-*}
+
+tests=$(cd "$test_root"; find -type f -path "$pattern/test")
+
+run=run-$$-$RANDOM
+
+STAGE=${STAGE:-I}
+EXTOL=${EXTOL:-$test_root/../local/bin/extol}
+
+extol () {
+    "$EXTOL" "$@"
+}
+
+mkname () {
+    echo ${1//[.\/ ]/}
+}
+
+capture () {
+    out=$test_root/$test/$run/out/$(mkname "$1")
+    "$@" > $out.stdout 2> $out.stderr
+    echo $? > $out.code
+}
+
+verify () (
+    cd "$test_root/$test"
+    if [[ -e $run/out ]]; then
+        diff -r expected $run/out
+    fi
+)
+
+total=0
+failed=0
+
+for test_file in $tests; do
+    test=${test_file%/test}
+    test=${test#./}
+    let ++total
+    echo [$STAGE] TEST $test
+    error=0
+    ( cd "$test_root/$test"
+      rm -rf $run
+      mkdir $run
+      cd $run
+      ln -s .. input
+      mkdir out
+      . ../test
+    )
+    error=$?
+    verify || error=1
+    if [[ $error = 0 ]]; then
+        rm -rf "$test_root/$test/$run"
+    else
+        echo [$STAGE] FAILED $test
+        let ++failed
+    fi
+done
+
+if [[ $failed = 0 ]]; then
+    echo [$STAGE] $total TESTS PASSED
+else
+    echo [$STAGE] $failed/$total TESTS FAILED "($run)"
+fi
