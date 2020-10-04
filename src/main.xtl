@@ -66,14 +66,16 @@ pred run_test:
                 run_test((B, done))).
 
 pred xtl_repl:
-    ((): write('Extol> '), flush_output, read_line(Line),
+    (():
+        Module := xtlm_new(repl),
+        write('Extol> '), flush_output, read_line(Line),
         ( Line = [0'\n]
         ; Line = [], write('end'), halt
         ; catch((
                 ( xtl_expression(ExpV, Line, [])
                 ; throw('parse failed')),
                     xtl_makevars(ExpV, Exp, Vars),
-                    xtl_to_pl_funexpr(Result, Exp, ExpPL),
+                    xtl_to_pl_funexpr(Module, Result, Exp, ExpPL),
                     comma_list(GoalPL, ExpPL),
                     (GoalPL = (); call(GoalPL)),
                     write(Result), nl
