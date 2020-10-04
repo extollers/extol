@@ -41,8 +41,17 @@ default: 2
 	@true
 
 .PHONY: test
-test: test1 test2 diff23
+test: unit1 unit2 diff23 testi
 	@echo [-] ALL TESTS PASSED
+
+.PHONY: testi
+testi: install
+	echo [I] INTEGRATION TESTS
+	STAGE=I EXTOL=$(BINDIR)/$(NAME) $/test/run
+
+testi-%: install
+	echo [I] INTEGRATION TESTS $*
+	STAGE=I EXTOL=$(BINDIR)/$(NAME) $/test/run "$*"
 
 .PHONY: check
 check: test
@@ -63,14 +72,14 @@ diff$(1)$(2): $!stage$(2).pl $$(STAGE$(1)_PL)
 	@echo [$(2)] DIFF
 	diff --unified=2 --report-identical-files $$^
 
-.PHONY: test$(2)
-test$(2): $!stage$(2)
-	@echo [$(2)] TEST $$<
+.PHONY: unit$(2)
+unit$(2): $!stage$(2)
+	@echo [$(2)] UNIT $$<
 	$(./)$$< test
 
-test$(2)-%: $!stage$(2)
-	@echo [$(2)] TEST $$< $$*
-	$(./)$$< test $$*
+unit$(2)-%: $!stage$(2)
+	@echo [$(2)] UNIT $$< $$*
+	$(./)$$< unit $$*
 
 $!stage$(2).pl: $$(STAGE$(1)) $(all_sources)
 	@echo [$(2)] TOPL $$@
@@ -127,8 +136,8 @@ clean:
 .PHONY: repl
 repl: repl2
 
-test-%: test1-% test2-%
-	@echo [-] TEST "'$*'" PASSED
+unit-%: unit1-% unit2-%
+	@echo [-] UNIT TEST "'$*'" PASSED
 
 .PHONY: todo
 todo:

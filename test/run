@@ -2,9 +2,9 @@
 
 test_root=$(cd $(dirname "$0"); pwd)
 
-pattern=${1:-*}
+pattern=${1:-}
 
-tests=$(cd "$test_root"; find -type f -path "$pattern/test")
+tests=$(cd "$test_root"; find . -type f -path "./$pattern*/test")
 
 run=run-$$-$RANDOM
 
@@ -15,12 +15,12 @@ extol () {
     "$EXTOL" "$@"
 }
 
-mkname () {
-    echo ${1//[.\/ ]/}
-}
-
 capture () {
-    out=$test_root/$test/$run/out/$(mkname "$1")
+    out=$test_root/$test/$run/out/${1//[.\/ ]/}
+    i=2
+    while [[ -e $out.code ]]; do
+        out=${out%.*}.$((i++))
+    done
     "$@" > $out.stdout 2> $out.stderr
     echo $? > $out.code
 }
