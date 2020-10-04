@@ -8,10 +8,10 @@ pred xtl_include: ((File, Module):
 
 pred xtl_import: ((File, Name, Module):
     log(importing(File, Name)),
-    tc must(Imports := xtlm_imports(Module)),
-    tc must(Imported := xtlm_new(Name, Imports)),
+    must(Imports := xtlm_imports(Module)),
+    must(Imported := xtlm_new(Name, Imports)),
     must(xtl_top_level(Imported, := read_file(File), [])),
-    tc must(xtlm_seal(Imported)),
+    must(xtlm_seal(Imported)),
     must(xtlm_import(Module, Imported, inline)),
     log(imports(Imports))).
 

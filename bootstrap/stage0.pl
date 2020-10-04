@@ -11,9 +11,9 @@
 :-(run_test(done),','(!,','(write(success),nl))).
 :-(run_test(','(A,B)),','(!,;(->(sf(A),','(!,run_test(B))),','(nl,','(write('  failed: '),','(write_term(A,'.'(numbervars(false),'.'(namevars(false),'.'(max_depth(6),[])))),','(nl,throw(test_failed)))))))).
 :-(run_test(A),run_test(','(A,done))).
-:-(xtl_repl,','(write('Extol> '),','(flush_output,','(read_line(A),','(;(=(A,'.'(10,[])),;(catch(','(;(xtl_expression(B,A,[]),throw('parse failed')),','(xtl_makevars(B,C,D),','(xtl_to_pl_funexpr(E,C,F),','(comma_list(G,F),','(;(=(G,'()'),call(G)),','(write(E),nl)))))),H,','(write('failed: '),print_exception(H))),','(write(error),nl))),','(!,xtl_repl)))))).
+:-(xtl_repl,','(write('Extol> '),','(flush_output,','(read_line(A),','(;(=(A,'.'(10,[])),;(','(=(A,[]),','(write(end),halt)),;(catch(','(;(xtl_expression(B,A,[]),throw('parse failed')),','(xtl_makevars(B,C,D),','(xtl_to_pl_funexpr(E,C,F),','(comma_list(G,F),','(;(=(G,'()'),call(G)),','(write(E),nl)))))),H,','(write('failed: '),print_exception(H))),','(write(error),nl)))),','(!,xtl_repl)))))).
 :-(xtl_repl,','(write(end),nl)).
-:-(log(A),t(A)).
+:-(log(A),true).
 :-(t(A),','(write('trace: '),','(ti,','(write_term(A,'.'(quoted(true),'.'(max_depth(7),[]))),nl)))).
 :-(t(A,B,C),','(','(','(write('trace: '),','(ti,','(write_term(A,'.'(quoted(true),'.'(max_depth(7),[]))),write(', at: ')))),=(B,D)),','(peek(E,D,F),','(','(','(pretty_init(E,G),','(write(G),nl)),=(F,H)),','(!,=(H,C)))))).
 :-(pretty_init(A,B),','(copy_term(A,C),','(;(','(length(D,32),append(D,E,C)),=(D,C)),','(!,','(prep_chars(D,F,[]),','(length(F,G),','(;(->(<(G,10),append(F,'.'(60,'.'(101,'.'(111,'.'(102,'.'(62,[]))))),H)),=(H,F)),atom_codes(B,H)))))))).
@@ -135,7 +135,7 @@ test(:-(pmaplist,','(pmaplist(=(1),[]),','(pmaplist(=(1),'.'(1,A)),','(pmaplist(
 :-(read_line([]),','(current_input(A),','(at_end_of_stream(A),!))).
 :-(read_line('.'(A,B)),','(current_input(C),','(line_count(C,D),','(get_char(E),','(atom_codes(E,'.'(A,[])),;(','(line_count(C,D),read_line(B)),=(B,[]))))))).
 :-(xtl_include(A,B),','(log(including(A)),','(read_file(A,C),must(xtl_top_level(B,C,[]))))).
-:-(xtl_import(A,B,C),','(log(importing(A,B)),','(tc(must(:=(D,xtlm_imports(C)))),','(tc(must(:=(E,xtlm_new(B,D)))),','(','(read_file(A,F),must(xtl_top_level(E,F,[]))),','(tc(must(xtlm_seal(E))),','(must(xtlm_import(C,E,inline)),log(imports(D))))))))).
+:-(xtl_import(A,B,C),','(log(importing(A,B)),','(must(:=(D,xtlm_imports(C))),','(must(:=(E,xtlm_new(B,D))),','(','(read_file(A,F),must(xtl_top_level(E,F,[]))),','(must(xtlm_seal(E)),','(must(xtlm_import(C,E,inline)),log(imports(D))))))))).
 :-(xtl_token(A,B,C),','(assert(callable(A)),','('__contract_free_xtl_token'(A,B,C),assert(true)))).
 :-('__contract_free_xtl_token'(A,B,C),','(dcg_call(A,B,D),xtl_skipwhite(D,C))).
 test(:-(xtl_token,','(xtl_token('.'(120,[]),'.'(120,'.'(32,'.'(32,[]))),[]),','(xtl_token('.'(120,[]),'.'(120,'.'(32,'.'(37,'.'(32,'.'(99,'.'(111,'.'(109,'.'(109,'.'(101,'.'(110,'.'(116,[]))))))))))),[]),xtl_token('.'(120,[]),'.'(120,'.'(32,'.'(37,'.'(32,'.'(99,'.'(111,'.'(109,'.'(109,'.'(101,'.'(110,'.'(116,'.'(10,'.'(32,'.'(32,'.'(9,[]))))))))))))))),[]))))).
