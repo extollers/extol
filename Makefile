@@ -6,7 +6,7 @@ BUILD ?= build
 
 VERBOSE ?= 0
 SRC ?= $(CURDIR)
-ONLY ?= 01234
+ONLY ?= 0123i
 DESTDIR ?=
 NAME ?= extol
 PREFIX ?= $(SRC)/local
@@ -45,11 +45,11 @@ test: unit1 testi unit2 diff23
 	@echo [-] ALL TESTS PASSED
 
 .PHONY: testi
-testi: install
+testi: install-for-testi
 	echo [2] INTEGRATION TESTS
 	STAGE=2 EXTOL=$(BINDIR)/$(NAME) $(SHELL) $/test/run
 
-testi-%: install
+testi-%: install-for-testi
 	echo [2] INTEGRATION TESTS $*
 	STAGE=2 EXTOL=$(BINDIR)/$(NAME) $(SHELL) $/test/run "$*"
 
@@ -150,4 +150,13 @@ install: $!stage2
 	  install -Cvm 755 $!stage2 -DT $(DESTDIR)$(BINDIR)/$(NAME) ; \
 	  install -Cvm 644 $/README.md $/LICENSE.md $/NOTICE -Dt $(DESTDIR)$(DOCDIR) ; \
 	  install -Cvm 644 $/integrations/emacs/extol.el -DT $(DESTDIR)$(DATADIR)/emacs/site-lisp/$(NAME).el ; \
-	) | sed 's/^/[ ] /'
+	) | sed 's/^/[2] + /'
+
+.PHONY: install-for-testi
+ifneq (,$(findstring i,$(ONLY)))
+install-for-testi: install
+	@true
+else
+install-for-testi:
+	@true
+endif

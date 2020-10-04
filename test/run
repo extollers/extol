@@ -39,7 +39,7 @@ for test_file in $tests; do
     test=${test_file%/test}
     test=${test#./}
     let ++total
-    echo [$STAGE] TEST $test
+    echo [$STAGE] + TEST $test
     error=0
     ( cd "$test_root/$test"
       rm -rf $run
