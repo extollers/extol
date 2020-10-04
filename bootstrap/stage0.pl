@@ -2,6 +2,49 @@
 :-(set_prolog_flag(singleton_warning,off)).
 :-(discontiguous(/(test,1))).
 :-(initialization(;(main,','(write('error: unexpected failure in main'),','(nl,halt(1)))))).
+:-(main,catch(','(current_prolog_flag(argv,A),;(','(=(A,'.'(B,'.'(C,D))),','(!,','(command(C,D),halt))),','(command(help,[]),halt(1)))),E,','(write('failed: '),','(print_exception(E),halt(1))))).
+:-(command(help,A),','(write('extol repl'),','(nl,','(write('    Invoke the interactive REPL'),','(nl,','(write('extol extoltoprolog <in.xtl> <out.pl> [--slim]'),','(nl,','(write('    Convert the input for to prolog. Use "--sim" to remove tests for bootstrapping'),','(nl,','(write('extol test [test-name]'),','(nl,','(write('    Run all tests or, if present, just the named test'),nl)))))))))))).
+:-(command(test,A),;(','(test(:-(B,C)),','(;(=('.'(B,[]),A),=(A,[])),','(write('    '),','(write(B),','(write('... '),','(once(run_test(C)),fail)))))),true)).
+:-(command(extoltoprolog,'.'(A,'.'(B,C))),','(xtlm_new(main,D),','(log(revving),','(must(xtl_include(A,D)),','(must(xtlm_seal(D)),','(log(parsed),','(must(xtlm_all_declarations_recursive(D,E)),','(log(listed),','(;(','(member('--slim',C),','(=(F,true),!)),=(F,false)),','(;(','(call(F),','(!,','(must(maplist(xtl_slim_declaration,E,G)),must(append(G,H))))),=(E,H)),','(log(decls_new(H)),','(must(xtl_to_pl_toplevel(H,I)),','(log(translated),','(must(pl_write_top_level(I,J,[])),','(!,','(must(append('.'(37,'.'(32,'.'(71,'.'(101,'.'(110,'.'(101,'.'(114,'.'(97,'.'(116,'.'(101,'.'(100,'.'(32,'.'(98,'.'(121,'.'(32,'.'(101,'.'(120,'.'(116,'.'(111,'.'(108,'.'(116,'.'(111,'.'(112,'.'(114,'.'(111,'.'(108,'.'(111,'.'(103,'.'(10,[]))))))))))))))))))))))))))))),J,K)),must(write_file(B,K)))))))))))))))))).
+:-(command(repl,[]),xtl_repl).
+:-(command(A,B),','(write(unknown_command(A)),','(nl,false))).
+:-(run_test(done),','(!,','(write(success),nl))).
+:-(run_test(','(A,B)),','(!,;(->(sf(A),','(!,run_test(B))),','(nl,','(write('  failed: '),','(write_term(A,'.'(numbervars(false),'.'(namevars(false),'.'(max_depth(6),[])))),','(nl,throw(test_failed)))))))).
+:-(run_test(A),run_test(','(A,done))).
+:-(xtl_repl,','(write('Extol> '),','(flush_output,','(read_line(A),','(;(=(A,'.'(10,[])),;(catch(','(;(xtl_expression(B,A,[]),throw('parse failed')),','(xtl_makevars(B,C,D),','(xtl_to_pl_funexpr(E,C,F),','(comma_list(G,F),','(;(=(G,'()'),call(G)),','(write(E),nl)))))),H,','(write('failed: '),print_exception(H))),','(write(error),nl))),','(!,xtl_repl)))))).
+:-(xtl_repl,','(write(end),nl)).
+:-(log(A),t(A)).
+:-(t(A),','(write('trace: '),','(ti,','(write_term(A,'.'(quoted(true),'.'(max_depth(7),[]))),nl)))).
+:-(t(A,B,C),','(','(','(write('trace: '),','(ti,','(write_term(A,'.'(quoted(true),'.'(max_depth(7),[]))),write(', at: ')))),=(B,D)),','(peek(E,D,F),','(','(','(pretty_init(E,G),','(write(G),nl)),=(F,H)),','(!,=(H,C)))))).
+:-(pretty_init(A,B),','(copy_term(A,C),','(;(','(length(D,32),append(D,E,C)),=(D,C)),','(!,','(prep_chars(D,F,[]),','(length(F,G),','(;(->(<(G,10),append(F,'.'(60,'.'(101,'.'(111,'.'(102,'.'(62,[]))))),H)),=(H,F)),atom_codes(B,H)))))))).
+:-(prep_chars([],A,B),=(A,B)).
+:-(prep_chars('.'(A,B),C,D),','(prep_char(A,C,E),prep_chars(B,E,D))).
+:-(prep_char(A,B,C),','(','(var(A),=(B,D)),','(','(!,=(D,E)),append('.'(60,'.'(63,'.'(62,[]))),C,E)))).
+:-(prep_char(10,A,B),','(','(!,=(A,C)),append('.'(60,'.'(110,'.'(108,'.'(62,[])))),B,C))).
+:-(prep_char(13,A,B),','(','(!,=(A,C)),append('.'(60,'.'(99,'.'(114,'.'(62,[])))),B,C))).
+:-(prep_char(9,A,B),','(','(!,=(A,C)),append('.'(60,'.'(116,'.'(97,'.'(98,'.'(62,[]))))),B,C))).
+:-(prep_char(60,A,B),','(','(!,=(A,C)),append('.'(60,'.'(108,'.'(116,'.'(62,[])))),B,C))).
+:-(prep_char(A,B,C),','(','(','(;(\+(integer(A)),;(<(A,32),>(A,126))),','(!,','(open_output_codes_stream(D),','(write(D,A),close_output_codes_stream(D,E))))),=(B,F)),','(append('.'(60,[]),G,F),','(dcg_call(E,G,H),','(append('.'(62,[]),I,H),','(!,=(I,C))))))).
+:-(prep_char(A,B,C),append('.'(A,[]),C,B)).
+:-(tf(A),','(t(A),fail)).
+:-(tf(A,B,C),','(tf(A,B,C),fail)).
+:-(tc(A),','(undo(t(failed(A))),','(t(enter(A)),','(ticall(A),','(undo(t(redo(A))),t(exit(A))))))).
+:-(tc(A,B,C),','(undo(t(failed(A)),B,D),','(t(enter(A),D,E),','(ticall(A,E,F),','(undo(t(redo(A)),F,G),t(exit(A),G,C)))))).
+:-(tc(A,B,C,D),','(undo(t(failed(A)),C,E),','(t(enter(A),E,F),','(ticall(A,B,F,G),','(undo(t(redo(A)),G,H),t(exit(A),H,D)))))).
+:-(ti,','(=(A,'.'(124,'.'(32,'.'(46,'.'(32,'.'(46,'.'(32,A))))))),','(g_read(tindent,B),','(is(C,*(B,2)),','(length(D,C),','(append(D,E,A),','(atom_codes(F,D),write(F)))))))).
+:-(ticall(A),','(g_read(tindent,B),','(is(C,+(B,1)),','(g_assignb(tindent,C),','(call(A),g_assignb(tindent,B)))))).
+:-(ticall(A,B,C),','(g_read(tindent,D),','(is(E,+(D,1)),','(g_assignb(tindent,E),','(dcg_call(A,B,C),g_assignb(tindent,D)))))).
+:-(ticall(A,B,C,D),','(g_read(tindent,E),','(is(F,+(E,1)),','(g_assignb(tindent,F),','(=...(A,G),','(append(G,'.'(B,[]),H),','(=...(I,H),','(dcg_call(I,C,D),g_assignb(tindent,E))))))))).
+:-(write_trace_line(A),','(write('at: '),','(writeq(A),nl))).
+:-(throw_with_trace(traced_exception(A,B),C),','(!,throw(traced_exception(A,'.'(C,B))))).
+:-(throw_with_trace(A,B),throw(traced_exception(A,'.'(B,[])))).
+:-(print_exception(traced_exception(A,B)),','(!,','(print_exception(A),','(reverse(B,C),maplist(write_trace_line,C))))).
+:-(print_exception(A),','(write_term(A,'.'(numbervars(false),'.'(namevars(false),'.'(max_depth(6),[])))),nl)).
+:-(sf(A),catch(A,B,throw_with_trace(B,A))).
+:-(sf(A,B,C),sf(call(A,B,C))).
+:-(test_sf1,sf(test_sf2)).
+:-(test_sf2,throw(boop)).
+test(:-(trace,','(catch(sf(test_sf1),A,true),=(A,traced_exception(boop,'.'(test_sf1,'.'(test_sf2,[]))))))).
 :-(undo(A),true).
 :-(undo(A),','(call(A),fail)).
 :-(undo(A,B,C),','(true,=(B,C))).
@@ -51,6 +94,7 @@ test(:-(pmaplist,','(pmaplist(=(1),[]),','(pmaplist(=(1),'.'(1,A)),','(pmaplist(
 :-(plength('.'(B,C),D),','(plength(C,E),+(1,E,D))).
 :-(filterlist(A,[],[]),true).
 :-(filterlist(A,'.'(B,C),D),;(','(call(A,B),','(!,','(filterlist(A,C,E),=(D,'.'(B,E))))),filterlist(A,C,D))).
+:-('()',true).
 :-(many(A,'.'(B,C),D,E),','(call(A,B,D,F),','(many(A,C,F,G),','(!,=(G,E))))).
 :-(many(A,[],B,C),=(B,C)).
 :-(many(A,B,C),','(call(A,B,D),','(many(A,D,E),','(!,=(E,C))))).
@@ -255,7 +299,7 @@ test(:-(xtl_to_pl_declaration,','(xtl_to_pl_declaration(define(odd,'.'(nondet,'.
 :-(xtl_to_pl_dcg([],=(A,B),A,B),!).
 :-(xtl_to_pl_dcg('.'(A,B),append('.'(A,B),C,D),D,C),!).
 :-(xtl_to_pl_dcg({}(A),','(B,=(C,D)),C,D),','(!,xtl_to_pl_goal(A,B))).
-:-(xtl_to_pl_dcg(A,B,C,D),','(!,','(=...(A,E),','(append(E,'.'(C,'.'(D,[])),F),=...(B,F))))).
+:-(xtl_to_pl_dcg(A,B,C,D),','(!,','(=...(A,'.'(E,F)),','(maplist(xtl_to_pl_quoted,G,F,H),','(append('.'(E,G),'.'(C,'.'(D,[])),I),','(=...(J,I),','(append(H,K),;(','(=(K,[]),','(!,=(B,J))),','(comma_list(L,K),=(B,','(L,J))))))))))).
 :-(xtl_to_pl_dcg(A,B,C,D),throw(error(xtl_to_pl_dcg,A))).
 test(:-(xtl_to_pl_dcg,','(xtl_to_pl_dcg(','(;(f,g),h),','(;(f(a,b),g(a,b)),h(b,c)),a,c),','(xtl_to_pl_dcg(','(e,','(;(','(f,i),g),h)),','(e(a,b),','(;(','(f(b,c),i(c,d)),g(b,d)),h(d,e))),a,e),','(xtl_to_pl_dcg(A,B,i,o),','(==(B,dcg_call(A,i,o)),','(xtl_to_pl_dcg({}(A),C,i,o),==(C,','(call(A),=(i,o)))))))))).
 :-(xtl_contract_to_pl(pred,A,B,C,'.'(D,[])),','(member(parameters(E),C),','(!,','(;(member(requires(F),C),=(F,true)),','(!,','(;(member(ensures(G),C),=(G,true)),','(!,','(=...(H,'.'(A,E)),','(xtl_to_pl_goal(F,I),','(xtl_to_pl_goal(G,J),','(=...(K,'.'(B,E)),','(=(L,:-(H,','(assert(F),','(K,assert(G))))),','(copy_term(L,D),numbervars(D)))))))))))))).
@@ -316,46 +360,3 @@ test(:-(xtlm_declaration_key,xtlm_declaration_key(define(foo,'.'(fun,[]),'.'(:(A
 :-(xtlm_all_declarations_(-(A,B),C),','(log(listing_decls_from(A,B)),','(maplist(snd,B,D),filterlist(xtl_declaration,D,C)))).
 :-(xtlm_all_declarations_recursive(module(A,B,C),D),','(length(C,E),','(maplist(xtlm_all_declarations_,C,F),append(F,D)))).
 :-(xtlm_imports(module(A,B,C),C),true).
-:-(main,catch(','(current_prolog_flag(argv,A),;(','(=(A,'.'(B,'.'(C,D))),','(!,','(command(C,D),halt))),','(command(help,[]),halt(1)))),E,','(write('failed: '),','(print_exception(E),halt(1))))).
-:-(command(help,A),','(write('extol repl'),','(nl,','(write('    Invoke the interactive REPL'),','(nl,','(write('extol extoltoprolog <in.xtl> <out.pl> [--slim]'),','(nl,','(write('    Convert the input for to prolog. Use "--sim" to remove tests for bootstrapping'),','(nl,','(write('extol test [test-name]'),','(nl,','(write('    Run all tests or, if present, just the named test'),nl)))))))))))).
-:-(command(test,A),;(','(test(:-(B,C)),','(;(=('.'(B,[]),A),=(A,[])),','(write('    '),','(write(B),','(write('... '),','(once(run_test(C)),fail)))))),true)).
-:-(command(extoltoprolog,'.'(A,'.'(B,C))),','(xtlm_new(main,D),','(log(revving),','(must(xtl_include(A,D)),','(must(xtlm_seal(D)),','(log(parsed),','(must(xtlm_all_declarations_recursive(D,E)),','(log(listed),','(;(','(member('--slim',C),','(=(F,true),!)),=(F,false)),','(;(','(call(F),','(!,','(must(maplist(xtl_slim_declaration,E,G)),must(append(G,H))))),=(E,H)),','(log(decls_new(H)),','(must(xtl_to_pl_toplevel(H,I)),','(log(translated),','(must(pl_write_top_level(I,J,[])),','(!,','(must(append('.'(37,'.'(32,'.'(71,'.'(101,'.'(110,'.'(101,'.'(114,'.'(97,'.'(116,'.'(101,'.'(100,'.'(32,'.'(98,'.'(121,'.'(32,'.'(101,'.'(120,'.'(116,'.'(111,'.'(108,'.'(116,'.'(111,'.'(112,'.'(114,'.'(111,'.'(108,'.'(111,'.'(103,'.'(10,[]))))))))))))))))))))))))))))),J,K)),must(write_file(B,K)))))))))))))))))).
-:-(command(repl,[]),xtl_repl).
-:-(command(A,B),','(write(unknown_command(A)),','(nl,false))).
-:-(run_test(done),','(!,','(write(success),nl))).
-:-(run_test(','(A,B)),','(!,;(->(sf(A),','(!,run_test(B))),','(nl,','(write('  failed: '),','(write_term(A,'.'(numbervars(false),'.'(namevars(false),'.'(max_depth(6),[])))),','(nl,throw(test_failed)))))))).
-:-(run_test(A),run_test(','(A,done))).
-:-(xtl_repl,','(write('Extol> '),','(flush_output,','(read_line(A),','(;(=(A,'.'(10,[])),;(catch(','(;(xtl_expression(B,A,[]),throw('parse failed')),','(xtl_makevars(B,C,D),','(xtl_to_pl_funexpr(E,C,F),','(comma_list(G,F),','(;(=(G,'()'),call(G)),','(write(E),nl)))))),H,','(write('failed: '),print_exception(H))),','(write(error),nl))),','(!,xtl_repl)))))).
-:-(xtl_repl,','(write(end),nl)).
-:-(log(A),t(A)).
-:-(t(A),','(write('trace: '),','(ti,','(write_term(A,'.'(quoted(true),'.'(max_depth(7),[]))),nl)))).
-:-(t(A,B,C),','(','(','(write('trace: '),','(ti,','(write_term(A,'.'(quoted(true),'.'(max_depth(7),[]))),write(', at: ')))),=(B,D)),','(peek(E,D,F),','(','(','(pretty_init(E,G),','(write(G),nl)),=(F,H)),','(!,=(H,C)))))).
-:-(pretty_init(A,B),','(copy_term(A,C),','(;(','(length(D,32),append(D,E,C)),=(D,C)),','(!,','(prep_chars(D,F,[]),','(length(F,G),','(;(->(<(G,10),append(F,'.'(60,'.'(101,'.'(111,'.'(102,'.'(62,[]))))),H)),=(H,F)),atom_codes(B,H)))))))).
-:-(prep_chars([],A,B),=(A,B)).
-:-(prep_chars('.'(A,B),C,D),','(prep_char(A,C,E),prep_chars(B,E,D))).
-:-(prep_char(A,B,C),','(','(var(A),=(B,D)),','(','(!,=(D,E)),append('.'(60,'.'(63,'.'(62,[]))),C,E)))).
-:-(prep_char(10,A,B),','(','(!,=(A,C)),append('.'(60,'.'(110,'.'(108,'.'(62,[])))),B,C))).
-:-(prep_char(13,A,B),','(','(!,=(A,C)),append('.'(60,'.'(99,'.'(114,'.'(62,[])))),B,C))).
-:-(prep_char(9,A,B),','(','(!,=(A,C)),append('.'(60,'.'(116,'.'(97,'.'(98,'.'(62,[]))))),B,C))).
-:-(prep_char(60,A,B),','(','(!,=(A,C)),append('.'(60,'.'(108,'.'(116,'.'(62,[])))),B,C))).
-:-(prep_char(A,B,C),','(','(','(;(\+(integer(A)),;(<(A,32),>(A,126))),','(!,','(open_output_codes_stream(D),','(write(D,A),close_output_codes_stream(D,E))))),=(B,F)),','(append('.'(60,[]),G,F),','(dcg_call(E,G,H),','(append('.'(62,[]),I,H),','(!,=(I,C))))))).
-:-(prep_char(A,B,C),append('.'(A,[]),C,B)).
-:-(tf(A),','(t(A),fail)).
-:-(tf(A,B,C),','(tf(A,B,C),fail)).
-:-(tc(A),','(undo(t(failed(A))),','(t(enter(A)),','(ticall(A),','(undo(t(redo(A))),t(exit(A))))))).
-:-(tc(A,B,C),','(undo(t(failed(A)),B,D),','(t(enter(A),D,E),','(ticall(A,E,F),','(undo(t(redo(A)),F,G),t(exit(A),G,C)))))).
-:-(tc(A,B,C,D),','(undo(t(failed(A)),C,E),','(t(enter(A),E,F),','(ticall(A,B,F,G),','(undo(t(redo(A)),G,H),t(exit(A),H,D)))))).
-:-(ti,','(=(A,'.'(124,'.'(32,'.'(46,'.'(32,'.'(46,'.'(32,A))))))),','(g_read(tindent,B),','(is(C,*(B,2)),','(length(D,C),','(append(D,E,A),','(atom_codes(F,D),write(F)))))))).
-:-(ticall(A),','(g_read(tindent,B),','(is(C,+(B,1)),','(g_assignb(tindent,C),','(call(A),g_assignb(tindent,B)))))).
-:-(ticall(A,B,C),','(g_read(tindent,D),','(is(E,+(D,1)),','(g_assignb(tindent,E),','(dcg_call(A,B,C),g_assignb(tindent,D)))))).
-:-(ticall(A,B,C,D),','(g_read(tindent,E),','(is(F,+(E,1)),','(g_assignb(tindent,F),','(=...(A,G),','(append(G,'.'(B,[]),H),','(=...(I,H),','(dcg_call(I,C,D),g_assignb(tindent,E))))))))).
-:-(write_trace_line(A),','(write('at: '),','(writeq(A),nl))).
-:-(throw_with_trace(traced_exception(A,B),C),','(!,throw(traced_exception(A,'.'(C,B))))).
-:-(throw_with_trace(A,B),throw(traced_exception(A,'.'(B,[])))).
-:-(print_exception(traced_exception(A,B)),','(!,','(print_exception(A),','(reverse(B,C),maplist(write_trace_line,C))))).
-:-(print_exception(A),','(write_term(A,'.'(numbervars(false),'.'(namevars(false),'.'(max_depth(6),[])))),nl)).
-:-(sf(A),catch(A,B,throw_with_trace(B,A))).
-:-(sf(A,B,C),sf(call(A,B,C))).
-:-(test_sf1,sf(test_sf2)).
-:-(test_sf2,throw(boop)).
-test(:-(trace,','(catch(sf(test_sf1),A,true),=(A,traced_exception(boop,'.'(test_sf1,'.'(test_sf2,[]))))))).
