@@ -201,6 +201,7 @@ Extol is inspired in part by the following languages and tools:
 - [x] Functions and expressions instead of predicates and goals
 - [x] Stack traces
 - [x] Clause transformation by annotation
+- [x] Integration tests
 - [ ] Modules and namespaces
 - [ ] Explicit import of external functions
 - [ ] Don't use Prolog's eval for the REPL
