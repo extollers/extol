@@ -28,7 +28,7 @@ capture () {
 verify () (
     cd "$test_root/$test"
     if [[ -e $run/out ]]; then
-        diff -r expected $run/out
+        diff -U 3 -r expected $run/out
     fi
 )
 

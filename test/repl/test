@@ -1,0 +1,4 @@
+capture extol repl <<EOF
+1 + 1
+'Hello, world!'
+EOF
