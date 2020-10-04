@@ -3,10 +3,10 @@
 % pred log: _: true.
 pred log: Debug: t(Debug).
 
-pred t: (X: write('trace: '), ti, write_term(X, [quoted(true), max_depth(4)]), nl).
+pred t: (X: write('trace: '), ti, write_term(X, [quoted(true), max_depth(7)]), nl).
 
 dcg t: (X:
-        {write('trace: '), ti, write_term(X, [quoted(true), max_depth(4)]), write(', at: ')},
+        {write('trace: '), ti, write_term(X, [quoted(true), max_depth(7)]), write(', at: ')},
         peek(A), {pretty_init(A, C), write(C),
         nl}, !).
 

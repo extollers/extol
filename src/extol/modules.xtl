@@ -41,7 +41,7 @@ pred xtlm_new: (Name, Imports, Module):
 	throw(error(already_imported(Named)))
     ; true),
     pinsert(Name-Decls, Imports),
-    Module = module(Name, _, Imports).
+    Module = module(Name, Decls, Imports).
 
 pred xtlm_find:
     ((Module, Name/N/K): sf xtlm_find_(Module, (Name/N/K)-_)).
