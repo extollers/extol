@@ -202,9 +202,10 @@ Extol is inspired in part by the following languages and tools:
 - [x] Stack traces
 - [x] Clause transformation by annotation
 - [x] Integration tests
-- [ ] Modules and namespaces
+- [x] Modules
 - [ ] Explicit import of external functions
 - [ ] Don't use Prolog's eval for the REPL
+- [ ] Namespaces
 - [ ] Indentation-sensitive syntax (get rid of those parentheses)
 - [ ] Proper AST instead of raw terms (to allow better type checking)
 - [ ] `nondet` clause annotations (to improve performance and reasoning)
