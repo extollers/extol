@@ -46,12 +46,12 @@ test: unit1 testi unit2 diff23
 
 .PHONY: testi
 testi: install
-	echo [I] INTEGRATION TESTS
-	STAGE=I EXTOL=$(BINDIR)/$(NAME) $(SHELL) $/test/run
+	echo [2] INTEGRATION TESTS
+	STAGE=2 EXTOL=$(BINDIR)/$(NAME) $(SHELL) $/test/run
 
 testi-%: install
-	echo [I] INTEGRATION TESTS $*
-	STAGE=I EXTOL=$(BINDIR)/$(NAME) $(SHELL) $/test/run "$*"
+	echo [2] INTEGRATION TESTS $*
+	STAGE=2 EXTOL=$(BINDIR)/$(NAME) $(SHELL) $/test/run "$*"
 
 .PHONY: check
 check: test
@@ -70,7 +70,7 @@ endif
 .PHONY: diff$(1)$(2)
 diff$(1)$(2): $!stage$(2).pl $$(STAGE$(1)_PL)
 	@echo [$(2)] DIFF
-	diff --unified=2 --report-identical-files $$^
+	diff --unified=2 --brief $$^ || echo [$(2)] DIFF FAILED
 
 .PHONY: unit$(2)
 unit$(2): $!stage$(2)
@@ -146,6 +146,8 @@ todo:
 .PHONY: install
 install: $!stage2
 	@echo [2] INSTALL $(DESTDIR)$(PREFIX)
-	install -Cvm 755 $!stage2 -DT $(DESTDIR)$(BINDIR)/$(NAME)
-	install -Cvm 644 $/README.md $/LICENSE.md $/NOTICE -Dt $(DESTDIR)$(DOCDIR)
-	install -Cvm 644 $/integrations/emacs/extol.el -DT $(DESTDIR)$(DATADIR)/emacs/site-lisp/$(NAME).el
+	set -o pipefail; ( \
+	  install -Cvm 755 $!stage2 -DT $(DESTDIR)$(BINDIR)/$(NAME) ; \
+	  install -Cvm 644 $/README.md $/LICENSE.md $/NOTICE -Dt $(DESTDIR)$(DOCDIR) ; \
+	  install -Cvm 644 $/integrations/emacs/extol.el -DT $(DESTDIR)$(DATADIR)/emacs/site-lisp/$(NAME).el ; \
+	) | sed 's/^/[ ] /'

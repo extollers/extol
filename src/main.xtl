@@ -33,7 +33,7 @@ pred command:
     ((test, Args) :
         (   test((Name :- Goals)),
             ([Name] = Args ; Args = []),
-            write('    '), write(Name), write('... '),
+            write('[ ] '), write(Name), write(': '),
             once(run_test(Goals)),
             fail
         ;
