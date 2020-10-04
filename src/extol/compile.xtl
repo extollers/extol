@@ -144,9 +144,14 @@ pred xtl_to_pl_dcg:
     (({G}, (GPL, I=O), I, O) : !,
         xtl_to_pl_goal(G, GPL)),
     ((F, C, I, O) : !,
-        F =... L,
-        append(L, [I,O], LL),
-        C =... LL),
+        F =... [Name | ArgsXtl],
+        maplist(xtl_to_pl_quoted, VarsPL, ArgsXtl, ArgsPLs),
+        append([Name | VarsPL], [I,O], LL),
+        Call =... LL,
+        append(ArgsPLs, ArgsPL),
+        ( ArgsPL = [], !, C = Call
+        ; comma_list(PrepPL, ArgsPL),
+            C = (PrepPL, Call))),
     ((D,_,_,_) :
         throw(error(xtl_to_pl_dcg, D))).
 

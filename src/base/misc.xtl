@@ -109,3 +109,5 @@ pred filterlist:
     ((P, [X | Xs], Ys):
         call(P, X), !, filterlist(P, Xs, Zs), Ys = [X | Zs]
     ; filterlist(P, Xs, Ys)).
+
+pred '()': (): true.
