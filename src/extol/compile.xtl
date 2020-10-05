@@ -132,6 +132,9 @@ pred xtl_to_pl_goal:
         comma_list(Goal, List)),
     ((Module, G, GPL) :
         G =... [Name | Args],
+        N := length(Args),
+        ( xtlm_find(Module, Name/N/_), !
+        ; throw(not_found(Name/N))),
         maplist(xtl_to_pl_quoted(Module), QuotedArgs, Args, ExtraGoalsListList),
         ExtraGoalsList := append(ExtraGoalsListList),
         comma_list(ExtraGoals, ExtraGoalsList),
@@ -157,7 +160,7 @@ pred xtl_to_pl_dcg:
     ((M, F, C, I, O) : !,
         F =... [Name | ArgsXtl],
         N := length(ArgsXtl) + 2,
-        ( % TODO xtlm_find(M, Name/N/_), !,
+        ( xtlm_find(M, Name/N/_), !,
             maplist(xtl_to_pl_quoted(M), VarsPL, ArgsXtl, ArgsPLs),
             append([Name | VarsPL], [I,O], LL),
             Call =... LL,
