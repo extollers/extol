@@ -9,9 +9,11 @@ pred xtl_include: ((File, Module):
 pred xtl_import: ((File, Name, Module):
     log(importing(File, Name)),
     must(Imports := xtlm_imports(Module)),
-    must(Imported := xtlm_new(Name, Imports)),
-    must(xtl_top_level(Imported, := read_file(File), [])),
-    must(xtlm_seal(Imported)),
+    ( tc pmember(Name-Declarations, Imports), !,
+        Imported = module(Name, Declarations, Imports)
+    ; tc must(Imported := xtlm_new(Name, Imports)),
+        must(xtl_top_level(Imported, := read_file(File), [])),
+        must(xtlm_seal(Imported))),
     must(xtlm_import(Module, Imported, inline)),
     log(imports(Imports))).
 
@@ -56,7 +58,8 @@ dcg xtl_top_level:
 
 pred xtl_declaration:
     ((define(Name, Annots, Clauses)): atom(Name), maplist(annotation, Annots), maplist(define_clause, Clauses)),
-    ((test(Name, Goals)): atom(Name), xtl_goal(Goals)).
+    ((test(Name, Goals)): atom(Name), xtl_goal(Goals)),
+    ((prolog(Name/N)): atom(Name), number(N)).
 
 pred annotation:
     (nondet: true),
@@ -105,6 +108,7 @@ pred xtl_term_to_declaration:
         comma_list(Clauses, ClauseList)),
     (((define(Name) : Definition), define(Name, Annots, Clauses)):
         xtl_split_annots(Definition, Annots, Clauses)),
+    ((prolog(FN), prolog(FN)): !),
     ((T, _): throw(failed(xtl_term_to_declaration(T)))).
 
 pred xtl_split_annots:

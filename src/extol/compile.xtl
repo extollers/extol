@@ -12,7 +12,7 @@ pred xtl_to_pl_toplevel: (XTL, PL):
 pred xtl_to_pl_declaration:
     (Mod-XTL, PL):
         log(compiling(XTL, Mod)),
-        xtl_to_pl_declaration(Mod, XTL, PL).
+        sf xtl_to_pl_declaration(Mod, XTL, PL).
 
 pred xtl_to_pl_declaration:
     contract((Module, XTL, PL), xtl_declaration(XTL), true),
@@ -48,6 +48,8 @@ pred xtl_to_pl_declaration:
 
 test xtl_to_pl_declaration :
     Module := xtlm_new(main),
+    xtlm_add(Module, prolog(e/0)),
+
     xtl_to_pl_declaration(
         Module,
         define(odd, [nondet, predicate],[
@@ -136,6 +138,7 @@ pred xtl_to_pl_goal:
         ( ExtraGoals = (), GPL = MainGoalPL
         ; GPL = (ExtraGoals, MainGoalPL))).
 
+% TODO: `O' should be out var not in var
 pred xtl_to_pl_dcg:
     ((_, Var, dcg_call(Var, I, O), I, O) :
         var(Var), !),
@@ -152,19 +155,30 @@ pred xtl_to_pl_dcg:
         xtl_to_pl_goal(Module, G, GPL)),
     ((M, F, C, I, O) : !,
         F =... [Name | ArgsXtl],
-        % TODO ATN xtlm_l
-        maplist(xtl_to_pl_quoted(M), VarsPL, ArgsXtl, ArgsPLs),
-        append([Name | VarsPL], [I,O], LL),
-        Call =... LL,
-        append(ArgsPLs, ArgsPL),
-        ( ArgsPL = [], !, C = Call
-        ; comma_list(PrepPL, ArgsPL),
-            C = (PrepPL, Call))),
+        N := length(ArgsXtl) + 2,
+        ( % TODO xtlm_find(M, Name/N/_), !,
+            maplist(xtl_to_pl_quoted(M), VarsPL, ArgsXtl, ArgsPLs),
+            append([Name | VarsPL], [I,O], LL),
+            Call =... LL,
+            append(ArgsPLs, ArgsPL),
+            ( ArgsPL = [], !, C = Call
+            ; comma_list(PrepPL, ArgsPL),
+                C = (PrepPL, Call))
+        ; xtlm_find(M, Name/(:= N - 2)/_),
+            xtl_to_pl_goal(M, F, PL),
+            C = (I=O, PL)
+        ; throw(not_found(Name/N)))),
     ((_,D,_,_,_) :
         throw(error(xtl_to_pl_dcg, D))).
 
 test xtl_to_pl_dcg :
     M := xtlm_new(main),
+    xtlm_add(M, prolog(f/0)),
+    xtlm_add(M, prolog(g/0)),
+    xtlm_add(M, prolog(h/0)),
+    xtlm_add(M, prolog(e/0)),
+    xtlm_add(M, prolog(i/0)),
+
     xtl_to_pl_dcg(M, ((f; g), h), ((f(a, b); g(a, b)), h(b, c)), a, c),
     xtl_to_pl_dcg(M, (e, (f, i; g), h), (e(a, b), (f(b, c), i(c, d); g(b, d)), h(d, e)), a, e),
     xtl_to_pl_dcg(M, V, PL1, i, o),

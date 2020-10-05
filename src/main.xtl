@@ -1,10 +1,11 @@
-import('src/base/trace.xtl', 'trace').
-import('src/base/misc.xtl', misc).
-import('src/base/parsing.xtl', parsing).
-import('src/base/streams.xtl', streams).
-import('src/extol/parse.xtl', extol_parse).
-import('src/extol/compile.xtl', extol_compile).
-import('src/extol/modules.xtl', extol_modules).
+include 'src/base/prolog.xtl'.
+include 'src/base/trace.xtl'.
+include 'src/base/parsing.xtl'.
+include 'src/base/misc.xtl'.
+include 'src/base/streams.xtl'.
+include 'src/extol/parse.xtl'.
+include 'src/extol/compile.xtl'.
+include 'src/extol/modules.xtl'.
 
 %% Main
 

@@ -41,7 +41,7 @@ default: 2
 	@true
 
 .PHONY: test
-test: unit1 testi unit2 diff23
+test: unit1 unit2 diff23 testi
 	@echo [-] ALL TESTS PASSED
 
 .PHONY: testi

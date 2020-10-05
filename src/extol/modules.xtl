@@ -14,6 +14,7 @@ pred module_key: (Name / N / Type):
 
 pred module_declaration:
     (imported(Module, Name): !, name(Module), name(Name)),
+    (prolog(Atom/N): !, atom(Atom), number(N)),
     (Declaration: xtl_declaration(Declaration)).
 
 % TODO: uniform representation for names 
@@ -38,13 +39,13 @@ pred xtlm_new: (Name, Module):
 pred xtlm_new: (Name, Imports, Module):
     log(new(Name, := plength(Imports))),
     ( pmember(Name-_, Imports),
-	throw(error(already_imported(Named)))
+	throw(error(already_imported(Name)))
     ; true),
     pinsert(Name-Decls, Imports),
     Module = module(Name, Decls, Imports).
 
 pred xtlm_find:
-    ((Module, Name/N/K): sf xtlm_find_(Module, (Name/N/K)-_)).
+    ((Module, Name/N/K): xtlm_find_(Module, (Name/N/K)-_)).
 
 pred xtlm_find_: (module(_, Declarations, _), Decl):
     pmember(Decl, Declarations).
@@ -60,6 +61,7 @@ pred xtlm_add_: (module(_, Declarations, _), Key, Declaration):
     ; throw(error('xtlm_add_: module is already sealed'))).
 
 pred xtlm_declaration_key:
+    ((prolog(F/N), F/N/pred): true),
     ((define(Name, Annots, Clauses), Key):
         !,
 	Clauses = [(Head : _) | _],

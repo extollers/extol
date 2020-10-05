@@ -1,4 +1,3 @@
-% Trace
 
 pred log: _: true.
 %pred log: Debug: t(Debug).
@@ -98,7 +97,7 @@ pred ticall: (G, X, A, B) :
     dcg_call(GX, A, B),
     g_assignb(tindent, I).
 
-pred write_trace_line: X: write('at: '), writeq(X), nl.
+pred write_trace_line: X: write('at: '), write_term(X, [numbervars(false), namevars(false), max_depth(6)]), nl.
 
 pred throw_with_trace:
     ((traced_exception(Error, Trace), Frame): !, throw(traced_exception(Error, [Frame | Trace]))),
