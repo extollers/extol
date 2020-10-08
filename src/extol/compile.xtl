@@ -49,7 +49,16 @@ pred xtl_to_pl_declaration:
 
 test xtl_to_pl_declaration :
     Module := xtlm_new(main),
+    xtlm_add(Module, prolog(e/2)),
     xtlm_add(Module, prolog(e/0)),
+    xtlm_add(Module, prolog(true/0)),
+    xtlm_add(Module, prolog(false/0)),
+    xtlm_add(Module, prolog(is/2)),
+    xtlm_add(Module, prolog(odd/1)),
+    xtlm_add(Module, prolog(b/0)),
+    xtlm_add(Module, prolog(c/0)),
+    xtlm_add(Module, prolog(g/0)),
+    xtlm_add(Module, prolog(h/0)),
 
     xtl_to_pl_declaration(
         Module,
@@ -182,6 +191,11 @@ test xtl_to_pl_dcg :
     xtlm_add(M, prolog(h/0)),
     xtlm_add(M, prolog(e/0)),
     xtlm_add(M, prolog(i/0)),
+    xtlm_add(M, prolog(f/2)),
+    xtlm_add(M, prolog(g/2)),
+    xtlm_add(M, prolog(h/2)),
+    xtlm_add(M, prolog(e/2)),
+    xtlm_add(M, prolog(i/2)),
 
     xtl_to_pl_dcg(M, ((f; g), h), ((f(a, b); g(a, b)), h(b, c)), a, c),
     xtl_to_pl_dcg(M, (e, (f, i; g), h), (e(a, b), (f(b, c), i(c, d); g(b, d)), h(d, e)), a, e),
