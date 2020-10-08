@@ -9,7 +9,7 @@ tests=$(cd "$test_root"; find . -type f -path "./$pattern*/test")
 run=run-$$-$RANDOM
 
 STAGE=${STAGE:-I}
-EXTOL=${EXTOL:-$test_root/../local/bin/extol}
+EXTOL=$(realpath -s "${EXTOL:-$test_root/../local/bin/extol}")
 
 extol () {
     "$EXTOL" "$@"
@@ -22,7 +22,9 @@ capture () {
         out=${out%.*}.$((i++))
     done
     "$@" > $out.stdout 2> $out.stderr
-    echo $? > $out.code
+    code=$?
+    echo $code > $out.code
+    return $code
 }
 
 verify () (
@@ -41,12 +43,18 @@ for test_file in $tests; do
     let ++total
     echo [$STAGE] + TEST $test
     error=0
+    stages_file="$test_root/$test/stages"
+    stages=$(test -e "$stages_file" && cat "$stages_file" || echo "12I")
+    if [[ -z "${stages#*$STAGE*}" ]]; then
+        continue
+    fi
     ( cd "$test_root/$test"
       rm -rf $run
       mkdir $run
       cd $run
       ln -s .. input
       mkdir out
+      set -e
       . ../test
     )
     error=$?

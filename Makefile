@@ -40,22 +40,18 @@ all_sources = $(shell find $/src -type f)
 default: 2
 	@true
 
-.PHONY: test
-test: unit1 testi unit2 diff23
+.PHONY: check
+check: unit1 test1 unit2 test2 diff23 testi
 	@echo [-] ALL TESTS PASSED
 
 .PHONY: testi
 testi: install-for-testi
-	echo [2] INTEGRATION TESTS
-	STAGE=2 EXTOL=$(BINDIR)/$(NAME) $(SHELL) $/test/run
+	echo [I] INTEGRATION TESTS
+	STAGE=I EXTOL=$(BINDIR)/$(NAME) $(SHELL) $/test/run
 
 testi-%: install-for-testi
-	echo [2] INTEGRATION TESTS $*
-	STAGE=2 EXTOL=$(BINDIR)/$(NAME) $(SHELL) $/test/run "$*"
-
-.PHONY: check
-check: test
-	@true
+	echo [I] INTEGRATION TESTS $*
+	STAGE=I EXTOL=$(BINDIR)/$(NAME) $(SHELL) $/test/run "$*"
 
 define make_stage
 
@@ -66,6 +62,15 @@ else
 STAGE$(1)_PL :=
 STAGE$(1) :=
 endif
+
+.PHONY: test$(2)
+test$(2): $$(STAGE$(2))
+	echo [$(2)] INTEGRATION TESTS
+	STAGE=$(2) EXTOL=$$!stage$(2) $$(SHELL) $/test/run
+
+test$(2)-%: $$(STAGE$(2))
+	echo [2] INTEGRATION TESTS $$*
+	STAGE=$(2) EXTOL=$$!stage$(2) $$(SHELL) $/test/run "$$*"
 
 .PHONY: diff$(1)$(2)
 diff$(1)$(2): $!stage$(2).pl $$(STAGE$(1)_PL)
@@ -79,7 +84,7 @@ unit$(2): $!stage$(2)
 
 unit$(2)-%: $!stage$(2)
 	@echo [$(2)] UNIT $$< $$*
-	$(./)$$< unit $$*
+	$(./)$$< test $$*
 
 $!stage$(2).pl: $$(STAGE$(1)) $(all_sources)
 	@echo [$(2)] TOPL $$@
@@ -145,12 +150,12 @@ todo:
 
 .PHONY: install
 install: $!stage2
-	@echo [2] INSTALL $(DESTDIR)$(PREFIX)
+	@echo [I] INSTALL $(DESTDIR)$(PREFIX)
 	set -o pipefail; ( \
 	  install -Cvm 755 $!stage2 -DT $(DESTDIR)$(BINDIR)/$(NAME) ; \
 	  install -Cvm 644 $/README.md $/LICENSE.md $/NOTICE -Dt $(DESTDIR)$(DOCDIR) ; \
 	  install -Cvm 644 $/integrations/emacs/extol.el -DT $(DESTDIR)$(DATADIR)/emacs/site-lisp/$(NAME).el ; \
-	) | sed 's/^/[2] + /'
+	) | sed 's/^/[I] + /'
 
 .PHONY: install-for-testi
 ifneq (,$(findstring i,$(ONLY)))
