@@ -222,7 +222,7 @@ test(:-(xtl_regular_term,','(xtl_regular_term(123,'.'(49,'.'(50,'.'(51,[]))),[])
 :-(xtl_op(1100,xfy,;),true).
 :-(xtl_op(1050,xfy,->),true).
 :-(xtl_op(1000,xfy,','),true).
-:-(xtl_op(900,fy,\+),true).
+:-(xtl_op(900,fy,not),true).
 :-(xtl_op(700,xfx,=),true).
 :-(xtl_op(700,xfx,\=),true).
 :-(xtl_op(700,xfx,=..),true).

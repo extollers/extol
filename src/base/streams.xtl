@@ -1,18 +1,18 @@
 %% Streams
 
 pred read_bytes:
-contract((Stream, Bytes), ground(Stream), bytes(Bytes)),
+%contract((Stream, Bytes), ground(Stream), bytes(Bytes)),
 ((Stream, []): at_end_of_stream(Stream), !),
 ((Stream, [X | Xs]):
  get_byte(Stream, X),
- '__contract_free_read_bytes'(Stream, Xs)).
+ read_bytes(Stream, Xs)).
 
 pred write_bytes:
-contract((Stream, Bytes), (ground(Stream), current_stream(Stream), bytes(Bytes)), true),
+%contract((Stream, Bytes), (ground(Stream), current_stream(Stream), bytes(Bytes)), true),
 ((_, []) : true),
 ((Stream, [X | Xs]) :
     put_byte(Stream, X),
-    '__contract_free_write_bytes'(Stream, Xs)).
+    write_bytes(Stream, Xs)).
 
 pred read_file:
 contract((Path, Bytes), atom(Path), bytes(Bytes)),

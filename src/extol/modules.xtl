@@ -19,11 +19,11 @@ pred module_declaration:
 
 % TODO: uniform representation for names 
 pred name:
-    (name(Ns): maplist(atom, Ns), \+length(Ns, 1)),
+    (name(Ns): maplist(atom, Ns), not length(Ns, 1)),
     (A: atom(A)).
 
 pred name_list:
-    ((name(Xs), Xs): \+ (Xs = [_])),
+    ((name(Xs), Xs): not (Xs = [_])),
     ((X, [X]): atom(X)).
 
 pred concat_name: (A, B, Res):

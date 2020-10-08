@@ -2,7 +2,6 @@ prolog(call/4).
 prolog(call/3).
 prolog(true/0).
 prolog(write/1).
-prolog('\+'/1).
 prolog('<'/2).
 prolog('=='/2).
 prolog('=..'/2).

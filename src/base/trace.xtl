@@ -1,6 +1,6 @@
 
-%pred log: _: true.
-pred log: Debug: t(Debug).
+pred log: _: true.
+%pred log: Debug: t(Debug).
 
 pred t: (X: write('trace: '), ti, write_term(X, [quoted(true), max_depth(7)]), nl).
 
@@ -28,7 +28,7 @@ dcg prep_char:
 (0'\t: !, "<tab>"),
 (0'<: !, "<lt>"),
 (X:
- { ( \+integer(X) ; X < 32 ; X > 126), !,
+ { ( not integer(X) ; X < 32 ; X > 126), !,
    open_output_codes_stream(S),
    write(S, X),
    close_output_codes_stream(S, C) },

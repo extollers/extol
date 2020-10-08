@@ -353,7 +353,7 @@ pred xtl_op:
     ((1100, xfy, ';') : true),
     ((1050, xfy, '->') : true),
     ((1000, xfy, ',') : true),
-    ((900, fy, '\\+') : true),
+    ((900, fy, not) : true),
     ((700, xfx, '=') : true),
     ((700, xfx, '\\=') : true),
     ((700, xfx, '=..') : true),

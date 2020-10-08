@@ -63,14 +63,14 @@ STAGE$(1)_PL :=
 STAGE$(1) :=
 endif
 
-.PHONY: test$(2)
-test$(2): $$(STAGE$(2))
-	echo [$(2)] INTEGRATION TESTS
-	STAGE=$(2) EXTOL=$$!stage$(2) $$(SHELL) $/test/run
+.PHONY: test$(1)
+test$(1): $$(STAGE$(1))
+	echo [$(1)] INTEGRATION TESTS
+	STAGE=$(1) EXTOL=$$!stage$(1) $$(SHELL) $/test/run
 
-test$(2)-%: $$(STAGE$(2))
+test$(1)-%: $$(STAGE$(1))
 	echo [2] INTEGRATION TESTS $$*
-	STAGE=$(2) EXTOL=$$!stage$(2) $$(SHELL) $/test/run "$$*"
+	STAGE=$(1) EXTOL=$$!stage$(1) $$(SHELL) $/test/run "$$*"
 
 .PHONY: diff$(1)$(2)
 diff$(1)$(2): $!stage$(2).pl $$(STAGE$(1)_PL)
@@ -124,7 +124,6 @@ $!stage0.pl: $/bootstrap/stage0.pl | $!.
 $(eval $(call make_stage,0,1))
 $(eval $(call make_stage,1,2))
 $(eval $(call make_stage,2,3))
-$(eval $(call make_stage,3,4))
 
 .PHONY: reboot
 reboot: 2

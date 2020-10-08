@@ -111,3 +111,5 @@ pred filterlist:
     ; filterlist(P, Xs, Ys)).
 
 pred '()': (): true.
+
+pred not: G: G, !, false; true.
