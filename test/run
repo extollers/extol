@@ -22,7 +22,9 @@ capture () {
         out=${out%.*}.$((i++))
     done
     "$@" > $out.stdout 2> $out.stderr
-    echo $? > $out.code
+    code=$?
+    echo $code > $out.code
+    return $code
 }
 
 verify () (
@@ -52,6 +54,7 @@ for test_file in $tests; do
       cd $run
       ln -s .. input
       mkdir out
+      set -e
       . ../test
     )
     error=$?
