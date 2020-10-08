@@ -40,22 +40,18 @@ all_sources = $(shell find $/src -type f)
 default: 2
 	@true
 
-.PHONY: test
-test: unit1 unit2 diff23 testi
+.PHONY: check
+check: unit1 test1 unit2 test2 diff23 testi
 	@echo [-] ALL TESTS PASSED
 
 .PHONY: testi
 testi: install-for-testi
-	echo [2] INTEGRATION TESTS
-	STAGE=2 EXTOL=$(BINDIR)/$(NAME) $(SHELL) $/test/run
+	echo [I] INTEGRATION TESTS
+	STAGE=I EXTOL=$(BINDIR)/$(NAME) $(SHELL) $/test/run
 
 testi-%: install-for-testi
-	echo [2] INTEGRATION TESTS $*
-	STAGE=2 EXTOL=$(BINDIR)/$(NAME) $(SHELL) $/test/run "$*"
-
-.PHONY: check
-check: test
-	@true
+	echo [I] INTEGRATION TESTS $*
+	STAGE=I EXTOL=$(BINDIR)/$(NAME) $(SHELL) $/test/run "$*"
 
 define make_stage
 
@@ -66,6 +62,15 @@ else
 STAGE$(1)_PL :=
 STAGE$(1) :=
 endif
+
+.PHONY: test$(2)
+test$(2): $$(STAGE$(2))
+	echo [$(2)] INTEGRATION TESTS
+	STAGE=$(2) EXTOL=$$!stage$(2) $$(SHELL) $/test/run
+
+test$(2)-%: $$(STAGE$(2))
+	echo [2] INTEGRATION TESTS $*
+	STAGE=$(2) EXTOL=$$!stage$(2) $$(SHELL) $/test/run "$$*"
 
 .PHONY: diff$(1)$(2)
 diff$(1)$(2): $!stage$(2).pl $$(STAGE$(1)_PL)
