@@ -160,3 +160,7 @@ else
 install-for-testi:
 	@true
 endif
+
+.PHONY: docker
+docker:
+	docker build $/. -t extol
