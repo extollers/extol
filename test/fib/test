@@ -1,0 +1,5 @@
+capture extol extoltoprolog input/fib.xtl out/fib.prolog
+cd out
+gplc fib.prolog
+capture ./fib
+rm fib
