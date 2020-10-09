@@ -54,7 +54,8 @@ pred xtlm_add: (Module, Declaration):
     Name/N/Type := xtlm_declaration_key(Declaration),
     ( xtlm_find(Module, Name/N/K),
         throw(conflicting_declaration(Name/N,K,Declaration))
-    ; xtlm_add_(Module, Name/N/Type, Declaration)).
+    ; log(adding_declaration(Name/N/Type)),
+        xtlm_add_(Module, Name/N/Type, Declaration)).
 
 pred xtlm_add_: (module(_, Declarations, _), Key, Declaration):
     ( pinsert(Key-Declaration, Declarations)
@@ -65,13 +66,14 @@ pred xtlm_declaration_key:
     ((define(Name, Annots, Clauses), Key):
         !,
 	Clauses = [(Head : _) | _],
-        ( member(fun, Annots), !,
-            Key = (Name/(:= 1 + length(comma_list(Head)))/fun)
-        ; member(dcg, Annots), !,
+        ( member(dcg, Annots), !,
             Key = (Name/(:= 2 + length(comma_list(Head)))/dcg)
-        ; !, Key = (Name/(:= length(comma_list(Head)))/pred))),
-	    ((test(Name, _), (Name/test/test)): !),
-	    ((Other, _): throw(error(unsuported_declaration(Other)))).
+        ; member(predicate, Annots), !,
+            Key = (Name/(:= length(comma_list(Head)))/pred)
+        ; !,
+            Key = (Name/(:= 1 + length(comma_list(Head)))/fun))),
+    ((test(Name, _), (Name/test/test)): !),
+    ((Other, _): throw(error(unsuported_declaration(Other)))).
 
 test xtlm_declaration_key:
     xtlm_declaration_key(define(foo, [fun], [(N: N + 1)]), foo/2/fun).

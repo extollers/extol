@@ -8,7 +8,6 @@ prolog('=..'/2).
 prolog('='/2).
 prolog('>='/2).
 prolog('>'/2).
-prolog(append/2).
 prolog(append/3).
 prolog(at_end_of_stream/1).
 prolog(atom/1).
@@ -21,7 +20,6 @@ prolog(callable/1).
 prolog(catch/3).
 prolog(close/1).
 prolog(close_output_codes_stream/2).
-prolog(comma_list/2).
 prolog(compound/1).
 prolog(copy_term/2).
 prolog(current_input/1).
@@ -29,7 +27,6 @@ prolog(current_stream/1).
 prolog(fail/0).
 prolog(false/0).
 prolog(flush_output/0).
-prolog(foldl/4).
 prolog(g_assignb/2).
 prolog(get_byte/2).
 prolog(get_char/1).
@@ -52,9 +49,9 @@ prolog(once/1).
 prolog(open/4).
 prolog(open_output_codes_stream/1).
 prolog(put_byte/2).
-prolog(snd/2).
 prolog(throw/1).
 prolog(var/1).
 prolog(write/2).
 prolog(write_term/2).
 prolog(write_term/3).
+prolog(test/1).
