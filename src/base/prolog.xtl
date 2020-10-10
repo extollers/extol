@@ -55,3 +55,4 @@ prolog(write/2).
 prolog(write_term/2).
 prolog(write_term/3).
 prolog(test/1).
+prolog(reverse/2).

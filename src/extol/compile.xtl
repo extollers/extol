@@ -59,6 +59,10 @@ test xtl_to_pl_declaration :
     xtlm_add(Module, prolog(c/0)),
     xtlm_add(Module, prolog(g/0)),
     xtlm_add(Module, prolog(h/0)),
+    xtlm_add(Module, prolog('+'/3)),
+    xtlm_add(Module, prolog('-'/3)),
+    xtlm_add(Module, prolog(fib/2)),
+    xtlm_add(Module, prolog(f/3)),
 
     xtl_to_pl_declaration(
         Module,
@@ -248,6 +252,9 @@ pred xtl_to_pl_funexpr:
         PL := xtl_to_pl_quoted(Module, Res, Quoted)),
     ((Module, Result, Functor, PL): compound(Functor), !,
         Functor =... [Name | ListFun],
+        N := length(ListFun) + 1,
+        ( xtlm_find(Module, Name/N/_), !
+        ; throw(not_found(Name/N))),
         maplist(xtl_to_pl_funexpr(Module), Results, ListFun, DepsPLs),
         append(DepsPLs, DepsPL),
         append(Results, [Result], ArgsPL),
@@ -256,6 +263,12 @@ pred xtl_to_pl_funexpr:
 
 test xtl_to_pl_funexpr :
     Module := xtlm_new(main),
+    xtlm_add(Module, prolog(f/3)),
+    xtlm_add(Module, prolog(g/3)),
+    xtlm_add(Module, prolog(fib/2)),
+    xtlm_add(Module, prolog('-'/3)),
+    xtlm_add(Module, prolog('+'/3)),
+
     xtl_to_pl_funexpr(Module, res, f(1,g(2,3)), X),
     X = [g(2,3,A),f(1,A,res)],
 
