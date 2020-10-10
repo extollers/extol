@@ -60,8 +60,7 @@ pred command:
 pred run_test:
     ((done) : !, write(success), nl),
     (((A, B), ()) : !,
-        (sf(A)
-            -> !, run_test(B)
+        (sf(A), !, run_test(B)
         ; nl, write('  failed: '), write_term(A, [numbervars(false), namevars(false), max_depth(6)]), nl, throw(test_failed))),
             ((B) :
                 run_test((B, done))).

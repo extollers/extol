@@ -1,0 +1,32 @@
+pred xtl_eval_funexpr:
+    ((Module, Expr, Result):
+        ( var(Expr) % TODO: don't use same var in input and result
+        ; number(Expr)
+        ; atom(Expr)),
+        !, Result = Var),
+    ((Module, (Result if Goal), Result):
+        xtl_eval_goal(Module, Goal)),
+    ((Module, [ X | Xs ], [ Y | Ys ]):
+        xtl_eval_funexpr(Module, X, Y),
+        xtl_eval_funexpr(Module, Xs, Ys)),
+    ((Module, Expr, Result):
+        Expr =... [ Name | Args ],
+        N := length(Args) + 1,
+        ( xtlm_find(Module, Name/N/_, Declaration)
+        ; throw(error(not_found(Name/N)))
+            ),
+        maplist(xtl_eval_funexpr(Module), Args, Values),
+        xtl_eval_call(Module, Declaration, [Result, Values])).
+
+pred xtl_eval_goal:
+    ((Module, Goal):
+        var(Goal), !,
+        throw(error(variable_goal(Goal)))),
+    ((Module, (A, B)): !,
+        xtl_eval_goal(Module, A),
+        xtl_eval_goal(Module, B)),
+    ((Module, (A; B)): !,
+        xtl_eval_goal(Module, A) ;
+        xtl_eval_goal(Module, B)),
+    ((Module, !): !,
+        throw(cut)),

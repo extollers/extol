@@ -14,7 +14,7 @@ pred pretty_init: (A, C :
     (length(B, 32), append(B, _, AA) ; B = AA), !,
     prep_chars(B, Q, []),
     length(Q, N),
-    (N < 10 -> append(Q, "<eof>", QQ) ; QQ = Q),
+    (N < 10, !, append(Q, "<eof>", QQ) ; QQ = Q),
     atom_codes(C, QQ)).
 
 dcg prep_chars:

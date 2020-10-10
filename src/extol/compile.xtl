@@ -132,13 +132,6 @@ pred xtl_to_pl_goal:
     ((Module, (A; B), (APL; BPL)) : !,
         xtl_to_pl_goal(Module, A, APL),
         xtl_to_pl_goal(Module, B, BPL)),
-    ((Module, (A -> B ; C), (APL -> BPL ; CPL)) : !,
-        xtl_to_pl_goal(Module, A, APL),
-        xtl_to_pl_goal(Module, B, BPL),
-        xtl_to_pl_goal(Module, C, CPL)),
-    ((Module, (A -> B), (APL -> BPL)) : !,
-        xtl_to_pl_goal(Module, A, APL),
-        xtl_to_pl_goal(Module, B, BPL)),
     ((_, '!', '!') : !),
     ((Module, (Var := Fun), Goal) : !,
         xtl_to_pl_funexpr(Module, Var, Fun, List),
@@ -146,7 +139,7 @@ pred xtl_to_pl_goal:
     ((Module, G, GPL) :
         G =... [Name | Args],
         N := length(Args),
-        ( xtlm_find(Module, Name/N/_), !
+        ( xtlm_find(Module, Name/N/_, _), !
         ; throw(not_found(Name/N))),
         maplist(xtl_to_pl_quoted(Module), QuotedArgs, Args, ExtraGoalsListList),
         ExtraGoalsList := append(ExtraGoalsListList),
@@ -173,7 +166,7 @@ pred xtl_to_pl_dcg:
     ((M, F, C, I, O) : !,
         F =... [Name | ArgsXtl],
         N := length(ArgsXtl) + 2,
-        ( xtlm_find(M, Name/N/_), !,
+        ( xtlm_find(M, Name/N/_, _), !,
             maplist(xtl_to_pl_quoted(M), VarsPL, ArgsXtl, ArgsPLs),
             append([Name | VarsPL], [I,O], LL),
             Call =... LL,
@@ -181,7 +174,7 @@ pred xtl_to_pl_dcg:
             ( ArgsPL = [], !, C = Call
             ; comma_list(PrepPL, ArgsPL),
                 C = (PrepPL, Call))
-        ; xtlm_find(M, Name/(:= N - 2)/_),
+        ; xtlm_find(M, Name/(:= N - 2)/_, _),
             xtl_to_pl_goal(M, F, PL),
             C = (I=O, PL)
         ; throw(not_found(Name/N)))),
@@ -253,7 +246,7 @@ pred xtl_to_pl_funexpr:
     ((Module, Result, Functor, PL): compound(Functor), !,
         Functor =... [Name | ListFun],
         N := length(ListFun) + 1,
-        ( xtlm_find(Module, Name/N/_), !
+        ( xtlm_find(Module, Name/N/_, _), !
         ; throw(not_found(Name/N))),
         maplist(xtl_to_pl_funexpr(Module), Results, ListFun, DepsPLs),
         append(DepsPLs, DepsPL),
