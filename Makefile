@@ -45,11 +45,11 @@ check: unit1 test1 unit2 test2 diff23 testi
 	@echo [-] ALL TESTS PASSED
 
 .PHONY: testi
-testi: install-for-testi
+testi: install-if-needed
 	echo [I] INTEGRATION TESTS
 	STAGE=I EXTOL=$(BINDIR)/$(NAME) $(SHELL) $/test/run
 
-testi-%: install-for-testi
+testi-%: install-if-needed
 	echo [I] INTEGRATION TESTS $*
 	STAGE=I EXTOL=$(BINDIR)/$(NAME) $(SHELL) $/test/run "$*"
 
@@ -140,6 +140,11 @@ clean:
 .PHONY: repl
 repl: repl2
 
+.PHONY: repli
+repli: install-if-needed
+	@echo [I] REPL
+	$(BINDIR)/$(NAME) repl
+
 unit-%: unit1-% unit2-%
 	@echo [-] UNIT TEST "'$*'" PASSED
 
@@ -156,12 +161,12 @@ install: $!stage2
 	  install -Cvm 644 $/integrations/emacs/extol.el -DT $(DESTDIR)$(DATADIR)/emacs/site-lisp/$(NAME).el ; \
 	) | sed 's/^/[I] + /'
 
-.PHONY: install-for-testi
+.PHONY: install-if-needed
 ifneq (,$(findstring i,$(ONLY)))
-install-for-testi: install
+install-if-needed: install
 	@true
 else
-install-for-testi:
+install-if-needed:
 	@true
 endif
 

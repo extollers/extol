@@ -25,7 +25,9 @@
      ((bobp)
       (indent-line-to 0))
      ((looking-at " *$")
-      (indent-line-to 0))
+      (indent-line-to (save-excursion
+                        (re-search-backward "[^ \t]")
+                        (current-indentation))))
      ((looking-at " *\\(pred\\|dcg\\|test\\|fun\\) ")
       (indent-line-to 0))
      ((looking-at " *%")
@@ -40,7 +42,9 @@
                   (prev-nesting (car (syntax-ppss)))
                   (nesting-indent (* 4 (- nesting prev-nesting)))
                   (extra-indent (if (looking-at ".*\\(:\\|-->\\)$\\| *;") (cond ((<= nesting-indent 0) (+ (- nesting-indent) 4)) (t 0)) 0)))
-             (+ prev-indent nesting-indent extra-indent (if unindent -4 0))))))))))
+             (+ prev-indent nesting-indent extra-indent (if unindent -4 0)))))))))
+  (if (bolp)
+          (re-search-forward "^[ \t]*")))
 
 (defvar extol-mode-syntax-table
   (let ((st (make-syntax-table)))

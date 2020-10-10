@@ -1,3 +1,4 @@
+% TODO: backtick quote
 pred xtl_eval_funexpr:
     ((Module, Expr, Result):
         ( var(Expr) % TODO: don't use same var in input and result
@@ -15,18 +16,96 @@ pred xtl_eval_funexpr:
         ( xtlm_find(Module, Name/N/_, Declaration)
         ; throw(error(not_found(Name/N)))
             ),
-        maplist(xtl_eval_funexpr(Module), Args, Values),
-        xtl_eval_call(Module, Declaration, [Result, Values])).
+        Values := maplist(`xtl_eval_funexpr(Module), Args),
+        xtl_eval_call(Module, Declaration, := append(Values, [Result]))).
 
 pred xtl_eval_goal:
     ((Module, Goal):
         var(Goal), !,
         throw(error(variable_goal(Goal)))),
-    ((Module, (A, B)): !,
+    ((Module, (A, B), ()): !,
         xtl_eval_goal(Module, A),
         xtl_eval_goal(Module, B)),
     ((Module, (A; B)): !,
         xtl_eval_goal(Module, A) ;
         xtl_eval_goal(Module, B)),
-    ((Module, !): !,
-        throw(cut)),
+    ((Module, '!'): !,
+        throw(not_supported(!))),
+    ((Module, (Result := Expr)): !,
+        xtl_eval_funexpr(Module, Expr, Result)),
+    ((Module, Goal):
+        Goal =... [ Name | Args ],
+        N := length(Args),
+        ( xtlm_find(Module, Name/N/_, Declaration)
+        ; throw(error(not_found(Name/N)))
+            ),
+        maplist(xtl_eval_quoted(Module), Args, Values),
+        xtl_eval_call(Module, Declaration, Values)).
+
+pred xtl_eval_quoted:
+    ((Module, `Expr, Value): !,
+        xtl_eval_funexpr(Module, Expr, Value)),
+    ((Module, Expr, Value):
+        Expr =... [Name | Args],
+        Values := maplist(`xtl_eval_quoted(Module), Args),
+        Value =... [Name | Values]).
+
+pred xtl_eval_dcg:
+    ((Module, Grammar, I, O):
+        var(Grammar), !, throw(error(eval_variable(Grammar)))),
+    ((Module, (A, B), I, O):
+        xtl_eval_dcg(Module, A, I, J),
+        xtl_eval_dcg(Module, B, J, O)),
+    ((Module, (A, B), I, O):
+        xtl_eval_dcg(Module, A, I, O) ;
+        xtl_eval_dcg(Module, B, I, O)),
+    ((Module, '!', I, O):
+        throw(error(not_cupported(!)))),
+    ((Module, [], I, I): true),
+    ((Module, [X | Xs], I, O): append([X | Xs], O, I)),
+    ((Module, {Goal}, I, O):
+        xtl_eval_goal(Module, Goal)),
+    ((Module, Call, I, O):
+        Call =... [ Name | Args ],
+        N := length(Args) + 2,
+        maplist(xtl_eval_quoted(Module), Args, Values),
+        ( xtlm_find(Module, Name/N/_, Declaration), !,
+            xtl_eval_call(Module, Declaration, := append(Values, [I, O]))
+        ; xtlm_find(Module, Name/(:= N - 2)/_, Declaration),
+            xtl_eval_call(Module, Declaration, := append(Values))
+        ; throw(error(not_found(Name/N))))).
+
+pred xtl_eval_call:
+    ((Module, prolog(Name/N), Arguments):
+        assert(length(Arguments, N)),
+        call([Name | Arguments])),
+    ((Module, imported(Name, Key), Arguments):
+        Import := xtlm_find_import(Module, Name),
+        Declaration := xtlm_find(Import, Key),
+        xtl_eval_call(Module, Declaration, Arguments)),
+    ((Module, test(T), _):
+        throw(error(not_callable(test(T))))),
+    ((Module, define(_, Annotations, Clauses), Arguments):
+        copy_term(Clauses, Copy),
+        ( member(dcg, Annotations), !,
+            orlist(xtl_eval_call_dcg(Module, Arguments), Copy)
+        ; member(predicate, Annotations), !,
+            orlist(xtl_eval_call_pred(Module, Arguments), Copy)
+        ; orlist(xtl_eval_call_fun(Module, Arguments), Copy))).
+
+pred xtl_eval_call_pred:
+    (Module, Arguments, (Head: Body)):
+        comma_list(Head, Arguments),
+        xtl_eval_goal(Module, Body).
+
+pred xtl_eval_call_fun:
+    (Module, Arguments, (Head: Body)):
+        append(Parameters, [Result], Arguments),
+        comma_list(Head, Paremeters),
+        xtl_eval_funexpr(Module, Body, Result).
+
+pred xtl_eval_call_dcg:
+    (Module, Arguments, (Head: Body)):
+        append(Parameters, [I, O], Arguments),
+        comma_list(Head, Parameters),
+        xtl_eval_dcg(Module, Body, I, O).

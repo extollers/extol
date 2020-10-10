@@ -93,7 +93,7 @@ pred xtlm_import: (Module, Imported, As):
 pred xtlm_add_import_: (Module, Prefix, Import, Key-Declaration):
     must((Name/N/Type) = Key),
     must(NewName := concat_name(Prefix, Name)),
-    must(xtlm_add_(Module, NewName/N/Type, imported(Import, Name))).
+    must(xtlm_add_(Module, NewName/N/Type, imported(Import, Key))).
 
 pred xtlm_zip_module_: (Module, Decl, ModDecl):
     ModDecl = Module-Decl.
@@ -110,3 +110,7 @@ pred xtlm_all_declarations_recursive: (module(_, _, Imports), ModDecls):
     append(Declss, ModDecls).
 
 fun xtlm_imports: module(_, _, Imports): Imports.
+
+fun xtlm_find_import: (module(_, _, Imports), Name):
+    module(Name, Declarations, Imports)
+    if pmember(Imports, Name-Declarations).

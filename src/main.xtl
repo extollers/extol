@@ -6,6 +6,7 @@ include 'src/base/streams.xtl'.
 include 'src/extol/parse.xtl'.
 include 'src/extol/compile.xtl'.
 include 'src/extol/modules.xtl'.
+include 'src/extol/eval.xtl'.
 
 %% Main
 
@@ -75,9 +76,7 @@ pred xtl_repl:
                 ( xtl_expression(ExpV, Line, [])
                 ; throw('parse failed')),
                     xtl_makevars(ExpV, Exp, Vars),
-                    xtl_to_pl_funexpr(Module, Result, Exp, ExpPL),
-                    comma_list(GoalPL, ExpPL),
-                    (GoalPL = (); call(GoalPL)),
+                    xtl_eval_funexpr(Module, Exp, Result),
                     write(Result), nl
                     ),
                 Exception,

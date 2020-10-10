@@ -113,3 +113,7 @@ pred filterlist:
 pred '()': (): true.
 
 pred not: G: G, !, false; true.
+
+pred orlist:
+    ((Goal, []): false),
+    ((Goal, [X | Xs]): call(Goal, [X]) ; orlist(Goal, Xs)).
