@@ -4,7 +4,7 @@ pred xtl_eval_funexpr:
         ( var(Expr) % TODO: don't use same var in input and result
         ; number(Expr)
         ; atom(Expr)),
-        !, Result = Var),
+        !, Result = Expr),
     ((Module, (Result if Goal), Result):
         xtl_eval_goal(Module, Goal)),
     ((Module, [ X | Xs ], [ Y | Ys ]):
