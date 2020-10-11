@@ -109,7 +109,6 @@ pred xtlm_all_declarations_recursive: (Module, ModDecls):
     length(Imports, _),
     maplist(xtlm_all_declarations_(Imports), Imports, Declss),
     Builtins := [generate_load_builtins(Module)],
-    % writeq(builtins-Builtins), halt, % TODO
     append([Builtins|Declss], ModDecls).
 
 fun xtlm_imports: module(_, _, Imports): Imports.
@@ -126,10 +125,8 @@ pred generate_load_builtins: (Module, Gen):
         define(builtin_load_builtins,
             [nondet, predicate],
             [(module(_, RuntimeDeclarations, _):
-                    % write('loading generated builtins'), nl, % TODO
                 Commas)])).
 
 pred gen_add_builtin: (RuntimeDeclarations, Name/N/_-_, Gen):
     Gen = (
-        % write(gen(Name/N)), nl, % TODO
         member(((Name/N/pred)-prolog(Name/N)), RuntimeDeclarations), !).
