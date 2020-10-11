@@ -1,6 +1,7 @@
 prolog(write/1).
 prolog(nl/0).
 prolog(halt/0).
+prolog(member/2).
 
 pred main: ():
   write('Hello, world!'), nl,

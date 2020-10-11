@@ -108,7 +108,7 @@ pred print_exception:
         !,
         print_exception(Error),
         maplist(write_trace_line, := reverse(Trace))),
-    (Error: write_term(Error, [numbervars(false), namevars(false), max_depth(6)]), nl).
+    (Error: write_term(Error, [numbervars(false), namevars(false), max_depth(7)]), nl).
 
 % Explicit stack frame
 pred 'sf': (F:

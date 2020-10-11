@@ -1,3 +1,7 @@
+% TODO: for bootstrapping
+pred builtin_load_builtins: module(_, Decls, _):
+    member((('+'/3/pred)-prolog('+'/3)), Decls).
+
 include 'src/base/prolog.xtl'.
 include 'src/base/trace.xtl'.
 include 'src/base/parsing.xtl'.
@@ -50,7 +54,6 @@ pred command:
         log('parsed'),
         must(xtlm_all_declarations_recursive(Module, ModDeclsXTL)),
         log(listed(:= length(ModDeclsXTL))),
-        (member('--slim', Flags), Slim = true, ! ; Slim = false),
         log(decls_new(ModDeclsXTL)),
         must(xtl_to_pl_toplevel(ModDeclsXTL, DeclsPL)),
         log(translated(:=length(DeclsPL))),
@@ -64,14 +67,20 @@ pred command:
 pred run_test:
     ((done) : !, write(success), nl),
     (((A, B), ()) : !,
-        (sf(A), !, run_test(B)
-        ; nl, write('  failed: '), write_term(A, [numbervars(false), namevars(false), max_depth(6)]), nl, throw(test_failed))),
-            ((B) :
-                run_test((B, done))).
+        ( sf(A), !,
+            run_test(B)
+        ; nl, write('  failed: '), write_term(A, [numbervars(false), namevars(false), max_depth(7)]), nl,
+            throw(test_failed))),
+    ((B) :
+        run_test((B, done))).
+
+pred xtl_repl: ():
+    Module := xtlm_new(repl),
+    builtin_load_builtins(Module), !,
+    xtl_repl(Module).
 
 pred xtl_repl:
-    (():
-        Module := xtlm_new(repl),
+    ((Module):
         write('Extol> '), flush_output, read_line(Line),
         ( Line = [0'\n]
         ; Line = [], write('end'), halt
@@ -84,11 +93,14 @@ pred xtl_repl:
                     ),
                 Exception,
                 ( write('failed: '), print_exception(Exception)))
-        ; write(error), nl),
-            !, xtl_repl),
-        ((): write('end'), nl).
+        ; write(error),
+            nl),
+        !, xtl_repl(Module)),
+    ((_): write('end'), nl).
 
 pred xtl_command_eval: Expression:
+    Module := xtlm_new(eval),
+    builtin_load_builtins(Module), !,
     atom_codes(Expression, String),
     xtl_expression(ExpV, String, []),
     xtl_makevars(ExpV, Exp, _),

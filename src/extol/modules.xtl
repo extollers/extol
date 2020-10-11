@@ -104,13 +104,32 @@ pred xtlm_all_declarations_: (Imports, Name-DeclPairs, ModOut):
     Module = module(Name, DeclPairs, Imports),
     maplist(xtlm_zip_module_(Module), Out, ModOut).
 
-pred xtlm_all_declarations_recursive: (module(_, _, Imports), ModDecls):
+pred xtlm_all_declarations_recursive: (Module, ModDecls):
+    module(_, _, Imports) = Module,
     length(Imports, _),
     maplist(xtlm_all_declarations_(Imports), Imports, Declss),
-    append(Declss, ModDecls).
+    Builtins := [generate_load_builtins(Module)],
+    % writeq(builtins-Builtins), halt, % TODO
+    append([Builtins|Declss], ModDecls).
 
 fun xtlm_imports: module(_, _, Imports): Imports.
 
 fun xtlm_find_import: (module(_, _, Imports), Name):
     module(Name, Declarations, Imports)
     if pmember(Imports, Name-Declarations).
+
+pred generate_load_builtins: (Module, Gen):
+    module(_, Declarations, _) = Module,
+    maplist(gen_add_builtin(RuntimeDeclarations), Declarations, List),
+    comma_list(Commas, List),
+    Gen = Module-(
+        define(builtin_load_builtins,
+            [nondet, predicate],
+            [(module(_, RuntimeDeclarations, _):
+                    % write('loading generated builtins'), nl, % TODO
+                Commas)])).
+
+pred gen_add_builtin: (RuntimeDeclarations, Name/N/_-_, Gen):
+    Gen = (
+        % write(gen(Name/N)), nl, % TODO
+        member(((Name/N/pred)-prolog(Name/N)), RuntimeDeclarations), !).

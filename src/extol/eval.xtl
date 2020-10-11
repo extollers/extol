@@ -78,7 +78,8 @@ pred xtl_eval_dcg:
 pred xtl_eval_call:
     ((Module, prolog(Name/N), Arguments):
         assert(length(Arguments, N)),
-        call([Name | Arguments])),
+        Goal =... [Name | Arguments],
+        call(Goal)),
     ((Module, imported(Name, Key), Arguments):
         Import := xtlm_find_import(Module, Name),
         Declaration := xtlm_find(Import, Key),

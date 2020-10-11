@@ -40,9 +40,17 @@ all_sources = $(shell find $/src -type f)
 default: 2
 	@true
 
-.PHONY: check
-check: unit1 test1 unit2 test2 diff23 testi
+.PHONY: check1 check2 check
+check1: unit1 test1
+check2: unit2 test2
+check: check1 check2 diff23 testi
 	@echo [-] ALL TESTS PASSED
+
+check1-%: unit1-% test1-%
+	@true
+
+check2-%: unit2-% test2-%
+	@true
 
 .PHONY: testi
 testi: install-if-needed

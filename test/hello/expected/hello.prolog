@@ -2,4 +2,5 @@
 :-(set_prolog_flag(singleton_warning,off)).
 :-(discontiguous(/(test,1))).
 :-(initialization(;(main,','(write('error: unexpected failure in main'),','(nl,halt(1)))))).
+:-(builtin_load_builtins(module(A,B,C)),','(','(member(-(/(/(write,1),pred),prolog(/(write,1))),B),!),','(','(member(-(/(/(nl,0),pred),prolog(/(nl,0))),B),!),','(','(member(-(/(/(halt,0),pred),prolog(/(halt,0))),B),!),','(','(member(-(/(/(member,2),pred),prolog(/(member,2))),B),!),','(member(-(/(/(main,0),pred),prolog(/(main,0))),B),!)))))).
 :-(main,','(write('Hello, world!'),','(nl,halt))).
