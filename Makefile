@@ -40,6 +40,12 @@ all_sources = $(shell find $/src -type f)
 default: 2
 	@true
 
+.PHONY: everything
+everything: check extras
+
+.PHONY: extras
+extras: docker
+
 .PHONY: check1 check2 check
 check1: unit1 test1
 check2: unit2 test2
@@ -181,3 +187,7 @@ endif
 .PHONY: docker
 docker:
 	docker build $/. -t extol
+
+.PHONY: docker-repl
+docker-repl: docker
+	docker run --rm --interactive --tty extol
