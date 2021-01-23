@@ -1,0 +1,8 @@
+module main.
+
+import 'sub/a'.
+import 'sub/b' as b.
+
+pred main: ():
+    af,
+    b.bf.
