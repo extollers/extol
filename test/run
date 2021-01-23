@@ -30,9 +30,16 @@ capture () {
 verify () (
     cd "$test_root/$test"
     if [[ -e $run/out ]]; then
-        diff -U 3 -r expected $run/out
+        diff -N -U 3 -r expected $run/out
+    else
+        test ! -e "expected"
     fi
 )
+
+disabled () {
+    echo [$STAGE] + DISABLED $test
+    exit 0
+}
 
 total=0
 failed=0

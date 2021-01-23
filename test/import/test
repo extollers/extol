@@ -1,1 +1,3 @@
-capture extoltoprolog input/main.xtl out/main.pl
+disabled
+
+capture extol extoltoprolog input/main.xtl out/main.pl
