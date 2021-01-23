@@ -71,4 +71,5 @@ if [[ $failed = 0 ]]; then
     echo [$STAGE] $total TESTS PASSED
 else
     echo [$STAGE] $failed/$total TESTS FAILED "($run)"
+    exit 1
 fi
