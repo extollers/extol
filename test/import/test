@@ -1,3 +1,9 @@
 disabled
 
-capture extol extoltoprolog input/main.xtl out/main.pl
+cd input
+capture extol extoltoprolog main.xtl ../out/main.pl
+
+cd ../out
+gplc main.prolog
+capture ./main
+rm main

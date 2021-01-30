@@ -11,6 +11,8 @@ run=run-$$-$RANDOM
 STAGE=${STAGE:-I}
 EXTOL=$(realpath -s "${EXTOL:-$test_root/../local/bin/extol}")
 
+ENABLE_ALL=
+
 extol () {
     "$EXTOL" "$@"
 }
@@ -37,8 +39,10 @@ verify () (
 )
 
 disabled () {
-    echo [$STAGE] + DISABLED $test
-    exit 0
+    if [[ -z "${ENABLE_ALL}" ]]; then
+        echo [$STAGE] + DISABLED $test
+        exit 0
+    fi
 }
 
 total=0

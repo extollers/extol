@@ -9,6 +9,7 @@ pred xtl_include: ((File, Module):
 pred xtl_import: ((File, Name, Module):
     log(importing(File, Name)),
     must(Imports := xtlm_imports(Module)),
+    % TODO: don't index by name
     ( tc pmember(Name-Declarations, Imports), !,
         Imported = module(Name, Declarations, Imports)
     ; tc must(Imported := xtlm_new(Name, Imports)),
