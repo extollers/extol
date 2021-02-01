@@ -11,7 +11,7 @@ pred xtl_eval_funexpr:
         xtl_eval_funexpr(Module, X, Y),
         xtl_eval_funexpr(Module, Xs, Ys)),
     ((Module, Expr, Result):
-        Expr =... [ Name | Args ],
+        Expr := xtl_apply( Name, Args ),
         N := length(Args) + 1,
         ( xtlm_find(Module, Name/N/_, Declaration)
         ; throw(error(not_found(Name/N)))
@@ -34,7 +34,7 @@ pred xtl_eval_goal:
     ((Module, (Result := Expr)): !,
         xtl_eval_funexpr(Module, Expr, Result)),
     ((Module, Goal):
-        Goal =... [ Name | Args ],
+        Goal := xtl_apply( Name, Args ),
         N := length(Args),
         ( xtlm_find(Module, Name/N/_, Declaration)
         ; throw(error(not_found(Name/N)))
@@ -46,9 +46,9 @@ pred xtl_eval_quoted:
     ((Module, `Expr, Value): !,
         xtl_eval_funexpr(Module, Expr, Value)),
     ((Module, Expr, Value):
-        Expr =... [Name | Args],
+        Expr := xtl_apply( Name, Args),
         Values := maplist(`xtl_eval_quoted(Module), Args),
-        Value =... [Name | Values]).
+        Value := [Name | Values]).
 
 pred xtl_eval_dcg:
     ((Module, Grammar, I, O):
@@ -66,7 +66,7 @@ pred xtl_eval_dcg:
     ((Module, {Goal}, I, O):
         xtl_eval_goal(Module, Goal)),
     ((Module, Call, I, O):
-        Call =... [ Name | Args ],
+        Call := xtl_apply( Name, Args ),
         N := length(Args) + 2,
         maplist(xtl_eval_quoted(Module), Args, Values),
         ( xtlm_find(Module, Name/N/_, Declaration), !,
@@ -78,7 +78,7 @@ pred xtl_eval_dcg:
 pred xtl_eval_call:
     ((Module, prolog(Name/N), Arguments):
         assert(length(Arguments, N)),
-        Goal =... [Name | Arguments],
+        Goal := xtl_apply( Name, Arguments),
         call(Goal)),
     ((Module, imported(Name, Key), Arguments):
         Import := xtlm_find_import(Module, Name),

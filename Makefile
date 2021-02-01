@@ -34,7 +34,7 @@ ifeq ($!,./)
 ./ = ./
 endif
 
-all_sources = $(shell find $/src -type f)
+all_sources = $(shell find $/src -type f -iname '*.xtl')
 
 .PHONY: default
 default: 2

@@ -10,9 +10,9 @@ pred xtl_import: ((File, Name, Module):
     log(importing(File, Name)),
     must(Imports := xtlm_imports(Module)),
     % TODO: don't index by name
-    ( tc pmember(Name-Declarations, Imports), !,
+    ( pmember(Name-Declarations, Imports), !,
         Imported = module(Name, Declarations, Imports)
-    ; tc must(Imported := xtlm_new(Name, Imports)),
+    ; must(Imported := xtlm_new(Name, Imports)),
         must(xtl_top_level(Imported, := read_file(File), [])),
         must(xtlm_seal(Imported))),
     must(xtlm_import(Module, Imported, inline)),
@@ -134,11 +134,17 @@ fun xtl_make_annotation:
 %     xtl_declaration(Decl3, "define d: dcg, (a : b).", ""),
 %     Decl3 = ['define'(d, ['dcg'], [(a : b)])].
 
+pred xtl_apply: (Fun, Args, Compound):
+    Compound =... [Fun | Args].
+
+pred xtl_makevar: (Name, Var):
+    Var =... ['XTL$VARNAME', Name].
+
 pred xtl_makevars:
     ((V, _, _) :
-        V =... ['XTL$VARNAME', '_'], !),
+        V := xtl_makevar('_'), !),
     ((V, Var, Vars) :
-        V =... ['XTL$VARNAME', Name], !,
+        V := xtl_makevar(Name), !,
         member(Name-Var, Vars), !),
     ((Atomic, Atomic, _) :
         atomic(Atomic), !),
@@ -146,15 +152,17 @@ pred xtl_makevars:
         xtl_makevars(X, Y, Vars),
         xtl_makevars(Xs, Ys, Vars)),
     ((In, Out, Vars) :
-        In =... InL, !,
-        xtl_makevars(InL, OutL, Vars),
-        Out =... OutL).
+        In := xtl_apply( Fun, Args), !,
+        xtl_makevars(Fun, FunV, Vars),
+        xtl_makevars(Args, ArgsV, Vars),
+        Out := xtl_apply( FunV, ArgsV)).
 
 test xtl_makevars :
-    A =... ['XTL$VARNAME', 'A'],
+    A := xtl_makevar('A'),
     xtl_makevars(foo(A, A), foo(1, Z), V),
     atomic(Z),
     Z = 1.
+
 
 dcg xtl_atom_char:
 contract((Byte), true, number(Byte)),
@@ -172,9 +180,9 @@ dcg xtl_atom:
         { atom_codes(Atom, Cs),
             Cs = [C|_],
             ( C = 0'_, !,
-                AtomVar =... ['XTL$VARNAME', '_']
+                AtomVar := xtl_makevar('_')
             ; member(C, "ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
-                !, AtomVar =... ['XTL$VARNAME', Atom]
+                !, AtomVar := xtl_makevar(Atom)
             ; AtomVar = Atom )}).
 
 test xtl_atom :
@@ -182,7 +190,10 @@ test xtl_atom :
     xtl_atom('+', "'+'", ""),
     xtl_atom('9', "'\\9'", ""),
     xtl_atom(ab, "ab", ""),
-    xtl_atom('ab?', "ab?", "").
+    xtl_atom('ab?', "ab?", ""),
+    % 'a.b'
+    % 'ab.'
+    true.
 
 dcg xtl_quoted_char:
 % contract((Bytes), true, number(Byte)),
@@ -239,7 +250,7 @@ dcg xtl_regular_term:
     xtl_atom(Atom), !,
     ( xtl_token("("), !,
       xtl_comma_separated(Args, [], xtl_token(")")),
-      { Term =... [Atom | Args] }
+      { Term := xtl_apply( Atom, Args) }
     ; xtl_skipwhite,
       { Term = Atom })),
 (('()', ()) :
@@ -321,7 +332,7 @@ dcg xtl_expression:
     { member(Assoc-N, [fx-0, fy-1]),
       RightPrec is OpPrec + N },
     try(xtl_expression(none, RightPrec, Right)),
-    { Combined =... [Op, Right] },
+    { Combined := xtl_apply(Op, [Right]) },
     xtl_expression(just(Combined), Prec, Term)),
 ((none, Prec, Term) : !,
     require(xtl_op_or_term(Left, term)),
@@ -332,7 +343,7 @@ dcg xtl_expression:
       LeftPrec is OpPrec + N,
       LeftPrec < Prec,
       !,
-      Combined =... [Op, Left] },
+      Combined := xtl_apply( Op, [Left]) },
     xtl_expression(just(Combined), Prec, Term)),
 ((just(Left), Prec, Term) :
     xtl_op_or_term(Op, op(OpPrec, Assoc)),
@@ -342,7 +353,7 @@ dcg xtl_expression:
       !,
       RightPrec is OpPrec + M },
     require(xtl_expression(none, RightPrec, Right)),
-    { Combined =... [Op, Left, Right] },
+    { Combined := xtl_apply( Op, [Left, Right]) },
     xtl_expression(just(Combined), Prec, Term)),
 ((just(Term), _, Term) : !).
 

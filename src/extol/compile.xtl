@@ -137,7 +137,7 @@ pred xtl_to_pl_goal:
         xtl_to_pl_funexpr(Module, Var, Fun, List),
         comma_list(Goal, List)),
     ((Module, G, GPL) :
-        G =... [Name | Args],
+        G := xtl_apply(Name, Args),
         N := length(Args),
         ( xtlm_find(Module, Name/N/_, _), !
         ; throw(not_found(Name/N))),
@@ -164,7 +164,7 @@ pred xtl_to_pl_dcg:
     ((Module, {G}, (GPL, I=O), I, O) : !,
         xtl_to_pl_goal(Module, G, GPL)),
     ((M, F, C, I, O) : !,
-        F =... [Name | ArgsXtl],
+        F := xtl_apply( Name, ArgsXtl),
         N := length(ArgsXtl) + 2,
         ( xtlm_find(M, Name/N/_, _), !,
             maplist(xtl_to_pl_quoted(M), VarsPL, ArgsXtl, ArgsPLs),
@@ -243,8 +243,8 @@ pred xtl_to_pl_funexpr:
         PL := append(xtl_to_pl_funexpr(Module, X, Y), xtl_to_pl_funexpr(Module, Xs, Ys))),
     ((Module, Res, (`Quoted), PL):
         PL := xtl_to_pl_quoted(Module, Res, Quoted)),
-    ((Module, Result, Functor, PL): compound(Functor), !,
-        Functor =... [Name | ListFun],
+    ((Module, Result, Functor, PL):
+        Functor := xtl_apply( Name, ListFun), !,
         N := length(ListFun) + 1,
         ( xtlm_find(Module, Name/N/_, _), !
         ; throw(not_found(Name/N))),
@@ -278,8 +278,7 @@ pred xtl_to_pl_quoted:
     ((_, Num, Num, []): number(Num), !),
     ((_, Atom, Atom, []): atom(Atom), !),
     ((Module, Res, Term, Goals):
-        compound(Term), !,
-        Term =... [Name | Args],
+        Term := xtl_apply( Name, Args), !,
         maplist(xtl_to_pl_quoted(Module), ArgsQuoted, Args, Goalss),
         Goals := append(Goalss),
         Res =... [Name | ArgsQuoted]).
