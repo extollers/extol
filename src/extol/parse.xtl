@@ -79,8 +79,7 @@ dcg xtl_declaration:
     contract(Module, module(Module), module(Module)),
     ((_): eof, !, {fail}),
     ((Module):
-        sf require(xtl_expression(DeclV)),
-        (xtl_token("."); true), !,
+        sf require(xtl_expression(DeclV)), !,
         {log(parsed_expression(DeclV))},
         { DeclV = include(Other), !,
             sf xtl_include(Other, Module)
