@@ -232,7 +232,8 @@ test xtl_expression :
     xtl_expression((-a) * b, "-a * b", []),
     xtl_expression((:- (a * b)), ":- a * b", []),
     xtl_expression('()', "( )", []),
-    xtl_expression(':'(x, ':'('()', y)), "x: ((): y)", [])
+    xtl_expression(':'(x, ':'('()', y)), "x: ((): y)", []),
+    xtl_expression('.'(a, '.'(b, c('.'('x', 'y')))), "a.b.c(x.y)", [])
 
 test comma_expr :
     xtl_expression((p :- (a, b)), "p :- a, b", [])
@@ -402,7 +403,8 @@ pred xtl_op:
     ((1125, xfx, 'if') : true),
     ((100, fy, '`') : true),
     ((100, fy, 'XTL$') : true),
-    ((700, fx, ':=') : true)
+    ((700, fx, ':=') : true),
+    ((50, xfy, '.') : true)
 
 % TODO: parse_self test
 % test parse_self :
