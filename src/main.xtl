@@ -1,16 +1,16 @@
 % TODO: for bootstrapping
 pred builtin_load_builtins: module(_, Decls, _):
-    member((('+'/3/pred)-prolog('+'/3)), Decls).
+    member((('+'/3/pred)-prolog('+'/3)), Decls)
 
-include 'src/base/prolog.xtl'.
-include 'src/base/trace.xtl'.
-include 'src/base/parsing.xtl'.
-include 'src/base/misc.xtl'.
-include 'src/base/streams.xtl'.
-include 'src/extol/parse.xtl'.
-include 'src/extol/compile.xtl'.
-include 'src/extol/modules.xtl'.
-include 'src/extol/eval.xtl'.
+include 'src/base/prolog.xtl'
+include 'src/base/trace.xtl'
+include 'src/base/parsing.xtl'
+include 'src/base/misc.xtl'
+include 'src/base/streams.xtl'
+include 'src/extol/parse.xtl'
+include 'src/extol/compile.xtl'
+include 'src/extol/modules.xtl'
+include 'src/extol/eval.xtl'
 
 %% Main
 
@@ -25,7 +25,7 @@ pred main : ():
         Exception, (
             write('failed: '),
             print_exception(Exception),
-            halt(1))).
+            halt(1)))
 
 pred command:
     ((help, _) :
@@ -62,7 +62,7 @@ pred command:
         must(write_file(Out, BytesOut))),
     ((repl, []): xtl_repl),
     ((eval, [Expression]): xtl_command_eval(Expression)),
-    ((Command, _): write(unknown_command(Command)), nl, false).
+    ((Command, _): write(unknown_command(Command)), nl, false)
 
 pred run_test:
     ((done) : !, write(success), nl),
@@ -72,12 +72,12 @@ pred run_test:
         ; nl, write('  failed: '), write_term(A, [numbervars(false), namevars(false), max_depth(7)]), nl,
             throw(test_failed))),
     ((B) :
-        run_test((B, done))).
+        run_test((B, done)))
 
 pred xtl_repl: ():
     Module := xtlm_new(repl),
     builtin_load_builtins(Module), !,
-    xtl_repl(Module).
+    xtl_repl(Module)
 
 pred xtl_repl:
     ((Module):
@@ -96,7 +96,7 @@ pred xtl_repl:
         ; write(error),
             nl),
         !, xtl_repl(Module)),
-    ((_): write('end'), nl).
+    ((_): write('end'), nl)
 
 pred xtl_command_eval: Expression:
     Module := xtlm_new(eval),
@@ -105,4 +105,4 @@ pred xtl_command_eval: Expression:
     xtl_expression(ExpV, String, []),
     xtl_makevars(ExpV, Exp, _),
     xtl_eval_funexpr(Module, Exp, Result),
-    write(Result), nl.
+    write(Result), nl

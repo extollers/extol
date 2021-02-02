@@ -4,7 +4,7 @@
 pred xtl_include: ((File, Module):
     log(including(File)),
     % sf
-    must(xtl_top_level(Module, := read_file(File), []))).
+    must(xtl_top_level(Module, := read_file(File), [])))
 
 pred xtl_import: ((File, Name, Module):
     log(importing(File, Name)),
@@ -16,36 +16,36 @@ pred xtl_import: ((File, Name, Module):
         must(xtl_top_level(Imported, := read_file(File), [])),
         must(xtlm_seal(Imported))),
     must(xtlm_import(Module, Imported, inline)),
-    log(imports(Imports))).
+    log(imports(Imports)))
 
 dcg xtl_token:
     contract(N, callable(N), true),
-    (N: N, xtl_skipwhite).
+    (N: N, xtl_skipwhite)
 
 test xtl_token :
     xtl_token("x", "x  ", ""),
     xtl_token("x", "x % comment", ""),
-    xtl_token("x", "x % comment\n  \t", "").
+    xtl_token("x", "x % comment\n  \t", "")
 
 dcg xtl_skipwhite:
     ((): xtl_white, !),
-    ((): []).
+    ((): [])
 
 test xtl_skipwhite :
-    xtl_skipwhite("", "").
+    xtl_skipwhite("", "")
 
 dcg xtl_white:
     ((): "%", !, xtl_line_comment_, xtl_skipwhite),
-    ((): (" "; "\t"; "\r" ; "\n" ), !, xtl_skipwhite).
+    ((): (" "; "\t"; "\r" ; "\n" ), !, xtl_skipwhite)
 
 test xtl_white :
     xtl_white(" ", ""),
     xtl_white("%", ""),
-    xtl_white("% comment \n\t  ", "").
+    xtl_white("% comment \n\t  ", "")
 
 dcg xtl_line_comment_:
     ((): ("\n" ; eof), !),
-    ((): [_], xtl_line_comment_).
+    ((): [_], xtl_line_comment_)
 
 % TODO: now takes a Module
 dcg xtl_top_level:
@@ -55,12 +55,12 @@ dcg xtl_top_level:
         ( "#!", !, xtl_line_comment_; { true }),
         xtl_skipwhite,
         sf many(xtl_declaration(Module)),
-        require(eof)).
+        require(eof))
 
 pred xtl_declaration:
     ((define(Name, Annots, Clauses)): atom(Name), maplist(annotation, Annots), maplist(define_clause, Clauses)),
     ((test(Name, Goals)): atom(Name), xtl_goal(Goals)),
-    ((prolog(Name/N)): atom(Name), number(N)).
+    ((prolog(Name/N)): atom(Name), number(N))
 
 pred annotation:
     (nondet: true),
@@ -70,10 +70,10 @@ pred annotation:
     (requires(Pred): xtl_goal(Pred)),
     (traced: true),
     (dcg: true),
-    (parameters(List): maplist(var, List)).
+    (parameters(List): maplist(var, List))
 
-pred xtl_goal: _: true.
-pred define_clause: (_: _): true.
+pred xtl_goal: _: true
+pred define_clause: (_: _): true
 
 dcg xtl_declaration:
     contract(Module, module(Module), module(Module)),
@@ -88,7 +88,7 @@ dcg xtl_declaration:
             sf xtl_import(Other, Spec, Module)
         ; !, sf xtl_makevars(DeclV, DeclP, _), !,
              sf xtl_term_to_declaration(DeclP, Decl), !,
-             sf xtlm_add(Module, Decl) }).
+             sf xtlm_add(Module, Decl) })
 
 % TODO: @-pattern
 
@@ -110,18 +110,18 @@ pred xtl_term_to_declaration:
     (((define(Name) : Definition), define(Name, Annots, Clauses)):
         xtl_split_annots(Definition, Annots, Clauses)),
     ((prolog(FN), prolog(FN)): !),
-    ((T, _): throw(failed(xtl_term_to_declaration(T)))).
+    ((T, _): throw(failed(xtl_term_to_declaration(T))))
 
 pred xtl_split_annots:
     ((Def, Annots, Clauses):
         comma_list(Def, List),
         append(AnnotsRaw, Clauses, List),
         maplist(define_clause, Clauses),
-        maplist(xtl_make_annotation, AnnotsRaw, Annots)).
+        maplist(xtl_make_annotation, AnnotsRaw, Annots))
 
 fun xtl_make_annotation:
     (Params: parameters(List) if Params =... ['parameters' | List], !),
-    (Annot: Annot).
+    (Annot: Annot)
 
 % TODO: rewrite tests using modules
 % test xtl_declaration :
@@ -132,13 +132,13 @@ fun xtl_make_annotation:
 %     Decl2 = ['test'(t, (g,h))],
 
 %     xtl_declaration(Decl3, "define d: dcg, (a : b).", ""),
-%     Decl3 = ['define'(d, ['dcg'], [(a : b)])].
+%     Decl3 = ['define'(d, ['dcg'], [(a : b)])]
 
 pred xtl_apply: (Fun, Args, Compound):
-    Compound =... [Fun | Args].
+    Compound =... [Fun | Args]
 
 pred xtl_makevar: (Name, Var):
-    Var =... ['XTL$VARNAME', Name].
+    Var =... ['XTL$VARNAME', Name]
 
 pred xtl_makevars:
     ((V, _, _) :
@@ -155,19 +155,19 @@ pred xtl_makevars:
         In := xtl_apply( Fun, Args), !,
         xtl_makevars(Fun, FunV, Vars),
         xtl_makevars(Args, ArgsV, Vars),
-        Out := xtl_apply( FunV, ArgsV)).
+        Out := xtl_apply( FunV, ArgsV))
 
 test xtl_makevars :
     A := xtl_makevar('A'),
     xtl_makevars(foo(A, A), foo(1, Z), V),
     atomic(Z),
-    Z = 1.
+    Z = 1
 
 dcg xtl_atom_char:
 contract((Byte), true, number(Byte)),
 (C:
     [C], !,
-    { member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789$?") }).
+    { member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789$?") })
 
 dcg xtl_atom:
     ((Atom):
@@ -182,7 +182,7 @@ dcg xtl_atom:
                 AtomVar := xtl_makevar('_')
             ; member(C, "ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
                 !, AtomVar := xtl_makevar(Atom)
-            ; AtomVar = Atom )}).
+            ; AtomVar = Atom )})
 
 test xtl_atom :
     xtl_atom(a, "'a'", ""),
@@ -192,7 +192,7 @@ test xtl_atom :
     xtl_atom('ab?', "ab?", ""),
     % 'a.b'
     % 'ab.'
-    true.
+    true
 
 dcg xtl_quoted_char:
 % contract((Bytes), true, number(Byte)),
@@ -205,7 +205,7 @@ dcg xtl_quoted_char:
                  0't - 9,
                  0'e - 127,
                  AsIs - AsIs
-    ]) }, !).
+    ]) }, !)
 
 dcg xtl_quoted_atom_chars_:
 (([]) : "'", !),
@@ -214,15 +214,15 @@ dcg xtl_quoted_atom_chars_:
     xtl_quoted_atom_chars_(Cs)),
 (([C | Cs]) :
     [C],
-    xtl_quoted_atom_chars_(Cs)).
+    xtl_quoted_atom_chars_(Cs))
 
 dcg xtl_expression: (Expr) :
-    xtl_expression(1201, Expr).
+    xtl_expression(1201, Expr)
 
 dcg xtl_expression:
 contract((Prec, Expr), number(Prec), true),
 ((Prec, Expr):
-    xtl_expression(none, Prec, Expr)).
+    xtl_expression(none, Prec, Expr))
 
 test xtl_expression :
     xtl_expression(1, "1", []),
@@ -233,10 +233,10 @@ test xtl_expression :
     xtl_expression((-a) * b, "-a * b", []),
     xtl_expression((:- (a * b)), ":- a * b", []),
     xtl_expression('()', "( )", []),
-    xtl_expression(':'(x, ':'('()', y)), "x: ((): y)", []).
+    xtl_expression(':'(x, ':'('()', y)), "x: ((): y)", [])
 
 test comma_expr :
-    xtl_expression((p :- (a, b)), "p :- a, b", []).
+    xtl_expression((p :- (a, b)), "p :- a, b", [])
 
 dcg xtl_regular_term:
 ((Char) : "0'", !, require(xtl_string_char(Char)), xtl_skipwhite),
@@ -267,13 +267,13 @@ dcg xtl_regular_term:
     xtl_token("["),
     xtl_comma_separated(Term, Tail,
                        ( xtl_token("]"), {Tail=[]}
-                       ; xtl_token("|"), xtl_expression(Tail), xtl_token("]"))), !).
+                       ; xtl_token("|"), xtl_expression(Tail), xtl_token("]"))), !)
 
 dcg xtl_string_char:
 contract((Byte), true, byte(Byte)),
 ((_): "\"", !, { false }),
 ((C): xtl_quoted_char(C), !),
-((C): [C]).
+((C): [C])
 
 test xtl_regular_term :
     xtl_regular_term(123, "123", ""),
@@ -283,17 +283,17 @@ test xtl_regular_term :
     xtl_regular_term(6, "(6)", ""),
     xtl_regular_term('{}'(x), "{x}", ""),
     xtl_regular_term([], "[]", ""),
-    xtl_regular_term([1,2,3], "[1,2,3]", "").
+    xtl_regular_term([1,2,3], "[1,2,3]", "")
 
 dcg xtl_comma_separated: (As, Tail, End):
-    xtl_comma_seperated_first(As, Tail, End).
+    xtl_comma_seperated_first(As, Tail, End)
 
 dcg xtl_comma_seperated_first:
 ((Tail, Tail, End) :
     End, !),
 (([A | As], Tail, End) :
     xtl_expression(1000, A), !,
-    xtl_comma_separated_next(As, Tail, End)).
+    xtl_comma_separated_next(As, Tail, End))
 
 dcg xtl_comma_separated_next:
 ((Tail, Tail, End) :
@@ -301,7 +301,7 @@ dcg xtl_comma_separated_next:
 (([A | As], Tail, End) :
     require(xtl_token(",")), !,
     xtl_expression(1000, A), !,
-    xtl_comma_separated_next(As, Tail, End)).
+    xtl_comma_separated_next(As, Tail, End))
 
 dcg xtl_op_or_term:
 (('!', term) : "!", xtl_skipwhite),
@@ -316,14 +316,14 @@ dcg xtl_op_or_term:
     % ; { atom_codes(X, Cs),
     %     Info = term }
     ),
-    xtl_skipwhite).
+    xtl_skipwhite)
 
 dcg xtl_known_op:
     ((Cs, Op, Prec, Assoc) : { atom_codes(Op, Cs), xtl_op(_, _, Op), !, xtl_op(Prec, Assoc, Op) }),
-    ((Cs, Op, Prec, Assoc) : { append(Shorter, [C], Cs) }, append([C]), xtl_known_op(Shorter, Op, Prec, Assoc)).
+    ((Cs, Op, Prec, Assoc) : { append(Shorter, [C], Cs) }, append([C]), xtl_known_op(Shorter, Op, Prec, Assoc))
 
 dcg xtl_op_char: (C):
-    [C], { member(C, "`~!@#%^&*<>/;:-_=+,|\\.") }, !.
+    [C], { member(C, "`~!@#%^&*<>/;:-_=+,|\\.") }, !
 
 dcg xtl_expression:
 ((none, Prec, Term) :
@@ -354,7 +354,7 @@ dcg xtl_expression:
     require(xtl_expression(none, RightPrec, Right)),
     { Combined := xtl_apply( Op, [Left, Right]) },
     xtl_expression(just(Combined), Prec, Term)),
-((just(Term), _, Term) : !).
+((just(Term), _, Term) : !)
 
 pred xtl_op:
     ((1200, xfx, ':-') : true),
@@ -403,13 +403,13 @@ pred xtl_op:
     ((1125, xfx, 'if') : true),
     ((100, fy, '`') : true),
     ((100, fy, 'XTL$') : true),
-    ((700, fx, ':=') : true).
+    ((700, fx, ':=') : true)
 
 % TODO: parse_self test
 % test parse_self :
 %     read_file('main.xtl', Bytes), !,
-%     xtl_top_level(_Decls, Bytes, []).
+%     xtl_top_level(_Decls, Bytes, [])
 
 fun xtl_slim_declaration:
 (((test _ : _)) : []),
-((Decl) : Decl).
+((Decl) : Decl)

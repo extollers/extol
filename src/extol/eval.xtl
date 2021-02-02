@@ -17,7 +17,7 @@ pred xtl_eval_funexpr:
         ; throw(error(not_found(Name/N)))
             ),
         Values := maplist(`xtl_eval_funexpr(Module), Args),
-        xtl_eval_call(Module, Declaration, := append(Values, [Result]))).
+        xtl_eval_call(Module, Declaration, := append(Values, [Result])))
 
 pred xtl_eval_goal:
     ((Module, Goal):
@@ -40,7 +40,7 @@ pred xtl_eval_goal:
         ; throw(error(not_found(Name/N)))
             ),
         maplist(xtl_eval_quoted(Module), Args, Values),
-        xtl_eval_call(Module, Declaration, Values)).
+        xtl_eval_call(Module, Declaration, Values))
 
 pred xtl_eval_quoted:
     ((Module, `Expr, Value): !,
@@ -48,7 +48,7 @@ pred xtl_eval_quoted:
     ((Module, Expr, Value):
         Expr := xtl_apply( Name, Args),
         Values := maplist(`xtl_eval_quoted(Module), Args),
-        Value := [Name | Values]).
+        Value := [Name | Values])
 
 pred xtl_eval_dcg:
     ((Module, Grammar, I, O):
@@ -73,7 +73,7 @@ pred xtl_eval_dcg:
             xtl_eval_call(Module, Declaration, := append(Values, [I, O]))
         ; xtlm_find(Module, Name/(:= N - 2)/_, Declaration),
             xtl_eval_call(Module, Declaration, := append(Values))
-        ; throw(error(not_found(Name/N))))).
+        ; throw(error(not_found(Name/N)))))
 
 pred xtl_eval_call:
     ((Module, prolog(Name/N), Arguments):
@@ -92,21 +92,21 @@ pred xtl_eval_call:
             orlist(xtl_eval_call_dcg(Module, Arguments), Copy)
         ; member(predicate, Annotations), !,
             orlist(xtl_eval_call_pred(Module, Arguments), Copy)
-        ; orlist(xtl_eval_call_fun(Module, Arguments), Copy))).
+        ; orlist(xtl_eval_call_fun(Module, Arguments), Copy)))
 
 pred xtl_eval_call_pred:
     (Module, Arguments, (Head: Body)):
         comma_list(Head, Arguments),
-        xtl_eval_goal(Module, Body).
+        xtl_eval_goal(Module, Body)
 
 pred xtl_eval_call_fun:
     (Module, Arguments, (Head: Body)):
         append(Parameters, [Result], Arguments),
         comma_list(Head, Paremeters),
-        xtl_eval_funexpr(Module, Body, Result).
+        xtl_eval_funexpr(Module, Body, Result)
 
 pred xtl_eval_call_dcg:
     (Module, Arguments, (Head: Body)):
         append(Parameters, [I, O], Arguments),
         comma_list(Head, Parameters),
-        xtl_eval_dcg(Module, Body, I, O).
+        xtl_eval_dcg(Module, Body, I, O)

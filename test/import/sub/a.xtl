@@ -1,3 +1,3 @@
-% module a.
+% module a
 
-pred a: (): print(a).
+pred a: (): print(a)

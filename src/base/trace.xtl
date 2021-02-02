@@ -1,13 +1,13 @@
 
-pred log: _: true.
-%pred log: Debug: t(Debug).
+pred log: _: true
+%pred log: Debug: t(Debug)
 
-pred t: (X: write('trace: '), ti, write_term(X, [quoted(true), max_depth(7)]), nl).
+pred t: (X: write('trace: '), ti, write_term(X, [quoted(true), max_depth(7)]), nl)
 
 dcg t: (X:
         {write('trace: '), ti, write_term(X, [quoted(true), max_depth(7)]), write(', at: ')},
         peek(A), {pretty_init(A, C), write(C),
-        nl}, !).
+        nl}, !)
 
 pred pretty_init: (A, C :
     copy_term(A, AA),
@@ -15,11 +15,11 @@ pred pretty_init: (A, C :
     prep_chars(B, Q, []),
     length(Q, N),
     (N < 10, !, append(Q, "<eof>", QQ) ; QQ = Q),
-    atom_codes(C, QQ)).
+    atom_codes(C, QQ))
 
 dcg prep_chars:
 ([]: []),
-([X | Xs]: prep_char(X), prep_chars(Xs)).
+([X | Xs]: prep_char(X), prep_chars(Xs))
 
 dcg prep_char:
 (X: { var(X) }, !, "<?>"),
@@ -33,12 +33,12 @@ dcg prep_char:
    write(S, X),
    close_output_codes_stream(S, C) },
  "<", C, ">", !),
-(X: [X]).
+(X: [X])
 
 % Trace and fail
-pred 'tf': (X: t(X), fail).
+pred 'tf': (X: t(X), fail)
 
-pred 'tf': ((X, A, B): tf(X, A, B), fail).
+pred 'tf': ((X, A, B): tf(X, A, B), fail)
 
 % Trace call
 pred 'tc': (F:
@@ -46,21 +46,21 @@ pred 'tc': (F:
           t(enter(F)),
           ticall(F),
           undo(t(redo(F))),
-          t(exit(F))).
+          t(exit(F)))
 
 dcg 'tc': F:
     undo(t(failed(F))),
     t(enter(F)),
     ticall(F),
     undo(t(redo(F))),
-    t(exit(F)).
+    t(exit(F))
 
 dcg tc: (F, X):
     undo(t(failed(F))),
     t(enter(F)),
     ticall(F, X),
     undo(t(redo(F))),
-    t(exit(F)).
+    t(exit(F))
 
 % Trace indent
 
@@ -71,21 +71,21 @@ pred ti: (():
     length(L, II),
     append(L, _, Pat),
     atom_codes(S, L),
-    write(S)).
+    write(S))
 
 pred ticall: (G) :
     g_read(tindent, I),
     II is I + 1,
     g_assignb(tindent, II),
     call(G),
-    g_assignb(tindent, I).
+    g_assignb(tindent, I)
 
 pred ticall: (G, A, B) :
     g_read(tindent, I),
     II is I + 1,
     g_assignb(tindent, II),
     dcg_call(G, A, B),
-    g_assignb(tindent, I).
+    g_assignb(tindent, I)
 
 pred ticall: (G, X, A, B) :
     g_read(tindent, I),
@@ -95,33 +95,33 @@ pred ticall: (G, X, A, B) :
     append(L, [X], LL),
     GX =... LL,
     dcg_call(GX, A, B),
-    g_assignb(tindent, I).
+    g_assignb(tindent, I)
 
-pred write_trace_line: X: write('at: '), write_term(X, [numbervars(false), namevars(false), max_depth(6)]), nl.
+pred write_trace_line: X: write('at: '), write_term(X, [numbervars(false), namevars(false), max_depth(6)]), nl
 
 pred throw_with_trace:
     ((traced_exception(Error, Trace), Frame): !, throw(traced_exception(Error, [Frame | Trace]))),
-    ((Error, Frame): throw(traced_exception(Error, [Frame]))).
+    ((Error, Frame): throw(traced_exception(Error, [Frame])))
 
 pred print_exception:
     (traced_exception(Error, Trace):
         !,
         print_exception(Error),
         maplist(write_trace_line, := reverse(Trace))),
-    (Error: write_term(Error, [numbervars(false), namevars(false), max_depth(7)]), nl).
+    (Error: write_term(Error, [numbervars(false), namevars(false), max_depth(7)]), nl)
 
 % Explicit stack frame
 pred 'sf': (F:
     catch(
         F,
         Exception,
-        throw_with_trace(Exception, F))).
+        throw_with_trace(Exception, F)))
 
-pred sf: (F, I, O): sf call(F, I, O).
+pred sf: (F, I, O): sf call(F, I, O)
 
-pred test_sf1: ((): 'sf'(test_sf2)).
-pred test_sf2: ((): throw(boop)).
+pred test_sf1: ((): 'sf'(test_sf2))
+pred test_sf2: ((): throw(boop))
 
 test 'trace' :
     catch(('sf'(test_sf1)), E, true),
-    E = traced_exception(boop,[test_sf1,test_sf2]).
+    E = traced_exception(boop,[test_sf1,test_sf2])

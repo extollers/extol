@@ -1,40 +1,40 @@
 %% Modules
 
 pred module: module(Name, Declarations, Imports):
-    name(Name).
+    name(Name)
 
 pred module_item: (Key - Declaration):
     module_key(Key),
-    module_declaration(Declaration).
+    module_declaration(Declaration)
 
 pred module_key: (Name / N / Type):
     name(Name),
     (number(N) ; member(N, ['-'])),
-    member(Type, [test, imported, pred, dcg, fun]).
+    member(Type, [test, imported, pred, dcg, fun])
 
 pred module_declaration:
     (imported(Module, Name): !, name(Module), name(Name)),
     (prolog(Atom/N): !, atom(Atom), number(N)),
-    (Declaration: xtl_declaration(Declaration)).
+    (Declaration: xtl_declaration(Declaration))
 
 % TODO: uniform representation for names 
 pred name:
     (name(Ns): maplist(atom, Ns), not length(Ns, 1)),
-    (A: atom(A)).
+    (A: atom(A))
 
 pred name_list:
     ((name(Xs), Xs): not (Xs = [_])),
-    ((X, [X]): atom(X)).
+    ((X, [X]): atom(X))
 
 pred concat_name: (A, B, Res):
     Xs := append(name_list(A), name_list(B)),
-    name_list(Res, Xs).
+    name_list(Res, Xs)
 
 % TODO: store attributes instead of just `/pred'
 
 pred xtlm_new: (Name, Module):
     log(new_module(Name)),
-    Module = module(Name, Decls, [Name-Decls | _]).
+    Module = module(Name, Decls, [Name-Decls | _])
 
 pred xtlm_new: (Name, Imports, Module):
     log(new(Name, := plength(Imports))),
@@ -42,25 +42,25 @@ pred xtlm_new: (Name, Imports, Module):
 	throw(error(already_imported(Name)))
     ; true),
     pinsert(Name-Decls, Imports),
-    Module = module(Name, Decls, Imports).
+    Module = module(Name, Decls, Imports)
 
 pred xtlm_find:
     ((Module, Name/N/K, Declaration):
-        xtlm_find_(Module, (Name/N/K)-Declaration)).
+        xtlm_find_(Module, (Name/N/K)-Declaration))
 
 pred xtlm_find_: (module(_, Declarations, _), Decl):
-    pmember(Decl, Declarations).
+    pmember(Decl, Declarations)
 
 pred xtlm_add: (Module, Declaration):
     Name/N/Type := xtlm_declaration_key(Declaration),
     ( xtlm_find(Module, Name/N/K, _),
         throw(conflicting_declaration(Name/N,K,Declaration))
     ; log(adding_declaration(Name/N/Type)),
-        xtlm_add_(Module, Name/N/Type, Declaration)).
+        xtlm_add_(Module, Name/N/Type, Declaration))
 
 pred xtlm_add_: (module(_, Declarations, _), Key, Declaration):
     ( pinsert(Key-Declaration, Declarations)
-    ; throw(error('xtlm_add_: module is already sealed'))).
+    ; throw(error('xtlm_add_: module is already sealed')))
 
 pred xtlm_declaration_key:
     ((prolog(F/N), F/N/pred): true),
@@ -74,13 +74,13 @@ pred xtlm_declaration_key:
         ; !,
             Key = (Name/(:= 1 + length(comma_list(Head)))/fun))),
     ((test(Name, _), (Name/test/test)): !),
-    ((Other, _): throw(error(unsuported_declaration(Other)))).
+    ((Other, _): throw(error(unsuported_declaration(Other))))
 
 test xtlm_declaration_key:
-    xtlm_declaration_key(define(foo, [fun], [(N: N + 1)]), foo/2/fun).
+    xtlm_declaration_key(define(foo, [fun], [(N: N + 1)]), foo/2/fun)
 
 pred xtlm_seal: module(_, Decls, Imports):
-    must(length(Decls, _)).
+    must(length(Decls, _))
 
 pred xtlm_import: (Module, Imported, As):
     must(Imported = module(Name, Declarations, Imports)),
@@ -88,34 +88,34 @@ pred xtlm_import: (Module, Imported, As):
     must(( As = qualified, !, Prefix = Name
         ; As = as(Prefix), !
         ; As = inline, Prefix = name([]))),
-    maplist(must(xtlm_add_import_(Module, Prefix, Name)), Declarations).
+    maplist(must(xtlm_add_import_(Module, Prefix, Name)), Declarations)
 
 pred xtlm_add_import_: (Module, Prefix, Import, Key-Declaration):
     must((Name/N/Type) = Key),
     must(NewName := concat_name(Prefix, Name)),
-    must(xtlm_add_(Module, NewName/N/Type, imported(Import, Key))).
+    must(xtlm_add_(Module, NewName/N/Type, imported(Import, Key)))
 
 pred xtlm_zip_module_: (Module, Decl, ModDecl):
-    ModDecl = Module-Decl.
+    ModDecl = Module-Decl
 
 pred xtlm_all_declarations_: (Imports, Name-DeclPairs, ModOut):
     maplist(snd, DeclPairs, Decls),
     filterlist(xtl_declaration, Decls, Out),
     Module = module(Name, DeclPairs, Imports),
-    maplist(xtlm_zip_module_(Module), Out, ModOut).
+    maplist(xtlm_zip_module_(Module), Out, ModOut)
 
 pred xtlm_all_declarations_recursive: (Module, ModDecls):
     module(_, _, Imports) = Module,
     length(Imports, _),
     maplist(xtlm_all_declarations_(Imports), Imports, Declss),
     Builtins := [generate_load_builtins(Module)],
-    append([Builtins|Declss], ModDecls).
+    append([Builtins|Declss], ModDecls)
 
-fun xtlm_imports: module(_, _, Imports): Imports.
+fun xtlm_imports: module(_, _, Imports): Imports
 
 fun xtlm_find_import: (module(_, _, Imports), Name):
     module(Name, Declarations, Imports)
-    if pmember(Imports, Name-Declarations).
+    if pmember(Imports, Name-Declarations)
 
 pred generate_load_builtins: (Module, Gen):
     module(_, Declarations, _) = Module,
@@ -125,8 +125,8 @@ pred generate_load_builtins: (Module, Gen):
         define(builtin_load_builtins,
             [nondet, predicate],
             [(module(_, RuntimeDeclarations, _):
-                Commas)])).
+                Commas)]))
 
 pred gen_add_builtin: (RuntimeDeclarations, Name/N/_-_, Gen):
     Gen = (
-        member(((Name/N/pred)-prolog(Name/N)), RuntimeDeclarations), !).
+        member(((Name/N/pred)-prolog(Name/N)), RuntimeDeclarations), !)

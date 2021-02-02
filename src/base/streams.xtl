@@ -5,28 +5,28 @@ pred read_bytes:
 ((Stream, []): at_end_of_stream(Stream), !),
 ((Stream, [X | Xs]):
  get_byte(Stream, X),
- read_bytes(Stream, Xs)).
+ read_bytes(Stream, Xs))
 
 pred write_bytes:
 %contract((Stream, Bytes), (ground(Stream), current_stream(Stream), bytes(Bytes)), true),
 ((_, []) : true),
 ((Stream, [X | Xs]) :
     put_byte(Stream, X),
-    write_bytes(Stream, Xs)).
+    write_bytes(Stream, Xs))
 
 pred read_file:
 contract((Path, Bytes), atom(Path), bytes(Bytes)),
 ((Path, Bytes) :
     open(Path, read, Stream, [type(binary), buffering(block)]),
     read_bytes(Stream, Bytes),
-    close(Stream)).
+    close(Stream))
 
 pred write_file:
 contract((Path, Bytes), (ground(Path), bytes(Bytes)), true),
 ((Path, Bytes) :
     open(Path, write, Stream, [type(binary), buffering(block)]),
     write_bytes(Stream, Bytes),
-    close(Stream)).
+    close(Stream))
 
 pred read_line:
 (([]): current_input(Stream), at_end_of_stream(Stream), !),
@@ -36,4 +36,4 @@ pred read_line:
  get_char(C),
  atom_codes(C, [X]),
  ( line_count(Stream, Line), read_line(Xs)
- ; Xs = [])).
+ ; Xs = []))

@@ -1,8 +1,8 @@
-% module main.
+% module main
 
-import('sub/a.xtl', a).
-import('sub/b.xtl', b).
+import('sub/a.xtl', a)
+import('sub/b.xtl', b)
 
 pred main: ():
     a.f,
-    b.f.
+    b.f

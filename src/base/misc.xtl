@@ -3,43 +3,43 @@
 
 pred undo:
     ((_) : true),
-    ((G) : call(G), fail).
+    ((G) : call(G), fail)
 
 dcg undo:
     ((_) : { true }),
-    ((G) : dcg_call(G), { fail } ).
+    ((G) : dcg_call(G), { fail } )
 
 %% Types
 
-pred byte: (Byte) : number(Byte), Byte >= 0, Byte < 256.
+pred byte: (Byte) : number(Byte), Byte >= 0, Byte < 256
 
-pred bytes: (Bytes) : ground(Bytes), maplist(byte, Bytes).
+pred bytes: (Bytes) : ground(Bytes), maplist(byte, Bytes)
 
 pred assert:
     (((A, B), ()) : !, assert(A), assert(B)),
     ((maplist(G, [])) : !),
     ((maplist(G, [X | Xs])): !, assert(call(G, X)), !, assert(maplist(G, Xs))),
-    ((G) : G, ! ; throw(assert_failed(G))).
+    ((G) : G, ! ; throw(assert_failed(G)))
 
 %% Lists
 
 fun foldl:
 % contract((F, Z, L), (callable(F), list_or_partial_list(L)), list(L)),
 ((_, R, []): R),
-((F, Z, [X | Xs]): foldl(F, call(F, Z, X), Xs)).
+((F, Z, [X | Xs]): foldl(F, call(F, Z, X), Xs))
 
 fun append:
     ([] : []),
-    ([X | Xs] : append(X, append(Xs))).
+    ([X | Xs] : append(X, append(Xs)))
 
 fun comma_list:
     ((Var) : [X] if (var(Var), !, X = Var)),
     ((V) : [V] if (var(V), !)),
     (((X, XCs), ()): Y if (Y = [X | Xs], !, comma_list(XCs, Xs), !)),
     (((), ()) : []),
-    ((X) : [X]).
+    ((X) : [X])
 
-pred '.': (X, Xs, [X | Xs]): true.
+pred '.': (X, Xs, [X | Xs]): true
 
 test comma_list :
     comma_list('()', []),
@@ -48,72 +48,72 @@ test comma_list :
     comma_list((1,2,3), [1,2,3]),
     comma_list(X, [X]),
     comma_list((1,2,X), [1,2,X]),
-    comma_list(L, [14]), L = 14.
+    comma_list(L, [14]), L = 14
 
 pred map_comma_list: (G, CL):
     comma_list(CL, L),
-    maplist(G, L).
+    maplist(G, L)
 
 %%
 
 pred error_unless:
     ((Goal, _) : call(Goal), !),
     ((_, Error) : throw(error(Error))),
-    ((Goal) : error_unless(Goal, goal_failed(Goal))).
+    ((Goal) : error_unless(Goal, goal_failed(Goal)))
 
 pred '=...':
 contract((F, A), ((compound(F); atom(F); A = [G | _], atom(G)), list_or_partial_list(A)), true),
-((F, A) : F =.. A).
+((F, A) : F =.. A)
 
-fun '+': (A, B): C if C is A + B.
-fun '-': (A, B): C if C is A - B.
+fun '+': (A, B): C if C is A + B
+fun '-': (A, B): C if C is A - B
 
 fun fib:
   (0 : 1),
   (1 : 1),
-  (N : fib(N - 1) + fib(N - 2)).
+  (N : fib(N - 1) + fib(N - 2))
 
-fun snd: (A - B): B.
+fun snd: (A - B): B
 
 test misc:
-    snd(2-1, 1).
+    snd(2-1, 1)
 
 pred pmaplist:
     ((_, V): var(V), !),
     ((_, []): true),
-    ((G, [X | Xs]): call(G, X), pmaplist(G, Xs)).
+    ((G, [X | Xs]): call(G, X), pmaplist(G, Xs))
 
 test pmaplist:
     pmaplist('='(1), []),
     pmaplist('='(1), [1 | _]),
     pmaplist('='(1), [1, 1]),
-    pmaplist('='(1), _).
+    pmaplist('='(1), _)
 
 pred pmember:
     ((_, V): var(V), !, false),
     ((_, []): !, false),
     ((X, [X | Xs]): !, true),
-    ((X, [_ | Xs]): pmember(X, Xs)).
+    ((X, [_ | Xs]): pmember(X, Xs))
 
 pred pinsert:
     ((X, Xs): var(Xs), !, Xs = [X | _]),
-    ((X, [_ | Xs]): pinsert(X, Xs)).
+    ((X, [_ | Xs]): pinsert(X, Xs))
 
 fun plength:
     (V: 0 if var(V), !),
     ([]: 0),
-    ([_ | Xs]: 1 + plength(Xs)).
+    ([_ | Xs]: 1 + plength(Xs))
 
 pred filterlist:
     ((P, [], []): true),
     ((P, [X | Xs], Ys):
         call(P, X), !, filterlist(P, Xs, Zs), Ys = [X | Zs]
-    ; filterlist(P, Xs, Ys)).
+    ; filterlist(P, Xs, Ys))
 
-pred '()': (): true.
+pred '()': (): true
 
-pred not: G: G, !, false; true.
+pred not: G: G, !, false; true
 
 pred orlist:
     ((Goal, []): false),
-    ((Goal, [X | Xs]): call(Goal, [X]) ; orlist(Goal, Xs)).
+    ((Goal, [X | Xs]): call(Goal, [X]) ; orlist(Goal, Xs))

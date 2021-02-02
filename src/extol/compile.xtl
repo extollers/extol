@@ -7,12 +7,12 @@ pred xtl_to_pl_toplevel: (XTL, PL):
             (:- set_prolog_flag(singleton_warning, off)),
             (:- discontiguous('/'('test', 1))),
             (:- initialization((main;write('error: unexpected failure in main'),nl,halt(1))))
-            ], FlatDeclsPL, PL).
+            ], FlatDeclsPL, PL)
 
 pred xtl_to_pl_declaration:
     (Mod-XTL, PL):
         log(compiling(XTL, Mod)),
-        sf xtl_to_pl_declaration(Mod, XTL, PL).
+        sf xtl_to_pl_declaration(Mod, XTL, PL)
 
 pred xtl_to_pl_declaration:
     contract((Module, XTL, PL), xtl_declaration(XTL), true),
@@ -45,7 +45,7 @@ pred xtl_to_pl_declaration:
         maplist(xtl_annot_clause_to_pl(Module, InnerName, AnnotsState), Clauses, ClausesPL),
         DeclsPL := append(WrapperPL, ClausesPL)),
     ((_, prolog(F/N), []): !),
-    ((_, X, _) : !, throw(error(unknown_declaration(X)))).
+    ((_, X, _) : !, throw(error(unknown_declaration(X))))
 
 test xtl_to_pl_declaration :
     Module := xtlm_new(main),
@@ -106,7 +106,7 @@ test xtl_to_pl_declaration :
             fib(C_,D_),
             '-'(A_,2,E_),
             fib(E_,F_),
-            '+'(D_,F_,B_))].
+            '+'(D_,F_,B_))]
 
 pred xtl_def_to_pl:
     ((Module, dcg(Pred), (Head: Body), (HeadPL :- GoalPL)) :
@@ -121,7 +121,7 @@ pred xtl_def_to_pl:
         comma_list(HeadVars, HeadArgs),
         HeadPL =... [Pred | HeadArgs],
         xtl_to_pl_goal(Module, Goal, GoalPL),
-        numbervars(HeadPL-GoalPL)).
+        numbervars(HeadPL-GoalPL))
 
 pred xtl_to_pl_goal:
     (_, (Var, call(Var)) : % TODO: get rid of extra parenthesis around each clause
@@ -146,7 +146,7 @@ pred xtl_to_pl_goal:
         comma_list(ExtraGoals, ExtraGoalsList),
         MainGoalPL =... [Name | QuotedArgs],
         ( ExtraGoals = (), GPL = MainGoalPL
-        ; GPL = (ExtraGoals, MainGoalPL))).
+        ; GPL = (ExtraGoals, MainGoalPL)))
 
 % TODO: `O' should be out var not in var
 pred xtl_to_pl_dcg:
@@ -179,7 +179,7 @@ pred xtl_to_pl_dcg:
             C = (I=O, PL)
         ; throw(not_found(Name/N)))),
     ((_,D,_,_,_) :
-        throw(error(xtl_to_pl_dcg, D))).
+        throw(error(xtl_to_pl_dcg, D)))
 
 test xtl_to_pl_dcg :
     M := xtlm_new(main),
@@ -199,7 +199,7 @@ test xtl_to_pl_dcg :
     xtl_to_pl_dcg(M, V, PL1, i, o),
     PL1 == dcg_call(V, i, o),
     xtl_to_pl_dcg(M, {V}, PL2, i, o),
-    PL2 == (call(V), i = o).
+    PL2 == (call(V), i = o)
 
 pred xtl_contract_to_pl:
     ((Module, pred, Name, InnerName, AnnotsState, [DeclsPL]) :
@@ -219,7 +219,7 @@ pred xtl_contract_to_pl:
         numbervars(DeclsPL)),
     ((Module, dcg, Name, InnerName, [parameters(ArgsList), requires(Expects), ensures(Ensures)], Result) :
         append(ArgsList, [_,_], ArgsListIO),
-        xtl_contract_to_pl(Module, pred, Name, InnerName, [parameters(ArgsListIO), requires(Expects), ensures(Ensures)], Result)).
+        xtl_contract_to_pl(Module, pred, Name, InnerName, [parameters(ArgsListIO), requires(Expects), ensures(Ensures)], Result))
 
 pred xtl_to_pl_fun:
     ((Module, Name, (Args : Body), (HeadPL :- BodyPL)):
@@ -230,7 +230,7 @@ pred xtl_to_pl_fun:
         xtl_to_pl_funexpr(Module, Result, Body, BodyListPL),
         ( BodyListPL = [],
           BodyPL = true
-        ; comma_list(BodyPL, BodyListPL))).
+        ; comma_list(BodyPL, BodyListPL)))
 
 pred xtl_to_pl_funexpr:
     ((_, Var, Var, []): var(Var), !),
@@ -252,7 +252,7 @@ pred xtl_to_pl_funexpr:
         append(DepsPLs, DepsPL),
         append(Results, [Result], ArgsPL),
         FunctorPL =... [Name | ArgsPL],
-        append(DepsPL, [FunctorPL], PL)).
+        append(DepsPL, [FunctorPL], PL))
 
 test xtl_to_pl_funexpr :
     Module := xtlm_new(main),
@@ -270,7 +270,7 @@ test xtl_to_pl_funexpr :
         fib(B,C),
         '-'(A,2,D),
         fib(D,E),
-        '+'(C,E,res)].
+        '+'(C,E,res)]
 
 pred xtl_to_pl_quoted:
     ((_, Res, Var, []): var(Var), !, Res = Var),
@@ -281,36 +281,36 @@ pred xtl_to_pl_quoted:
         Term := xtl_apply( Name, Args), !,
         maplist(xtl_to_pl_quoted(Module), ArgsQuoted, Args, Goalss),
         Goals := append(Goalss),
-        Res =... [Name | ArgsQuoted]).
+        Res =... [Name | ArgsQuoted])
 
-pred ':=': (X, G): call(G, X).
+pred ':=': (X, G): call(G, X)
 
 fun xtl_define_clauses_to_params:
     ([(Head : Body) | Rest]:
         append(Params, [Result]) if
         List := comma_list(Head),
         N := length(List),
-        length(Params, N)).
+        length(Params, N))
 
 fun xtl_annot_prepare:
-    ((Annot): Annot).
+    ((Annot): Annot)
 
 fun xtl_annot_extend_params:
     ((Params, predicate):
         NewParams if append(NewParams, [_], Params)),
     ((Params, dcg): append(Params, [I, O])),
-    ((Params, _): Params).
+    ((Params, _): Params)
 
 fun xtl_annot_wrap_maybe:
     ((Module, Name, Params, AnnotsState): Ret if
         ( xtl_annot_should_wrap(AnnotsState),
             Ret := xtl_annot_wrap(Module, Name, Params, AnnotsState)
-        ; Ret = ([], Name))).
+        ; Ret = ([], Name)))
 
 pred xtl_annot_should_wrap:
     ([requires(_) | _]: !),
     ([ensures(_) | _]: !),
-    ([_ | Xs]: xtl_annot_should_wrap(Xs)).
+    ([_ | Xs]: xtl_annot_should_wrap(Xs))
 
 fun xtl_annot_wrap:
     ((Module, Name, Params, AnnotsState):
@@ -320,7 +320,7 @@ fun xtl_annot_wrap:
         ( member(ContractParams, AnnotsState),
             State = AnnotsState
         ; State = [ContractParams | AnnotsState] ),
-        xtl_contract_to_pl(Module, pred, Name, InnerName, State, Result)).
+        xtl_contract_to_pl(Module, pred, Name, InnerName, State, Result))
 
 % TODO: nondet
 pred xtl_annot_clause_to_pl:
@@ -329,17 +329,17 @@ pred xtl_annot_clause_to_pl:
             maplist(xtl_def_to_pl(Module, dcg(Name)), Clauses, ClausesPL)
         ; member(predicate, AnnotsState), !,
             maplist(xtl_def_to_pl(Module, pred(Name)), Clauses, ClausesPL)
-        ; maplist(xtl_to_pl_fun(Module, Name), Clauses, ClausesPL))).
+        ; maplist(xtl_to_pl_fun(Module, Name), Clauses, ClausesPL)))
 
 dcg pl_write_top_level:
 (([]) : []),
 (([Decl | Decls]) :
     pl_write_term(Decl), ".\n",
-    pl_write_top_level(Decls)).
+    pl_write_top_level(Decls))
 
 dcg pl_write_term: (X):
     { open_output_codes_stream(Stream),
       write_term(Stream, X, [quoted(true), namevars(true), numbervars(true), ignore_ops(true)]),
       close_output_codes_stream(Stream, Bytes) },
-    Bytes.
+    Bytes
 
