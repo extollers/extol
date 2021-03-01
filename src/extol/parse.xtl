@@ -134,7 +134,8 @@ fun xtl_make_annotation:
 %     Decl3 = ['define'(d, ['dcg'], [(a : b)])]
 
 pred xtl_apply: (Fun, Args, Compound):
-    Compound =... [Fun | Args]
+    ( Compound =... ['XTL$APPLY', Fun, Args], list(Fun)
+    ; Compound =... [Fun | Args], Fun \= 'XTL$APPLY')
 
 pred xtl_makevar: (Name, Var):
     Var =... ['XTL$VARNAME', Name]
