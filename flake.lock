@@ -3,13 +3,13 @@
     "nixpkgs": {
       "flake": false,
       "locked": {
-        "narHash": "sha256-OuvFTuWJ/QZb+c8HPyL7UavcPjXBIvle9tUdCpQXJec=",
+        "narHash": "sha256-GZbsWkI/pEx5mMhdUAMAx389sjnqnmA390AUek3CpM0=",
         "type": "tarball",
-        "url": "https://nixos.org/channels/nixos-20.09/nixexprs.tar.xz"
+        "url": "https://nixos.org/channels/nixos-21.05/nixexprs.tar.xz"
       },
       "original": {
         "type": "tarball",
-        "url": "https://nixos.org/channels/nixos-20.09/nixexprs.tar.xz"
+        "url": "https://nixos.org/channels/nixos-21.05/nixexprs.tar.xz"
       }
     },
     "root": {
