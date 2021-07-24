@@ -342,11 +342,11 @@ test(:-(xtl_to_pl_funexpr,','(xtlm_new(main,A),','(xtlm_add(A,prolog(/(f,3))),',
 :-(name_list(name(A),A),not(=(A,'.'(B,[])))).
 :-(name_list(A,'.'(A,[])),atom(A)).
 :-(concat_name(A,B,C),','(','(name_list(A,D),','(name_list(B,E),append(D,E,F))),name_list(C,F))).
-:-(xtlm_new(A,B),','(log(new_module(A)),=(B,module(A,C,'.'(-(A,C),D))))).
-:-(xtlm_new(A,B,C),','(','(plength(B,D),log(new(A,D))),','(;(','(pmember(-(A,E),B),throw(error(already_imported(A)))),true),','(pinsert(-(A,F),B),=(C,module(A,F,B)))))).
+:-(xtlm_new(A,B),=(B,module(A,C,'.'(-(A,C),D)))).
+:-(xtlm_new(A,B,C),','(;(','(pmember(-(A,D),B),throw(error(already_imported(A)))),true),','(pinsert(-(A,E),B),=(C,module(A,E,B))))).
 :-(xtlm_find(A,/(/(B,C),D),E),xtlm_find_(A,-(/(/(B,C),D),E))).
 :-(xtlm_find_(module(A,B,C),D),pmember(D,B)).
-:-(xtlm_add(A,B),','(xtlm_declaration_key(B,/(/(C,D),E)),;(','(xtlm_find(A,/(/(C,D),F),G),throw(conflicting_declaration(/(C,D),F,B))),','(log(adding_declaration(/(/(C,D),E))),xtlm_add_(A,/(/(C,D),E),B))))).
+:-(xtlm_add(A,B),','(xtlm_declaration_key(B,/(/(C,D),E)),;(','(xtlm_find(A,/(/(C,D),F),G),throw(conflicting_declaration(/(C,D),F,B))),xtlm_add_(A,/(/(C,D),E),B)))).
 :-(xtlm_add_(module(A,B,C),D,E),;(pinsert(-(D,E),B),throw(error('xtlm_add_: module is already sealed')))).
 :-(xtlm_declaration_key(prolog(/(A,B)),/(/(A,B),pred)),true).
 :-(xtlm_declaration_key(define(A,B,C),D),','(!,','(=(C,'.'(:(E,F),G)),;(','(member(dcg,B),','(!,','(','(comma_list(E,H),','(length(H,I),+(2,I,J))),=(D,/(/(A,J),dcg))))),;(','(member(predicate,B),','(!,','(','(comma_list(E,K),length(K,L)),=(D,/(/(A,L),pred))))),','(!,','(','(comma_list(E,M),','(length(M,N),+(1,N,O))),=(D,/(/(A,O),fun))))))))).

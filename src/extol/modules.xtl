@@ -33,11 +33,11 @@ pred concat_name: (A, B, Res):
 % TODO: store attributes instead of just `/pred'
 
 pred xtlm_new: (Name, Module):
-    log(new_module(Name)),
+    %log(new_module(Name)),
     Module = module(Name, Decls, [Name-Decls | _])
 
 pred xtlm_new: (Name, Imports, Module):
-    log(new(Name, := plength(Imports))),
+    %log(new(Name, := plength(Imports))),
     ( pmember(Name-_, Imports),
 	throw(error(already_imported(Name)))
     ; true),
@@ -55,7 +55,7 @@ pred xtlm_add: (Module, Declaration):
     Name/N/Type := xtlm_declaration_key(Declaration),
     ( xtlm_find(Module, Name/N/K, _),
         throw(conflicting_declaration(Name/N,K,Declaration))
-    ; log(adding_declaration(Name/N/Type)),
+    ; %log(adding_declaration(Name/N/Type)),
         xtlm_add_(Module, Name/N/Type, Declaration))
 
 pred xtlm_add_: (module(_, Declarations, _), Key, Declaration):
