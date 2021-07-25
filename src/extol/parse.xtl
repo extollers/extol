@@ -79,7 +79,7 @@ dcg xtl_declaration:
     contract(Module, module(Module), module(Module)),
     ((_): eof, !, {fail}),
     ((Module):
-        sf require(xtl_expression(DeclV)), !,
+        sf require(xtl_expression(pexpr(DeclV))), !,
         {log(parsed_expression(DeclV))},
         { DeclV = include(Other), !,
             sf xtl_include(Other, Module)
@@ -219,25 +219,27 @@ dcg xtl_quoted_atom_chars_:
 dcg xtl_expression: (Expr) :
     xtl_expression(1201, Expr)
 
-dcg xtl_expression:
-contract((Prec, Expr), number(Prec), true),
-((Prec, Expr):
-    xtl_expression(none, Prec, Expr))
+fun pexpr: (pexpr(_): true)
 
+dcg xtl_expression:
+    % contract((Prec, Expr), number(Prec), true),
+    ((Prec, Expr):
+        xtl_expression(none, Prec, Expr))
+        
 test xtl_expression :
-    xtl_expression(1, "1", []),
-    xtl_expression(a, "a", []),
-    xtl_expression(a + b, "a + b", []),
-    xtl_expression(a + (b * c), "a + b * c", []),
-    xtl_expression((a * b) + c, "a * b + c", []),
-    xtl_expression((-a) * b, "-a * b", []),
-    xtl_expression((:- (a * b)), ":- a * b", []),
-    xtl_expression('()', "( )", []),
-    xtl_expression(':'(x, ':'('()', y)), "x: ((): y)", []),
-    xtl_expression('.'(a, '.'(b, c('.'('x', 'y')))), "a.b.c(x.y)", [])
+    (xtl_expression(pexpr(1), "1", []),
+    xtl_expression(pexpr(a), "a", []),
+    xtl_expression(pexpr(a + b), "a + b", []),
+    xtl_expression(pexpr(a + (b * c)), "a + b * c", []),
+    xtl_expression(pexpr((a * b) + c), "a * b + c", []),
+    xtl_expression(pexpr((-a) * b), "-a * b", []),
+    xtl_expression(pexpr((:- (a * b))), ":- a * b", []),
+    xtl_expression(pexpr('()'), "( )", []),
+    xtl_expression(pexpr(':'(x, ':'('()', y))), "x: ((): y)", []),
+    xtl_expression(pexpr('.'(a, '.'(b, c('.'('x', 'y'))))), "a.b.c(x.y)", []))
 
 test comma_expr :
-    xtl_expression((p :- (a, b)), "p :- a, b", [])
+    xtl_expression(pexpr((p :- (a, b))), "p :- a, b", [])
 
 dcg xtl_regular_term:
 ((Char) : "0'", !, require(xtl_string_char(Char)), xtl_skipwhite),
@@ -258,17 +260,17 @@ dcg xtl_regular_term:
     xtl_token(")"), !),
 ((Term) :
     xtl_token("("),
-    xtl_expression(Term),
+    xtl_expression(pexpr(Term)),
     require(xtl_token(")"))),
 (('{}'(Term)) :
     xtl_token("{"),
-    xtl_expression(Term),
+    xtl_expression(pexpr(Term)),
     require(xtl_token("}"))),
 ((Term) :
     xtl_token("["),
     xtl_comma_separated(Term, Tail,
                        ( xtl_token("]"), {Tail=[]}
-                       ; xtl_token("|"), xtl_expression(Tail), xtl_token("]"))), !)
+                       ; xtl_token("|"), xtl_expression(pexpr(Tail)), xtl_token("]"))), !)
 
 dcg xtl_string_char:
 contract((Byte), true, byte(Byte)),
@@ -293,7 +295,7 @@ dcg xtl_comma_seperated_first:
 ((Tail, Tail, End) :
     End, !),
 (([A | As], Tail, End) :
-    xtl_expression(1000, A), !,
+    xtl_expression(1000, pexpr(A)), !,
     xtl_comma_separated_next(As, Tail, End))
 
 dcg xtl_comma_separated_next:
@@ -301,7 +303,7 @@ dcg xtl_comma_separated_next:
     End, !),
 (([A | As], Tail, End) :
     require(xtl_token(",")), !,
-    xtl_expression(1000, A), !,
+    xtl_expression(1000, pexpr(A)), !,
     xtl_comma_separated_next(As, Tail, End))
 
 dcg xtl_op_or_term:
@@ -327,35 +329,35 @@ dcg xtl_op_char: (C):
     [C], { member(C, "`~!@#%^&*<>/;:-_=+,|\\.") }, !
 
 dcg xtl_expression:
-((none, Prec, Term) :
+((none, Prec, pexpr(Term)) :
     xtl_op_or_term(Op, op(OpPrec, Assoc)),
     { member(Assoc-N, [fx-0, fy-1]),
       RightPrec is OpPrec + N },
-    try(xtl_expression(none, RightPrec, Right)),
+    try(xtl_expression(none, RightPrec, pexpr(Right))),
     { Combined := xtl_apply(Op, [Right]) },
-    xtl_expression(just(Combined), Prec, Term)),
-((none, Prec, Term) : !,
+    xtl_expression(just(Combined), Prec, pexpr(Term))),
+((none, Prec, pexpr(Term)) : !,
     require(xtl_op_or_term(Left, term)),
-    xtl_expression(just(Left), Prec, Term)),
-((just(Left), Prec, Term) :
+    xtl_expression(just(Left), Prec, pexpr(Term))),
+((just(Left), Prec, pexpr(Term)) :
     xtl_op_or_term(Op, op(OpPrec, Assoc)),
     { member(Assoc-N, [xf-0, yf-1]),
       LeftPrec is OpPrec + N,
       LeftPrec < Prec,
       !,
       Combined := xtl_apply( Op, [Left]) },
-    xtl_expression(just(Combined), Prec, Term)),
-((just(Left), Prec, Term) :
+    xtl_expression(just(Combined), Prec, pexpr(Term))),
+((just(Left), Prec, pexpr(Term)) :
     xtl_op_or_term(Op, op(OpPrec, Assoc)),
     { member(Assoc-N-M, [xfx-0-0, xfy-0-1, yfx-1-0]),
       LeftPrec is OpPrec + N,
       LeftPrec < Prec,
       !,
       RightPrec is OpPrec + M },
-    require(xtl_expression(none, RightPrec, Right)),
+    require(xtl_expression(none, RightPrec, pexpr(Right))),
     { Combined := xtl_apply( Op, [Left, Right]) },
-    xtl_expression(just(Combined), Prec, Term)),
-((just(Term), _, Term) : !)
+    xtl_expression(just(Combined), Prec, pexpr(Term))),
+((just(Term), _, pexpr(Term)) : !)
 
 pred xtl_op:
     ((1200, xfx, ':-') : true),

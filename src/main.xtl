@@ -85,7 +85,7 @@ pred xtl_repl:
         ( Line = [0'\n]
         ; Line = [], write('end'), halt
         ; catch((
-                ( xtl_expression(ExpV, Line, [])
+                ( xtl_expression(pexpr(ExpV), Line, [])
                 ; throw('parse failed')),
                     xtl_makevars(ExpV, Exp, Vars),
                     xtl_eval_funexpr(Module, Exp, Result),
@@ -102,7 +102,7 @@ pred xtl_command_eval: Expression:
     Module := xtlm_new(eval),
     builtin_load_builtins(Module), !,
     atom_codes(Expression, String),
-    xtl_expression(ExpV, String, []),
+    xtl_expression(pexpr(ExpV), String, []),
     xtl_makevars(ExpV, Exp, _),
     xtl_eval_funexpr(Module, Exp, Result),
     write(Result), nl
