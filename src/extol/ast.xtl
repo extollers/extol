@@ -1,0 +1,25 @@
+
+pred xtl_declaration:
+    ((define(Name, Annots, Clauses)): atom(Name), maplist(annotation, Annots), maplist(define_clause, Clauses)),
+    ((test(Name, Goals)): atom(Name), xtl_goal(Goals)),
+    ((prolog(Name/N)): atom(Name), number(N))
+
+pred annotation:
+    (nondet: true),
+    (predicate: true),
+    (returns(Var): true),
+    (ensures(Pred): xtl_goal(Pred)),
+    (requires(Pred): xtl_goal(Pred)),
+    (traced: true),
+    (dcg: true),
+    (parameters(List): maplist(var, List))
+
+pred xtl_goal: _: true
+
+pred define_clause: (_: _): true
+
+pred xtl_apply: (Fun, Args, Compound):
+    Compound =... ['XTL$APPLY', Fun, Args]
+
+pred xtl_makevar: (Name, Var):
+    Var =... ['XTL$VARNAME', Name]

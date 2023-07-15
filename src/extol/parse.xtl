@@ -57,24 +57,6 @@ dcg xtl_top_level:
         sf many(xtl_declaration(Module)),
         require(eof))
 
-pred xtl_declaration:
-    ((define(Name, Annots, Clauses)): atom(Name), maplist(annotation, Annots), maplist(define_clause, Clauses)),
-    ((test(Name, Goals)): atom(Name), xtl_goal(Goals)),
-    ((prolog(Name/N)): atom(Name), number(N))
-
-pred annotation:
-    (nondet: true),
-    (predicate: true),
-    (returns(Var): true),
-    (ensures(Pred): xtl_goal(Pred)),
-    (requires(Pred): xtl_goal(Pred)),
-    (traced: true),
-    (dcg: true),
-    (parameters(List): maplist(var, List))
-
-pred xtl_goal: _: true
-pred define_clause: (_: _): true
-
 dcg xtl_declaration:
     contract(Module, module(Module), module(Module)),
     ((_): eof, !, {fail}),
@@ -133,13 +115,6 @@ fun xtl_make_annotation:
 %     xtl_declaration(Decl3, "define d: dcg, (a : b).", ""),
 %     Decl3 = ['define'(d, ['dcg'], [(a : b)])]
 
-pred xtl_apply: (Fun, Args, Compound):
-    ( Compound =... ['XTL$APPLY', Fun, Args], list(Fun)
-    ; Compound =... [Fun | Args], Fun \= 'XTL$APPLY')
-
-pred xtl_makevar: (Name, Var):
-    Var =... ['XTL$VARNAME', Name]
-
 pred xtl_makevars:
     ((V, _, _) :
         V := xtl_makevar('_'), !),
@@ -152,10 +127,10 @@ pred xtl_makevars:
         xtl_makevars(X, Y, Vars),
         xtl_makevars(Xs, Ys, Vars)),
     ((In, Out, Vars) :
-        In := xtl_apply( Fun, Args), !,
+        In := xtl_apply(Fun, Args), !,
         xtl_makevars(Fun, FunV, Vars),
         xtl_makevars(Args, ArgsV, Vars),
-        Out := xtl_apply( FunV, ArgsV))
+        Out := xtl_apply(FunV, ArgsV))
 
 test xtl_makevars :
     A := xtl_makevar('A'),

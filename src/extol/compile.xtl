@@ -44,7 +44,7 @@ pred xtl_to_pl_declaration:
         (WrapperPL, InnerName) := xtl_annot_wrap(Module, Name, NewParams, AnnotsState),
         maplist(xtl_annot_clause_to_pl(Module, InnerName, AnnotsState), Clauses, ClausesPL),
         DeclsPL := append(WrapperPL, ClausesPL)),
-    ((_, prolog(F/N), []): !),
+    ((_, prolog(F/N), []): !), % TODO: remove
     ((_, X, _) : !, throw(error(unknown_declaration(X))))
 
 test xtl_to_pl_declaration :
