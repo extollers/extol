@@ -2,7 +2,7 @@
   description = "The Extol programming language";
 
   inputs.nixpkgs = {
-    url = "https://nixos.org/channels/nixos-21.05/nixexprs.tar.xz";
+    url = "https://nixos.org/channels/nixos-23.05/nixexprs.tar.xz";
     flake = false;
   };
 

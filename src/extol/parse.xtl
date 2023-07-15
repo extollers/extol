@@ -225,7 +225,7 @@ dcg xtl_expression:
     % contract((Prec, Expr), number(Prec), true),
     ((Prec, Expr):
         xtl_expression(none, Prec, Expr))
-        
+
 test xtl_expression :
     (xtl_expression(pexpr(1), "1", []),
     xtl_expression(pexpr(a), "a", []),
