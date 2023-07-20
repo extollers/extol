@@ -225,7 +225,7 @@ dcg xtl_regular_term:
 ((String) : "\"", !, require(many(xtl_string_char, String)), require("\""), xtl_skipwhite),
 ((Term) :
     xtl_atom(Atom), !,
-    ( xtl_token("("), !,
+    ( xtl_token("("), !, % TODO: call with no parens
       xtl_comma_separated(Args, [], xtl_token(")")),
       { Term := xtl_apply( Atom, Args) }
     ; xtl_skipwhite,
@@ -332,6 +332,9 @@ dcg xtl_expression:
     require(xtl_expression(none, RightPrec, pexpr(Right))),
     { Combined := xtl_apply( Op, [Left, Right]) },
     xtl_expression(just(Combined), Prec, pexpr(Term))),
+% ((just(Term), _, pexpr(Call)) :
+%     fail % TODO: non-paren call
+%     )
 ((just(Term), _, pexpr(Term)) : !)
 
 pred xtl_op:
@@ -380,8 +383,10 @@ pred xtl_op:
     ((700, xfx, ':=') : true),
     ((1125, xfx, 'if') : true),
     ((100, fy, '`') : true),
-    ((100, fy, 'XTL$') : true),
+    ((100, fy, '@`') : true),
+    ((100, fy, '@:=') : true),
     ((700, fx, ':=') : true),
+    % ((50, yfx, ' ') : true)
     ((50, xfy, '.') : true)
 
 % TODO: parse_self test

@@ -1,4 +1,3 @@
-% TODO: backtick quote
 pred xtl_eval_funexpr:
     ((Module, Expr, Result):
         ( var(Expr) % TODO: don't use same var in input and result
@@ -10,6 +9,8 @@ pred xtl_eval_funexpr:
     ((Module, [ X | Xs ], [ Y | Ys ]):
         xtl_eval_funexpr(Module, X, Y),
         xtl_eval_funexpr(Module, Xs, Ys)),
+    ((Module, @`Expr, Result): !,
+        xtl_eval_xtlquote(Module, Expr, Result)),
     ((Module, Expr, Result):
         Expr := xtl_apply( Name, Args ),
         N := length(Args) + 1,
@@ -49,6 +50,20 @@ pred xtl_eval_quoted:
         Expr := xtl_apply( Name, Args),
         Values := maplist(`xtl_eval_quoted(Module), Args),
         Value := [Name | Values])
+
+pred xtl_eval_xtlquote:
+    ((Module, Expr, Result):
+        ( var(Expr) % TODO: don't use same var in input and result
+        ; number(Expr)
+        ; atom(Expr)),
+            !, Result = Expr),
+    ((Module, (@:= Funexpr), Result):
+        xtl_eval_funexpr(Module, Funexpr, Result)),
+    ((Module, Expr, Result):
+        Expr := xtl_apply( Fun, Args ),
+        ResArgs := maplist(`xtl_eval_xtlquote(Module), Args),
+        ResFun := xtl_eval_xtlquote(Module, Fun),
+        Result := xtl_apply(ResFun, ResArgs))
 
 pred xtl_eval_dcg:
     ((Module, Grammar, I, O):

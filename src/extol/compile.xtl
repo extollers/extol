@@ -243,6 +243,8 @@ pred xtl_to_pl_funexpr:
         PL := append(xtl_to_pl_funexpr(Module, X, Y), xtl_to_pl_funexpr(Module, Xs, Ys))),
     ((Module, Res, (`Quoted), PL):
         PL := xtl_to_pl_quoted(Module, Res, Quoted)),
+    ((Module, Res, (@` Quoted), PL):
+        PL := xtl_to_pl_xtlquote(Module, Res, Quoted)),
     ((Module, Result, Functor, PL):
         Functor := xtl_apply( Name, ListFun), !,
         N := length(ListFun) + 1,
@@ -282,6 +284,18 @@ pred xtl_to_pl_quoted:
         maplist(xtl_to_pl_quoted(Module), ArgsQuoted, Args, Goalss),
         Goals := append(Goalss),
         Res =... [Name | ArgsQuoted])
+
+pred xtl_to_pl_xtlquote:
+     ((_, Res, Var, []): var(Var), !, Res := xtl_makevar(Var)),
+     ((_, Num, Num, []): number(Num), !),
+     ((_, Atom, Atom, []): atom(Atom), !),
+     ((Module, Res, (@:= Funexpr), Goals): !,
+         xtl_to_pl_funexpr(Module, Res, Funexpr, Goals)),
+     ((Module, Res, Term, Goals):
+         Term := xtl_apply(Name, Args), !,
+         maplist(xtl_to_pl_xtlquote(Module), ArgsQuoted, Args, Goalss),
+         Goals := append(Goalss),
+         Res := xtl_apply(Name, ArgsQuoted))
 
 pred ':=': (X, G): call(G, X)
 

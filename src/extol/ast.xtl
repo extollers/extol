@@ -19,7 +19,10 @@ pred xtl_goal: _: true
 pred define_clause: (_: _): true
 
 pred xtl_apply: (Fun, Args, Compound):
+     (
     Compound =... ['XTL$APPLY', Fun, Args]
+     , list(Fun)
+     ; Compound =... [Fun | Args], Fun \= 'XTL$APPLY')
 
 pred xtl_makevar: (Name, Var):
     Var =... ['XTL$VARNAME', Name]
