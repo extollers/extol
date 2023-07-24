@@ -40,7 +40,7 @@ verify () (
 
 disabled () {
     if [[ -z "${ENABLE_ALL}" ]]; then
-        echo [$STAGE] + DISABLED $test
+        echo [$STAGE ] + DISABLED $test
         exit 0
     fi
 }
@@ -57,7 +57,7 @@ for test_file in $tests; do
         continue
     fi
     let ++total
-    echo [$STAGE] + TEST $test
+    echo [$STAGE ] + TEST $test
     error=0
     ( cd "$test_root/$test"
       rm -rf $run
@@ -73,14 +73,14 @@ for test_file in $tests; do
     if [[ $error = 0 ]]; then
         rm -rf "$test_root/$test/$run"
     else
-        echo [$STAGE] FAILED $test
+        echo [$STAGE ] FAILED $test
         let ++failed
     fi
 done
 
 if [[ $failed = 0 ]]; then
-    echo [$STAGE] $total TESTS PASSED
+    echo [$STAGE ] $total TESTS PASSED
 else
-    echo [$STAGE] $failed/$total TESTS FAILED "($run)"
+    echo [$STAGE ] $failed/$total TESTS FAILED "($run)"
     exit 1
 fi

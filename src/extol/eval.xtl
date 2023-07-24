@@ -4,9 +4,9 @@ pred xtl_eval_funexpr:
         ; number(Expr)
         ; atom(Expr)),
         !, Result = Expr),
-    ((Module, (Result if Goal), Result):
+    ((Module, (Result if Goal), Result): !,
         xtl_eval_goal(Module, Goal)),
-    ((Module, [ X | Xs ], [ Y | Ys ]):
+    ((Module, [ X | Xs ], [ Y | Ys ]): !,
         xtl_eval_funexpr(Module, X, Y),
         xtl_eval_funexpr(Module, Xs, Ys)),
     ((Module, @`Expr, Result): !,
@@ -46,10 +46,28 @@ pred xtl_eval_goal:
 pred xtl_eval_quoted:
     ((Module, `Expr, Value): !,
         xtl_eval_funexpr(Module, Expr, Value)),
+    ((Module, \Expr, Value): !,
+        xtl_eval_quoted(Module, Expr, PartialGoal),
+        Value = xtl_eval_lambda(Module, PartialGoal)),
     ((Module, Expr, Value):
         Expr := xtl_apply( Name, Args),
         Values := maplist(`xtl_eval_quoted(Module), Args),
         Value := [Name | Values])
+
+pred xtl_eval_lambda: (Module, PartialGoal, A):
+    PartialGoal =... Xs,
+    Goal =... (:= append(Xs, [A])),
+    xtl_eval_goal(Module, Goal)
+
+pred xtl_eval_lambda: (Module, PartialGoal, A, B):
+    PartialGoal =... Xs,
+    Goal =... (:= append(Xs, [A, B])),
+    xtl_eval_goal(Module, Goal)
+
+pred xtl_eval_lambda: (Module, PartialGoal, A, B, C):
+    PartialGoal =... Xs,
+    Goal =... (:= append(Xs, [A, B, C])),
+    xtl_eval_goal(Module, Goal)
 
 pred xtl_eval_xtlquote:
     ((Module, Expr, Result):
@@ -93,7 +111,7 @@ pred xtl_eval_dcg:
 pred xtl_eval_call:
     ((Module, prolog(Name/N), Arguments):
         assert(length(Arguments, N)),
-        Goal := xtl_apply( Name, Arguments),
+        Goal := xtl_apply(Name, Arguments),
         call(Goal)),
     ((Module, imported(Name, Key), Arguments):
         Import := xtlm_find_import(Module, Name),

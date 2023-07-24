@@ -47,24 +47,32 @@ everything: check extras
 extras: docker
 
 .PHONY: check1 check2 check
-check1: unit1 test1
-check2: unit2 test2
-check: check1 check2 diff23 testi
-	@echo [-] ALL TESTS PASSED
+check0: eunit0
+check1: unit1 test1 eunit1
+check2: unit2 test2 eunit2
+eunit: eunit0 eunit1 eunit2
+check: check0 check1 check2 diff23 testi
+	@echo [--] ALL TESTS PASSED
 
-check1-%: unit1-% test1-%
+eunit-%: eunit0-% eunit1-% eunit2-%
 	@true
 
-check2-%: unit2-% test2-%
+check0-%: eunit0-%
+	@true
+
+check1-%: unit1-% test1-% eunit1-%
+	@true
+
+check2-%: unit2-% test2-% eunit2-%
 	@true
 
 .PHONY: testi
 testi: install-if-needed
-	echo [I] INTEGRATION TESTS
+	echo [I ] INTEGRATION TESTS
 	STAGE=I EXTOL=$(BINDIR)/$(NAME) $(SHELL) $/test/run
 
 testi-%: install-if-needed
-	echo [I] INTEGRATION TESTS $*
+	echo [I ] INTEGRATION TESTS $*
 	STAGE=I EXTOL=$(BINDIR)/$(NAME) $(SHELL) $/test/run "$*"
 
 define make_stage
@@ -79,34 +87,43 @@ endif
 
 .PHONY: test$(1)
 test$(1): $$(STAGE$(1))
-	echo [$(1)] INTEGRATION TESTS
+	echo [$(1) ] INTEGRATION TESTS
 	STAGE=$(1) EXTOL=$$!stage$(1) $$(SHELL) $/test/run
 
 test$(1)-%: $$(STAGE$(1))
-	echo [2] INTEGRATION TESTS $$*
+	echo [$(1) ] INTEGRATION TESTS $$*
 	STAGE=$(1) EXTOL=$$!stage$(1) $$(SHELL) $/test/run "$$*"
 
 .PHONY: diff$(1)$(2)
 diff$(1)$(2): $!stage$(2).pl $$(STAGE$(1)_PL)
-	@echo [$(2)] DIFF
+	@echo [$(2) ] DIFF
 	diff --unified=2 --brief $$^ || echo [$(2)] DIFF FAILED
 
 .PHONY: unit$(2)
 unit$(2): $!stage$(2)
-	@echo [$(2)] UNIT $$<
+	@echo [$(2) ] UNIT $$<
 	$(./)$$< test
 
 unit$(2)-%: $!stage$(2)
-	@echo [$(2)] UNIT $$< $$*
+	@echo [$(2) ] UNIT $$< $$*
 	$(./)$$< test $$*
 
+.PHONY: unit$(2)
+eunit$(1): $!stage$(1)
+	@echo [$(1)E] EVAL UNIT $$<
+	$(./)$$< eval-tests $/src/main.xtl
+
+eunit$(1)-%: $!stage$(1)
+	@echo [$(1)E] UNIT $$< $$*
+	$(./)$$< eval-tests $/src/main.xtl $$*
+
 $!stage$(2).pl: $$(STAGE$(1)) $(all_sources)
-	@echo [$(2)] TOPL $$@
+	@echo [$(2) ] TOPL $$@
 	@rm -f $$@
-	$(./)$!stage$(1) extoltoprolog src/main.xtl $$@
+	$(./)$!stage$(1) extoltoprolog $/src/main.xtl $$@
 
 $!stage$(1): $!stage$(1).pl
-	@echo [$(1)] GPLC $$@
+	@echo [$(1) ] GPLC $$@
 	$(PLC) $(PLC_FLAGS) $$< -o $$@
 
 .PHONY: $(1)
@@ -114,25 +131,25 @@ $(1): $!stage$(1)
 
 .PHONY: repl$(1)
 repl$(1): $(1)
-	@echo [$(1)] REPL
+	@echo [$(1) ] REPL
 	$(./)$!stage$(1) repl
 
 endef
 
 %/.:
-	@echo [-] MKDIR $@
+	@echo [--] MKDIR $@
 	mkdir -p $@
 
 configure: $!Makefile
-	@echo [-] CONFIG $!config.mk
+	@echo [--] CONFIG $!config.mk
 	@echo $$'$(foreach var,$(CONFIG_VARIABLES),\n$(var) := $($(var))\n)' > $!config.mk
 
 $!Makefile: | $!.
-	@echo [-] CREATE $@
+	@echo [--] CREATE $@
 	echo $$'BUILD=.\nSRC=$(realpath $(SRC))\ninclude $$(SRC)/Makefile' > $@
 
 $!stage0.pl: $/bootstrap/stage0.pl | $!.
-	@echo [0] COPY $@
+	@echo [0 ] COPY $@
 	cp $< $@
 
 $(eval $(call make_stage,0,1))
@@ -141,14 +158,14 @@ $(eval $(call make_stage,2,3))
 
 .PHONY: reboot
 reboot: 2
-	@echo [-] BOOT $/bootstrap/stage0.pl
+	@echo [--] BOOT $/bootstrap/stage0.pl
 	$(./)$!stage2 extoltoprolog $/src/main.xtl $!stage0.pl # --slim
 	cp $!stage0.pl $/bootstrap/stage0.pl
-	@echo [-] REBOOT COMPLETE
+	@echo [--] REBOOT COMPLETE
 
 .PHONY: clean
 clean:
-	@echo [-] CLEAN
+	@echo [--] CLEAN
 	rm -f $!stage0.pl $!stage1.pl $!stage2.pl $!stage3.pl $!stage0 $!stage1 $!stage2 $!stage3
 
 .PHONY: repl
@@ -156,11 +173,11 @@ repl: repl2
 
 .PHONY: repli
 repli: install-if-needed
-	@echo [I] REPL
+	@echo [I ] REPL
 	$(BINDIR)/$(NAME) repl
 
 unit-%: unit1-% unit2-%
-	@echo [-] UNIT TEST "'$*'" PASSED
+	@echo [--] UNIT TEST "'$*'" PASSED
 
 .PHONY: todo
 todo:
@@ -168,12 +185,12 @@ todo:
 
 .PHONY: install
 install: $!stage2
-	@echo [I] INSTALL $(DESTDIR)$(PREFIX)
+	@echo [I ] INSTALL $(DESTDIR)$(PREFIX)
 	set -o pipefail; ( \
 	  install -Cvm 755 $!stage2 -DT $(DESTDIR)$(BINDIR)/$(NAME) ; \
 	  install -Cvm 644 $/README.md $/LICENSE.md $/NOTICE -Dt $(DESTDIR)$(DOCDIR) ; \
 	  install -Cvm 644 $/integrations/emacs/extol.el -DT $(DESTDIR)$(DATADIR)/emacs/site-lisp/$(NAME).el ; \
-	) | sed 's/^/[I] + /'
+	) | sed 's/^/[I ] + /'
 
 .PHONY: install-if-needed
 ifneq (,$(findstring i,$(ONLY)))

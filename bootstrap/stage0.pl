@@ -264,6 +264,7 @@ test(:-(xtl_regular_term,','(xtl_regular_term(123,'.'(49,'.'(50,'.'(51,[]))),[])
 :-(xtl_op(700,xfx,:=),true).
 :-(xtl_op(1125,xfx,if),true).
 :-(xtl_op(100,fy,'`'),true).
+   :-(xtl_op(100,fy,'\\'),true).
    :-(xtl_op(100,fy,'@`'),true).
    :-(xtl_op(100,fy,'@:='),true).
 :-(xtl_op(700,fx,:=),true).

@@ -123,5 +123,5 @@ pred test_sf1: ((): 'sf'(test_sf2))
 pred test_sf2: ((): throw(boop))
 
 test 'trace' :
-    catch(('sf'(test_sf1)), E, true),
+    catch(\('sf'(test_sf1)), E, true),
     E = traced_exception(boop,[test_sf1,test_sf2])

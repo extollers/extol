@@ -275,6 +275,7 @@ test xtl_to_pl_funexpr :
         '+'(C,E,res)]
 
 pred xtl_to_pl_quoted:
+    ((Module, Res, (\ Quoted), Goals): !, xtl_to_pl_quoted(Module, Res, Quoted, Goals)),
     ((_, Res, Var, []): var(Var), !, Res = Var),
     ((Module, Res, (:= Fun), Goals): !, xtl_to_pl_funexpr(Module, Res, Fun, Goals)),
     ((_, Num, Num, []): number(Num), !),

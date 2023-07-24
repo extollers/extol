@@ -1,6 +1,9 @@
 
 pred xtl_declaration:
-    ((define(Name, Annots, Clauses)): atom(Name), maplist(annotation, Annots), maplist(define_clause, Clauses)),
+    ((define(Name, Annots, Clauses)):
+        atom(Name),
+        maplist(annotation, Annots),
+        maplist(define_clause, Clauses)),
     ((test(Name, Goals)): atom(Name), xtl_goal(Goals)),
     ((prolog(Name/N)): atom(Name), number(N))
 
@@ -19,6 +22,7 @@ pred xtl_goal: _: true
 pred define_clause: (_: _): true
 
 pred xtl_apply: (Fun, Args, Compound):
+    % TODO: force non-prolog apply
      (
     Compound =... ['XTL$APPLY', Fun, Args]
      , list(Fun)

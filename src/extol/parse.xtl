@@ -132,8 +132,9 @@ pred xtl_makevars:
         xtl_makevars(Args, ArgsV, Vars),
         Out := xtl_apply(FunV, ArgsV))
 
-test xtl_makevars :
+test xtl_makevars:
     A := xtl_makevar('A'),
+    % xtl_makevars(@` foo(@:= A, @:= A), @`foo(1, @:=Z), V),
     xtl_makevars(foo(A, A), foo(1, Z), V),
     atomic(Z),
     Z = 1
@@ -383,10 +384,11 @@ pred xtl_op:
     ((700, xfx, ':=') : true),
     ((1125, xfx, 'if') : true),
     ((100, fy, '`') : true),
+    ((100, fy, '\\') : true),
     ((100, fy, '@`') : true),
     ((100, fy, '@:=') : true),
     ((700, fx, ':=') : true),
-    % ((50, yfx, ' ') : true)
+    % ((50, yfx, ' ') : true) % TODO: parenless call
     ((50, xfy, '.') : true)
 
 % TODO: parse_self test
