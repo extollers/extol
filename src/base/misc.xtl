@@ -93,7 +93,7 @@ pred pmember:
     ((_, V): var(V), !, false),
     ((_, []): !, false),
     ((X, [X | Xs]): !, true),
-    ((X, [_ | Xs]): pmember(X, Xs))
+    ((X, [Y | Xs]): pmember(X, Xs))
 
 pred pinsert:
     ((X, Xs): var(Xs), !, Xs = [X | _]),

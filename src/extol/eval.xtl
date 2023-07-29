@@ -35,20 +35,20 @@ pred xtl_eval_goal:
     ((Module, (Result := Expr)): !,
         xtl_eval_funexpr(Module, Expr, Result)),
     ((Module, Goal):
-        Goal := xtl_apply( Name, Args ),
+        Goal := xtl_apply(Name, Args),
         N := length(Args),
-        ( xtlm_find(Module, Name/N/_, Declaration)
+        ( xtlm_find(Module, Name/N/_, Declaration), !
         ; throw(error(not_found(Name/N)))
             ),
-        maplist(xtl_eval_quoted(Module), Args, Values),
-        xtl_eval_call(Module, Declaration, Values))
+        tc maplist(xtl_eval_quoted(Module), Args, Values),
+        tc xtl_eval_call(Module, Declaration, Values))
 
 pred xtl_eval_quoted:
     ((Module, `Expr, Value): !,
         xtl_eval_funexpr(Module, Expr, Value)),
     ((Module, \Expr, Value): !,
         xtl_eval_quoted(Module, Expr, PartialGoal),
-        Value = xtl_eval_lambda(Module, PartialGoal)),
+        Value = `xtl_eval_lambda(Module, PartialGoal)),
     ((Module, Expr, Value):
         Expr := xtl_apply( Name, Args),
         Values := maplist(`xtl_eval_quoted(Module), Args),

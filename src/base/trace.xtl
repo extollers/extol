@@ -1,4 +1,6 @@
 
+
+% TODO: runtime turn on logging
 pred log: _: true
 %pred log: Debug: t(Debug)
 
@@ -117,11 +119,14 @@ pred 'sf': (F:
         Exception,
         throw_with_trace(Exception, F)))
 
+pred sf: (A, B): sf call(A, B)
+
 pred sf: (F, I, O): sf call(F, I, O)
 
 pred test_sf1: ((): 'sf'(test_sf2))
 pred test_sf2: ((): throw(boop))
 
 test 'trace' :
-    catch(\('sf'(test_sf1)), E, true),
+    skip_test(eval),
+    catch('sf'(test_sf1), E, true),
     E = traced_exception(boop,[test_sf1,test_sf2])

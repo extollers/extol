@@ -24,14 +24,14 @@ pred xtl_to_pl_declaration:
         maplist(xtl_to_pl_fun(Module, Name), Clauses, ClausesPL),
         numbervars(ClausesPL)),
     ((Module, define(Name, [nondet, predicate | Contract], Defs), Decls) : !,
-        ( Contract = [],
+        ( Contract = [], !,
             maplist(xtl_def_to_pl(Module, pred(Name)), Defs, Decls)
         ; atom_concat('__contract_free_', Name, InnerName),
             maplist(xtl_def_to_pl(Module, pred(InnerName)), Defs, InnerDecls),
             xtl_contract_to_pl(Module, pred, Name, InnerName, Contract, OuterDecls),
             append(OuterDecls, InnerDecls, Decls))),
     ((Module, define(Name, [dcg, nondet, predicate | Contract], Defs), Decls) : !,
-        ( Contract = [],
+        ( Contract = [], !,
             maplist(xtl_def_to_pl(Module, dcg(Name)), Defs, Decls)
         ; atom_concat('__contract_free_', Name, InnerName),
             maplist(xtl_def_to_pl(Module, dcg(InnerName)), Defs, InnerDecls),
@@ -275,8 +275,8 @@ test xtl_to_pl_funexpr :
         '+'(C,E,res)]
 
 pred xtl_to_pl_quoted:
-    ((Module, Res, (\ Quoted), Goals): !, xtl_to_pl_quoted(Module, Res, Quoted, Goals)),
     ((_, Res, Var, []): var(Var), !, Res = Var),
+    ((Module, Res, (\ Quoted), Goals): !, xtl_to_pl_quoted(Module, Res, Quoted, Goals)),
     ((Module, Res, (:= Fun), Goals): !, xtl_to_pl_funexpr(Module, Res, Fun, Goals)),
     ((_, Num, Num, []): number(Num), !),
     ((_, Atom, Atom, []): atom(Atom), !),
