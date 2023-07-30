@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+
+shopt -s expand_aliases
+
+if [[ $# = 0 ]]; then
+    echo 'usage:
+git depends list [branch]
+git depends all
+git depends add <upstream> [branch]
+git depends remove <upstream> [branch]
+git depends clear [-f] [branch]
+git depends merge
+git depends status
+'
+    exit
+fi
+
+die () {
+    echo "error: $*" >&2
+    exit 1
+}
+
+head () {
+    local b="`git branch --show-current`"
+    if [[ -z "$b" ]]; then
+        die "HEAD is detached"
+    fi
+    echo -n "$b"
+}
+
+branch=
+force=false
+
+branch_arg () {
+    if [[ -n "$1" ]]; then
+        branch=$1
+        true
+    else
+        branch=`head`
+        false
+    fi
+}
+
+force_arg () {
+    if [[ "$1" = "-f" ]]; then
+        force=true
+    else
+        false
+    fi
+}
+
+require_arg () {
+    if [[ -z "$2" ]]; then
+        die "missing argument $1"
+    fi
+    eval "$1"='"$2"'
+}
+
+alias maybe_shift='if [[ $? = 0 ]]; then shift; fi'
+
+command=$1
+shift
+
+case "$command" in
+    list)
+        branch_arg "$1"; maybe_shift
+        git config --get-all branch."$branch".depends
+        ;;
+    all)
+        git config --get-regexp 'branch\..*\.depends'
+        ;;
+    add)
+        require_arg upstream "$1"; shift
+        branch_arg "$1"; maybe_shift
+        git config --add branch."$branch".depends "$upstream"
+        ;;
+    remove)
+        require_arg upstream "$1"; shift
+        branch_arg "$1"; maybe_shift
+        git config --unset branch."$branch".depends "$upstream"
+        ;;
+    clear)
+        force_arg "$1"; maybe_shift
+        branch_arg "$1"; maybe_shift
+        if ! $force; then
+            die "refusing to clear without \`-f'"
+        fi
+        git config --unset-all branch."$branch".depends
+        ;;
+    merge)
+        branch=`head`
+        set -e
+        for branch in `git config --get-all branch."$branch".depends`; do
+            echo "Merging $branch"
+            git merge "$branch"
+        done
+        ;;
+    status)
+        branch=`head`
+        set -e
+        git log --oneline --decorate `git config --get-all branch."$branch".depends | sed "s|\$|...$branch|"`
+
+esac
