@@ -7,6 +7,7 @@ include 'src/base/trace.xtl'
 include 'src/base/parsing.xtl'
 include 'src/base/misc.xtl'
 include 'src/base/streams.xtl'
+include 'src/base/getopts.xtl'
 include 'src/extol/ast.xtl'
 include 'src/extol/parse.xtl'
 include 'src/extol/compile.xtl'
@@ -28,8 +29,6 @@ pred main : ():
             print_exception(Exception),
             halt(1)))
 
-% TODO: command line argument parser
-
 pred command:
     ((help, _) :
         write('extol repl'), nl,
@@ -40,8 +39,8 @@ pred command:
         write('    Run all built-in unit tests or, if present, just the named test'), nl,
         write('extol eval-tests <in.xtl> [test-name]'), nl,
         write('    Eval all tests or, if present, just the named test'), nl,
-        write('extol eval "expression"'), nl,
-        write('    Evaluate the expression and print its result'), nl
+        write('extol eval "expression" [--load <path>]'), nl,
+        write('    Load the given files, evaluate the expression and print its result'), nl
         ),
     ((test, Args) :
         (   test((Name :- Goals)),
@@ -67,7 +66,12 @@ pred command:
         must(xtlm_all_declarations_recursive(Main, ModDecls)), !,
         eval_tests(ModDecls)),
     ((repl, []): xtl_repl),
-    ((eval, [Expression]): xtl_command_eval(Expression)),
+    ((eval, Args):
+        getopts(Args, [
+                argument(Expression, required),
+                multi('--load', Files)
+                ]),
+        xtl_command_eval(Files, Expression)),
     ((Command, _): write(unknown_command(Command)), nl, false)
 
 pred eval_tests: (ModDecls):
@@ -132,9 +136,13 @@ pred xtl_repl:
         !, xtl_repl(Module)),
     ((_): write('end'), nl)
 
-pred xtl_command_eval: Expression:
+pred xtl_command_eval_include: (Module, Path):
+    xtl_include(Path, Module)
+
+pred xtl_command_eval: (Files, Expression):
     Module := xtlm_new(eval),
     builtin_load_builtins(Module), !,
+    maplist(xtl_command_eval_include(Module), Files),
     atom_codes(Expression, String),
     xtl_expression(pexpr(ExpV), String, []),
     xtl_makevars(ExpV, Exp, _),

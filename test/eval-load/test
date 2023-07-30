@@ -1,0 +1,3 @@
+disabled # TODO `eval --load' doesn't work
+
+capture extol eval --load input/fibo.xtl 'fibo(4)'

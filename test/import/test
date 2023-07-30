@@ -1,4 +1,4 @@
-disabled
+disabled # TODO import test is broken
 
 cd input
 capture extol extoltoprolog main.xtl ../out/main.pl

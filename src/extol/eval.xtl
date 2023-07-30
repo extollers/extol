@@ -40,8 +40,8 @@ pred xtl_eval_goal:
         ( xtlm_find(Module, Name/N/_, Declaration), !
         ; throw(error(not_found(Name/N)))
             ),
-        tc maplist(xtl_eval_quoted(Module), Args, Values),
-        tc xtl_eval_call(Module, Declaration, Values))
+        maplist(xtl_eval_quoted(Module), Args, Values),
+        xtl_eval_call(Module, Declaration, Values))
 
 pred xtl_eval_quoted:
     ((Module, `Expr, Value): !,

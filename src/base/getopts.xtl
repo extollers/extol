@@ -1,0 +1,80 @@
+
+pred getopts:
+    (([], Spec): !,
+        maplist(getopts_finalize, Spec)),
+    (([Option, Value | Rest], Spec):
+        member(option(Option, Value, _), Spec), !,
+        getopts(Rest, Spec)),
+    (([Option, Value | Rest], Spec):
+        member(multi(Option, List), Spec), !,
+        pinsert(Value, List), !,
+        getopts(Rest, Spec)),
+    (([Flag | Rest], Spec):
+        member(flag(Flag, true), Spec), !,
+        getopts(Rest, Spec)),
+    (([Argument | Rest], Spec):
+        member(argument(Argument, _), Spec), !,
+        getopts(Rest, Spec))
+
+test getopts:
+    getopts([], []),
+
+    getopts(['-x', 1], [option('-x', A, required)]),
+    A = 1,
+
+    getopts([], [option('-x', B, default(1))]),
+    B = 1,
+
+    catch(getopts([], [option('-x', _, required)]), Error, true),
+    Error = missing_option('-x'),
+
+    getopts([], [flag('-x', C)]),
+    C = false,
+
+    getopts(['-x'], [flag('-x', D)]),
+    D = true,
+
+    getopts([x], [argument(E, required)]),
+    E = x,
+
+    getopts([], [argument(F, default(1))]),
+    F = 1,
+
+    catch(getopts([], [argument(_, required)]), Error2, true),
+    Error2 = missing_positional_argument,
+
+    getopts([], [multi('-x', G)]),
+    G = [],
+
+    getopts(['-x', 1], [multi('-x', H)]),
+    H = [1],
+
+    getopts(['-x', 1, '-x', 2], [multi('-x', I)]),
+    I = [1, 2],
+
+    getopts(
+        ['--flag', '--option', 1, '--multi', 2, argument, '--multi', 3],
+        [
+            flag('--flag', J),
+            option('--option', K, required),
+            multi('--multi', L),
+            argument(M, required)
+            ]%
+        ),%
+    J = true,
+    K = 1,
+    L = [2, 3],
+    M = argument
+
+pred getopts_finalize:
+    (option(Option, Value, required):
+        var(Value), !,
+        throw(missing_option(Option))),
+    (option(Option, Value, default(Value)): !),
+    (flag(Flag, false): !),
+    (argument(Value, required):
+        var(Value), !,
+        throw(missing_positional_argument)),
+    (argument(Value, default(Value)): !),
+    (multi(Flag, List): length(List, _), !),
+    (_: true)
