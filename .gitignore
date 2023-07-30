@@ -1,4 +1,3 @@
 build/
-local/
 *~
 test/**/run-*

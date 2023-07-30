@@ -9,7 +9,7 @@ SRC ?= $(CURDIR)
 ONLY ?= 0123i
 DESTDIR ?=
 NAME ?= extol
-PREFIX ?= $(SRC)/local
+PREFIX ?= $(BUILD)/local
 BINDIR ?= $(PREFIX)/bin
 DATADIR ?= $(PREFIX)/share
 DOCDIR ?= $(PREFIX)/share/doc/$(NAME)
@@ -123,7 +123,7 @@ $!stage$(2).pl: $$(STAGE$(1)) $(all_sources)
 	$(./)$!stage$(1) extoltoprolog $/src/main.xtl $$@
 
 $!stage$(1): $!stage$(1).pl
-	@echo [$(1) ] GPLC $$@
+	@echo [$(1) ] PLC $$@
 	$(PLC) $(PLC_FLAGS) $$< -o $$@
 
 .PHONY: $(1)
