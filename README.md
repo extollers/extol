@@ -1,99 +1,56 @@
 # The Extol Programming Language
 
-We are building a programming that will have:
+The Extol programming language is an early work-in-progress. It is
+currently being bootstrapped from Prolog.
 
-- A uniform language for values, expressions, types, kinds, macros, patterns and tactics
-- Unrestricted predicates, constraint-solving, proofs and first-class patterns as core building blocks
-- A composable effects system that allows chosing abstraction levels and hides all lower abstractions
-- An extensible grammar that allows heavily bikeshedded coding styles
-- A compiler and a parser which are entirely generated from the interpreter and the AST data type
-- An FFI that can import and export to and from C, C++, Python, JavaScript, Ruby, Perl, sh, Java, .NET, Go, Rust, R, ELisp and Nix
+The goals of this project are:
+
+- A uniform language for values, function, statements, expressions,
+  types, kinds, macros, patterns, constraints, grammars, tactics and
+  proofs
+
+- A flexible syntax that allows building incrementally typed
+  high-level shell-style scripts, low-level systems code and
+  domain-specific languages
+
+- A type system with small-core verifiable theorem proving,
+  incremental typing, deferred type errors, termination proofs, no
+  universe hierarchy and separate types for compile-time (semantics)
+  and run-time (representation)
+
+- Semantics that allow strict/lazy/reactive/mixed evaluation,
+  value/reference/move parameters, prompt finalization, optional
+  garbage collection, mutable/immutable/const/nondet/constraint
+  variables, weak/lazy/mutable/immutable/serializable types,
+  backtracking, (un)delimited continuations, resumable exceptions,
+  static/dynamic polymorphism and static/dynamic/multiple dispatch
+
+- A composable environment and effects system that allows hopping
+  between abstraction levels, powerful negotiated implicit arguments
+  and detailed introspection of program requirements and behavior
+
+- A portable self-hosted interpreter and cross-compiler that targets
+  x86_64, ARM, C, .NET, JVM, WebAssembly and SPIR-V
+
+- An FFI that can import and export to and from C, C++, Python,
+  JavaScript, Ruby, Perl, sh, Java, C#, Go, Rust, R, ELisp and Nix
+
+- Parallel, distributed, heterogenous, symbolic and partial execution
+
+- Built-in cross-platform support for file IO, declarative UI,
+  networking, HTTP, HTML, JSON, IPC, Unicode, math, times and dates,
+  regular expressions, concurrency, string formatting, serialization,
+  cryptography and testing
+
+- A module and packaging system for code sharing and re-use
 
 ## Documentation
 
-<details><summary><b>Examples</b></summary><figure>
+<details><summary>
 
-Some day Extol code might look like this, with inferred types checked at compile-time:
+### Quick Start
 
-```
-define fib
-  0: 1
-  1: 1
-  n: fib (n - 1) + fib(n - 2)
-```
-
-But today look like this, and the types are checked at runtime:
-
-```
-define fib:
-    arguments(N),
-    returns X,
-    requires number(N),
-    ensures number(X),
-
-    (0: 1),
-    (1: 1),
-    (N: fib(N - 1) + fib(N - 2)).
-```
-
-Arbitrary Prolog-style predicates can be used as types, such as these
-types used by the compiler:
-
-```
-pred declaration:
-    (define(Name, Annots, Clauses):
-        atom(Name),
-	maplist(annotation, Annots),
-	maplist(define_clause, Clauses)),
-    (test(Name, Goals):
-        atom(Name),
-	goal(Goals)).
-
-pred annotation:
-    (nondet: true),
-    (predicate: true),
-    (returns(Var): true),
-    (ensures(Pred): xtl_goal(Pred)),
-    (requires(Pred): xtl_goal(Pred)),
-    (traced: true),
-    (dcg: true),
-    (parameters(List): maplist(var, List)).
-```
-
-There is support for declarative grammars such as this parser for Extol terms:
-
-```
-dcg xtl_regular_term:
-((Char) : "0'", !, require(xtl_string_char(Char)), xtl_skipwhite),
-((Integer) :
-    many1(digit, Ds), !,
-    { foldl(add_digit, 0, Ds, Integer), ! },
-    xtl_skipwhite),
-((String) : "\"", !, require(many(xtl_string_char, String)), require("\""), xtl_skipwhite),
-((Term) :
-    xtl_atom(Atom), !,
-    ( xtl_token("("), !,
-      xtl_comma_separated(Args, [], xtl_token(")")),
-      { Term =... [Atom | Args] }
-    ; xtl_skipwhite,
-      { Term = Atom })),
-% ...
-```
-
-With a built-in test framework that allows writing tests like this:
-
-```
-test xtl_regular_term :
-    xtl_regular_term(123, "123", ""),
-    xtl_regular_term(hi, "hi", ""),
-    xtl_regular_term(hi(1), "hi(1)", ""),
-    xtl_regular_term(hi(b, 4), "hi(b, 4)", ""),
-    % ...
-```
-
-</figure></details>
-
-<details><summary><b>Quick Start</b></summary><figure>
+</summary><figure>
 
 #### Setup Extol
 
@@ -120,6 +77,12 @@ Build the compiler and install it to `./local`:
 
 ```
 make install
+```
+
+Optionally, run all tests:
+
+```
+make check
 ```
 
 #### Using the REPL
@@ -155,19 +118,19 @@ Hello, world!
 ## Links
 
 - [Source Code](https://github.com/extollers/extol)
-- [Repl.it](https://repl.it/github/extollers/extol)
+- [Continuous Integration](https://hydra.atnnn.com/jobset/extol/extol#tabs-jobs)
 - [Reddit](https://www.reddit.com/r/extollers/)
 - [~Wikipedia~](https://en.wikipedia.org/wiki/Extol_(programming_language))
 - [~Rosetta Code~](https://rosettacode.org/wiki/Category:Extol)
 - [~Stack Overflow~](https://stackoverflow.com/questions/tagged/extol)
 - [~Trending on GitHub~](https://github.com/trending/extol)
-- [~rise4fun~](https://rise4fun.com/Extol)
+- [~Extol fiddle~](#)
 - [License](LICENSE.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
 
 ## Inspiration
 
-Extol is inspired in part by the following languages and tools:
+Extol is inspired in part by the following languages:
 
 - [Mercury](http://www.mercurylang.org/):
   Combining the power of Haskell and Prolog
@@ -187,9 +150,16 @@ Extol is inspired in part by the following languages and tools:
 - [Swig](http://www.swig.org/):
   Automatically generated glue code for interfacing with other languages
 
+- [Red](https://www.red-lang.org/p/about.html):
+  Multi-paradigm, multi-typing, full-stack, human-friendy language. Fun guaranteed.
+
 ---
 
-<details><summary><b>Roadmap</b></summary><figure>
+<details><summary>
+
+## Roadmap
+
+</summary><figure>
 
 - [x] A Prolog parser in Prolog that can parse itself
 - [x] A Prolog generator for the parsed declarations
@@ -212,7 +182,6 @@ Extol is inspired in part by the following languages and tools:
 - [ ] `nondet` clause annotations (to improve performance and reasoning)
 - [ ] Replace `,` with `do` blocks
 - [ ] Add `where` clauses
-- [ ] Static type checking
 - [ ] Anonymous functions, lambdas and closures
 - [ ] First-class functions
 - [ ] Improved error messages
