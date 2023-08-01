@@ -91,6 +91,11 @@ pred xtl_term_to_declaration:
     (((define(Name) : Definition), define(Name, Annots, Clauses)):
         xtl_split_annots(Definition, Annots, Clauses)),
     ((prolog(FN), prolog(FN)): !),
+    ((inline(Decl), Define):
+        Inner := xtl_term_to_declaration(Decl),
+        ( Inner = define(Name, Attributes, Clauses)
+        ; throw(error(cannot_inline_non_define(Inner)))),
+        Define = define(Name, := append(Attributes, [inline]), Clauses)),
     ((T, _): throw(failed(xtl_term_to_declaration(T))))
 
 pred xtl_split_annots:
