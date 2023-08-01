@@ -376,6 +376,7 @@ pred xtl_op:
     ((999, fx, sf) : true),
     ((700, xfx, '=...') : true),
     ((1200, xfy, ':') : true),
+    ((1150, fy, inline) : true),
     ((1150, fy, dcg) : true),
     ((1150, fy, pred) : true),
     ((1150, fy, include) : true),
