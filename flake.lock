@@ -1,15 +1,19 @@
 {
   "nodes": {
     "nixpkgs": {
-      "flake": false,
       "locked": {
-        "narHash": "sha256-Xs8OU8kPSuka2mZ0199MC1S5rNEPILVfWhHu3DHYXic=",
-        "type": "tarball",
-        "url": "https://nixos.org/channels/nixos-23.05/nixexprs.tar.xz"
+        "lastModified": 1690726002,
+        "narHash": "sha256-cACz6jCJZtsZHGCJAN4vMobxzH5s6FCOTZHMrh/Hu0M=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "391e8db1f06c3f74c2d313a73135515023af3993",
+        "type": "github"
       },
       "original": {
-        "type": "tarball",
-        "url": "https://nixos.org/channels/nixos-23.05/nixexprs.tar.xz"
+        "owner": "NixOS",
+        "ref": "nixos-23.05",
+        "repo": "nixpkgs",
+        "type": "github"
       }
     },
     "root": {
