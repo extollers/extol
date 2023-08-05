@@ -95,8 +95,16 @@ pred xtl_term_to_declaration:
         Inner := xtl_term_to_declaration(Decl),
         ( Inner = define(Name, Attributes, Clauses)
         ; throw(error(cannot_inline_non_define(Inner)))),
-        Define = define(Name, := append(Attributes, [inline]), Clauses)),
+        Define = define(Name, := append(Attributes, [inline]), Clauses),
+        !),
     ((T, _): throw(failed(xtl_term_to_declaration(T))))
+
+test xtl_term_to_declaration:
+    xtl_term_to_declaration(inline((pred(f):(a:b))), R1),
+    R1 = define('f', ['nondet', 'predicate', 'inline'], [('a' : 'b')]),
+
+    xtl_term_to_declaration(inline((pred(undo):((_: true), (G: call(G), fail)))), R2),
+    R2 = define('undo', ['nondet', 'predicate', 'inline'], [(_ : 'true'), (_: call(_), fail)])
 
 pred xtl_split_annots:
     ((Def, Annots, Clauses):
