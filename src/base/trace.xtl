@@ -1,9 +1,7 @@
 
 
-% TODO: runtime turn on logging
-inline
-pred log: _: true
-%pred log: Debug: t(Debug)
+pred log: Message:
+    environ('EXTOL_TRACE', _), !, t(Message); true
 
 pred t: (X: write('trace: '), ti, write_term(X, [quoted(true), max_depth(7)]), nl)
 
