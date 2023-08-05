@@ -7,17 +7,20 @@ pred module_item: (Key - Declaration):
     module_key(Key),
     module_declaration(Declaration)
 
-pred module_key: (Name / N / Type):
+pred module_key: (Name / N / Attributes):
     name(Name),
     (number(N) ; member(N, ['-'])),
-    member(Type, [test, imported, pred, dcg, fun])
+    maplist(module_attribute, Attributes)
+
+pred module_attribute: Attribute:
+    member(Attribute, [test, pred, dcg, fun, inline])
 
 pred module_declaration:
     (imported(Module, Name): !, name(Module), name(Name)),
     (prolog(Atom/N): !, atom(Atom), number(N)),
     (Declaration: xtl_declaration(Declaration))
 
-% TODO: uniform representation for names 
+% TODO: uniform representation for names
 pred name:
     (name(Ns): maplist(atom, Ns), not length(Ns, 1)),
     (A: atom(A))
@@ -63,21 +66,21 @@ pred xtlm_add_: (module(_, Declarations, _), Key, Declaration):
     ; throw(error('xtlm_add_: module is already sealed')))
 
 pred xtlm_declaration_key:
-    ((prolog(F/N), F/N/pred): true),
+    ((prolog(F/N), F/N/[pred]): true),
     ((define(Name, Annots, Clauses), Key):
         !,
 	Clauses = [(Head : _) | _],
         ( member(dcg, Annots), !,
-            Key = (Name/(:= 2 + length(comma_list(Head)))/dcg)
+            Key = (Name/(:= 2 + length(comma_list(Head)))/[dcg])
         ; member(predicate, Annots), !,
-            Key = (Name/(:= length(comma_list(Head)))/pred)
+            Key = (Name/(:= length(comma_list(Head)))/[pred])
         ; !,
-            Key = (Name/(:= 1 + length(comma_list(Head)))/fun))),
-    ((test(Name, _), (Name/test/test)): !),
+            Key = (Name/(:= 1 + length(comma_list(Head)))/[fun]))),
+    ((test(Name, _), (Name/'-'/[test])): !),
     ((Other, _): throw(error(unsuported_declaration(Other))))
 
 test xtlm_declaration_key:
-    xtlm_declaration_key(define(foo, [fun], [(N: N + 1)]), foo/2/fun)
+    xtlm_declaration_key(define(foo, [fun], [(N: N + 1)]), foo/2/[fun])
 
 pred xtlm_seal: module(_, Decls, Imports):
     must(length(Decls, _))

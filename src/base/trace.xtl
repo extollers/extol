@@ -37,11 +37,11 @@ dcg prep_char:
 (X: [X])
 
 % Trace and fail
+inline
 pred 'tf': (X: t(X), fail)
 
-pred 'tf': ((X, A, B): tf(X, A, B), fail)
-
 % Trace call
+inline
 pred 'tc': (F:
           undo(t(failed(F))),
           t(enter(F)),
@@ -49,6 +49,7 @@ pred 'tc': (F:
           undo(t(redo(F))),
           t(exit(F)))
 
+% TODO: inline dcg
 dcg 'tc': F:
     undo(t(failed(F))),
     t(enter(F)),
@@ -56,6 +57,7 @@ dcg 'tc': F:
     undo(t(redo(F))),
     t(exit(F))
 
+% TODO: inline dcg
 dcg tc: (F, X):
     undo(t(failed(F))),
     t(enter(F)),
@@ -74,6 +76,7 @@ pred ti: (():
     atom_codes(S, L),
     write(S))
 
+inline
 pred ticall: (G) :
     g_read(tindent, I),
     II is I + 1,
@@ -81,6 +84,7 @@ pred ticall: (G) :
     call(G),
     g_assignb(tindent, I)
 
+inline
 pred ticall: (G, A, B) :
     g_read(tindent, I),
     II is I + 1,
@@ -88,6 +92,7 @@ pred ticall: (G, A, B) :
     dcg_call(G, A, B),
     g_assignb(tindent, I)
 
+inline
 pred ticall: (G, X, A, B) :
     g_read(tindent, I),
     II is I + 1,
@@ -112,14 +117,17 @@ pred print_exception:
     (Error: write_term(Error, [numbervars(false), namevars(false), max_depth(7)]), nl)
 
 % Explicit stack frame
+inline
 pred 'sf': (F:
     catch(
         F,
         Exception,
         throw_with_trace(Exception, F)))
 
+inline
 pred sf: (A, B): sf call(A, B)
 
+inline
 pred sf: (F, I, O): sf call(F, I, O)
 
 pred test_sf1: ((): 'sf'(test_sf2))

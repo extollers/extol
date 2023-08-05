@@ -13,9 +13,9 @@ pred annotation:
     (returns(Var): true),
     (ensures(Pred): xtl_goal(Pred)),
     (requires(Pred): xtl_goal(Pred)),
-    (traced: true),
     (dcg: true),
-    (parameters(List): maplist(var, List))
+    (parameters(List): maplist(var, List)),
+    (inline: true)
 
 pred xtl_goal: _: true
 
