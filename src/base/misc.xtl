@@ -1,11 +1,12 @@
 
 % Call on undo
 
-% inline
+inline
 pred undo:
     ((_) : true),
     ((G) : call(G), fail)
 
+% inline
 dcg undo:
     ((_) : { true }),
     ((G) : dcg_call(G), { fail } )
@@ -40,6 +41,7 @@ fun comma_list:
     (((), ()) : []),
     ((X) : [X])
 
+inline
 pred '.': (X, Xs, [X | Xs]): true
 
 test comma_list :
@@ -111,8 +113,10 @@ pred filterlist:
         call(P, X), !, filterlist(P, Xs, Zs), Ys = [X | Zs]
     ; filterlist(P, Xs, Ys))
 
+inline
 pred '()': (): true
 
+inline
 pred not: G: G, !, false; true
 
 pred orlist:

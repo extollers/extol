@@ -116,6 +116,7 @@ test xtl_to_pl_declaration :
         ]
 
 pred xtl_def_to_pl:
+    ((_, Name, Clause, _): log(compiling_clause(Name, Clause)), fail),
     ((Module, dcg(Pred), (Head: Body), (HeadPL :- GoalPL)) :
         copy_term(Head-Body, HeadVars-Goal),
         comma_list(HeadVars, HeadArgs),
@@ -151,14 +152,55 @@ pred xtl_to_pl_goal:
         maplist(xtl_to_pl_quoted(Module), QuotedArgs, Args, ExtraGoalsListList),
         ExtraGoalsList := append(ExtraGoalsListList),
         comma_list(ExtraGoals, ExtraGoalsList),
-        MainGoalPL := xtl_to_pl_call(Attributes, Define, Name, QuotedArgs),
+        MainGoalPL := xtl_to_pl_call(Module, Name, Define, QuotedArgs),
         ( ExtraGoals = (), GPL = MainGoalPL
         ; GPL = (ExtraGoals, MainGoalPL)))
 
-pred xtl_to_pl_call: (Attributes, Define, Name, QuotedArgs, PL):
-    ( member(inline, Attributes),
-        false % TODO
-    ; PL =... [Name | QuotedArgs])
+% TODO: inline dcg support
+pred xtl_to_pl_call:
+    ((Module, _, define(_, Attributes, Clauses), QuotedArgs, PL):
+        member(inline, Attributes), !,
+        % TODO: inline contracts
+        ClausesCopy := maplist(copy_term, Clauses),
+        maplist(xtl_inline_clause(QuotedArgs), ClausesCopy, InlineClauses),
+        maplist(xtl_to_pl_goal(Module), InlineClauses, ClausesPL),
+        semicolon_list(PL, ClausesPL)),
+    ((_, Name, _, QuotedArgs, PL):
+        PL =... [Name | QuotedArgs])
+
+test xtl_to_pl_call:
+    Module := xtlm_new(main),
+    xtlm_add(Module, prolog(f/1)),
+    xtlm_add(Module, prolog('='/2)),
+    xtlm_add(Module, prolog(true/0)),
+
+    Res := xtl_to_pl_call(Module, g, `define(g, [inline], [(1 : true), (Y : f(Y))]), [3]),
+    Res = (
+        [1] = [3], true ;
+        [YY]=[3], f(YY) )
+
+pred xtl_inline_clause: ((QuotedArgs, (Head: Body), Goal):
+    comma_list(Head, HeadList),
+    Goal = (HeadList = QuotedArgs, Body))
+
+test xtl_inline_clause:
+    Res := xtl_inline_clause([1, 2], `((A, B): f(A,B))),
+    Res = ([A, B] = [1, 2], f(A, B))
+
+pred semicolon_list:
+    ((false, []): true),
+    (((X ; Xs), [X, Y | Ys]): !, semicolon_list(Xs, [ Y | Ys ])),
+    ((X, [X]): true)
+
+test semicolon_list:
+    semicolon_list(1, [1]),
+    semicolon_list((1; 2), [1, 2]),
+    semicolon_list(X, [1, 2]),
+    ground(X),
+    X = (1; 2),
+    semicolon_list((1; 2), Y),
+    ground(Y),
+    Y = [1, 2]
 
 % TODO: `O' should be out var not in var
 pred xtl_to_pl_dcg:
