@@ -1,6 +1,7 @@
 
 % Call on undo
 
+% inline
 pred undo:
     ((_) : true),
     ((G) : call(G), fail)
