@@ -149,7 +149,9 @@ pred xtl_to_pl_goal:
         ; GPL = (ExtraGoals, MainGoalPL)))
 
 pred xtl_to_pl_call: (Attributes, Define, Name, QuotedArgs, PL):
-    PL =... [Name | QuotedArgs]
+    ( member(inline, Attributes),
+        false % TODO
+    ; PL =... [Name | QuotedArgs])
 
 % TODO: `O' should be out var not in var
 pred xtl_to_pl_dcg:
