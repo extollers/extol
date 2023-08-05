@@ -24,14 +24,14 @@ pred xtl_to_pl_declaration:
         maplist(xtl_to_pl_fun(Module, Name), Clauses, ClausesPL),
         numbervars(ClausesPL)),
     ((Module, define(Name, [nondet, predicate | Contract], Defs), Decls) : !,
-        ( Contract = [], !,
+        ( (Contract = [], ! ; Contract = ['inline']), !,
             maplist(xtl_def_to_pl(Module, pred(Name)), Defs, Decls)
         ; atom_concat('__contract_free_', Name, InnerName),
             maplist(xtl_def_to_pl(Module, pred(InnerName)), Defs, InnerDecls),
             xtl_contract_to_pl(Module, pred, Name, InnerName, Contract, OuterDecls),
             append(OuterDecls, InnerDecls, Decls))),
     ((Module, define(Name, [dcg, nondet, predicate | Contract], Defs), Decls) : !,
-        ( Contract = [], !,
+        ( (Contract = [], ! ; Contract = ['inline']), !,
             maplist(xtl_def_to_pl(Module, dcg(Name)), Defs, Decls)
         ; atom_concat('__contract_free_', Name, InnerName),
             maplist(xtl_def_to_pl(Module, dcg(InnerName)), Defs, InnerDecls),
@@ -63,6 +63,7 @@ test xtl_to_pl_declaration :
     xtlm_add(Module, prolog('-'/3)),
     xtlm_add(Module, prolog(fib/2)),
     xtlm_add(Module, prolog(f/3)),
+    xtlm_add(Module, prolog(call/1)),
 
     xtl_to_pl_declaration(
         Module,
@@ -106,7 +107,13 @@ test xtl_to_pl_declaration :
             fib(C_,D_),
             '-'(A_,2,E_),
             fib(E_,F_),
-            '+'(D_,F_,B_))]
+            '+'(D_,F_,B_))],
+
+    xtl_to_pl_declaration(Module, define('undo', ['nondet', 'predicate', 'inline'], [(_ : 'true'), (G: call(G), false)]), Res7),
+    Res7 = [
+        (undo(_) :- true),
+        (undo(_) :- call(_), false)
+        ]
 
 pred xtl_def_to_pl:
     ((Module, dcg(Pred), (Head: Body), (HeadPL :- GoalPL)) :
