@@ -152,39 +152,42 @@ pred xtl_to_pl_goal:
         maplist(xtl_to_pl_quoted(Module), QuotedArgs, Args, ExtraGoalsListList),
         ExtraGoalsList := append(ExtraGoalsListList),
         comma_list(ExtraGoals, ExtraGoalsList),
-        MainGoalPL := xtl_to_pl_call(Module, Name, Define, QuotedArgs),
+        MainGoalPL := xtl_to_pl_goal_call(Module, Name, Define, QuotedArgs),
         ( ExtraGoals = (), GPL = MainGoalPL
         ; GPL = (ExtraGoals, MainGoalPL)))
 
 % TODO: inline dcg support
-pred xtl_to_pl_call:
-    ((Module, _, define(_, Attributes, Clauses), QuotedArgs, PL):
+pred xtl_to_pl_goal_call:
+    ((Module, _, define(_, Attributes, Clauses), ArgsPL, PL):
         member(inline, Attributes), !,
         % TODO: inline contracts
         ClausesCopy := maplist(copy_term, Clauses),
-        maplist(xtl_inline_clause(QuotedArgs), ClausesCopy, InlineClauses),
-        maplist(xtl_to_pl_goal(Module), InlineClauses, ClausesPL),
+        maplist(xtl_inline_pred_clause(ArgsPL), ClausesCopy, HeadsPL, Bodies),
+        maplist(xtl_to_pl_goal(Module), Bodies, BodiesPL),
+        maplist(pl_comma, HeadsPL, BodiesPL, ClausesPL),
         semicolon_list(PL, ClausesPL)),
     ((_, Name, _, QuotedArgs, PL):
         PL =... [Name | QuotedArgs])
 
-test xtl_to_pl_call:
+fun pl_comma: (A, B): `(A, B)
+
+test xtl_to_pl_goal_call:
     Module := xtlm_new(main),
     xtlm_add(Module, prolog(f/1)),
     xtlm_add(Module, prolog('='/2)),
     xtlm_add(Module, prolog(true/0)),
 
-    Res := xtl_to_pl_call(Module, g, `define(g, [inline], [(1 : true), (Y : f(Y))]), [3]),
+    Res := xtl_to_pl_goal_call(Module, g, `define(g, [inline], [(1 : true), (Y : f(Y))]), [3]),
     Res = (
         [1] = [3], true ;
         [YY]=[3], f(YY) )
 
-pred xtl_inline_clause: ((QuotedArgs, (Head: Body), Goal):
+pred xtl_inline_pred_clause: ((QuotedArgs, (Head: Body), Match, Body):
     comma_list(Head, HeadList),
-    Goal = (HeadList = QuotedArgs, Body))
+    Match = (HeadList = QuotedArgs)
 
-test xtl_inline_clause:
-    Res := xtl_inline_clause([1, 2], `((A, B): f(A,B))),
+test xtl_inline_pred_clause:
+    Res := xtl_inline_pred_clause([1, 2], `((A, B): f(A,B))),
     Res = ([A, B] = [1, 2], f(A, B))
 
 pred semicolon_list:
@@ -202,7 +205,6 @@ test semicolon_list:
     ground(Y),
     Y = [1, 2]
 
-% TODO: `O' should be out var not in var
 pred xtl_to_pl_dcg:
     ((_, Var, dcg_call(Var, I, O), I, O) :
         var(Var), !),
@@ -220,10 +222,9 @@ pred xtl_to_pl_dcg:
     ((M, F, C, I, O) : !,
         F := xtl_apply( Name, ArgsXtl),
         N := length(ArgsXtl) + 2,
-        ( xtlm_find(M, Name/N/_, _), !,
+        ( xtlm_find(M, Name/N/_, Define), !,
             maplist(xtl_to_pl_quoted(M), VarsPL, ArgsXtl, ArgsPLs),
-            append([Name | VarsPL], [I,O], LL),
-            Call =... LL,
+            Call := xtl_to_pl_dcg_call(Module, Name, Define, VarsPL, I, O)
             append(ArgsPLs, ArgsPL),
             ( ArgsPL = [], !, C = Call
             ; comma_list(PrepPL, ArgsPL),
@@ -254,6 +255,15 @@ test xtl_to_pl_dcg :
     PL1 == dcg_call(V, i, o),
     xtl_to_pl_dcg(M, {V}, PL2, i, o),
     PL2 == (call(V), i = o)
+
+pred xtl_to_pl_dcg_call:
+    ((Module, _, define(_, Attributes, Clauses), Args, I, O, PL):
+        member(inline, Attributes),
+        false, % TODO: inline dcg
+        !),
+    ((_, Name, _, Args, I, O, PL):
+        append([Name | Args], [I,O], LL),
+        PL =... LL)
 
 pred xtl_contract_to_pl:
     ((Module, pred, Name, InnerName, AnnotsState, [DeclsPL]) :
