@@ -95,8 +95,12 @@ test pmaplist:
 pred pmember:
     ((_, V): var(V), !, false),
     ((_, []): !, false),
-    ((X, [X | Xs]): !, true),
-    ((X, [Y | Xs]): pmember(X, Xs))
+    ((X, [X | Xs]): !,
+        % log(pmember_found(X)),
+        true),
+    ((X, [Y | Xs]):
+        % log(pmember_not_it(Y)),
+        pmember(X, Xs))
 
 pred pinsert:
     ((X, Xs): var(Xs), !, Xs = [X | _]),

@@ -1,5 +1,4 @@
 
-
 pred log: Message:
     environ('EXTOL_TRACE', _), !, t(Message); true
 

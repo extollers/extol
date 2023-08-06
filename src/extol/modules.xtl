@@ -49,7 +49,9 @@ pred xtlm_new: (Name, Imports, Module):
 
 pred xtlm_find:
     ((Module, Name/N/K, Declaration):
-        xtlm_find_(Module, (Name/N/K)-Declaration))
+        xtlm_find_(Module, (Name/N/K)-DeclarationOrigin),
+        copy_term(DeclarationOrigin, Declaration) % TODO: needed?
+        )
 
 pred xtlm_find_: (module(_, Declarations, _), Decl):
     pmember(Decl, Declarations)
@@ -58,7 +60,8 @@ pred xtlm_add: (Module, Declaration):
     Name/N/Type := xtlm_declaration_key(Declaration),
     ( xtlm_find(Module, Name/N/K, _),
         throw(conflicting_declaration(Name/N,K,Declaration))
-    ; %log(adding_declaration(Name/N/Type)),
+    ;
+        % log(adding_declaration(Name/N/Type)),
         xtlm_add_(Module, Name/N/Type, Declaration))
 
 pred xtlm_add_: (module(_, Declarations, _), Key, Declaration):

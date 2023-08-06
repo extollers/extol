@@ -122,7 +122,7 @@ pred xtl_def_to_pl:
         comma_list(HeadVars, HeadArgs),
         append(HeadArgs, [I,O], HeadIO),
         HeadPL =... [Pred | HeadIO],
-        xtl_to_pl_dcg(Module, Goal, GoalPL, I, O),
+        xtl_to_pl_dcg(Module, I, O, Goal, GoalPL),
         numbervars(HeadPL-GoalPL)),
     ((Module, pred(Pred), (Head: Body), (HeadPL :- GoalPL)) :
         copy_term(Head-Body, HeadVars-Goal),
@@ -148,7 +148,7 @@ pred xtl_to_pl_goal:
         G := xtl_apply(Name, Args),
         N := length(Args),
         ( xtlm_find(Module, Name/N/Attributes, Define), !
-        ; throw(not_found(Name/N))),
+        ; throw(not_found(pred, Name/N, Module))),
         maplist(xtl_to_pl_quoted(Module), QuotedArgs, Args, ExtraGoalsListList),
         ExtraGoalsList := append(ExtraGoalsListList),
         comma_list(ExtraGoals, ExtraGoalsList),
@@ -156,7 +156,6 @@ pred xtl_to_pl_goal:
         ( ExtraGoals = (), GPL = MainGoalPL
         ; GPL = (ExtraGoals, MainGoalPL)))
 
-% TODO: inline dcg support
 pred xtl_to_pl_goal_call:
     ((Module, _, define(_, Attributes, Clauses), ArgsPL, PL):
         member(inline, Attributes), !,
@@ -182,13 +181,15 @@ test xtl_to_pl_goal_call:
         [1] = [3], true ;
         [YY]=[3], f(YY) )
 
-pred xtl_inline_pred_clause: ((QuotedArgs, (Head: Body), Match, Body):
+pred xtl_inline_pred_clause: (QuotedArgs, (Head: Body), Match, BodyOut):
+    BodyOut = Body,
     comma_list(Head, HeadList),
     Match = (HeadList = QuotedArgs)
 
 test xtl_inline_pred_clause:
-    Res := xtl_inline_pred_clause([1, 2], `((A, B): f(A,B))),
-    Res = ([A, B] = [1, 2], f(A, B))
+    xtl_inline_pred_clause([1, 2], ((A, B): (f(A,B))), H, T),
+    H = ([a, b] = [1, 2]),
+    T = f(a, b)
 
 pred semicolon_list:
     ((false, []): true),
@@ -206,25 +207,25 @@ test semicolon_list:
     Y = [1, 2]
 
 pred xtl_to_pl_dcg:
-    ((_, Var, dcg_call(Var, I, O), I, O) :
+    ((_, I, O, Var, dcg_call(Var, I, O)):
         var(Var), !),
-    ((M, (A, B), (APL, BPL), I, O) : !,
-        xtl_to_pl_dcg(M, A, APL, I, IO),
-        xtl_to_pl_dcg(M, B, BPL, IO, O)),
-    ((M, (A; B), (APL; BPL), I, O) : !,
-        xtl_to_pl_dcg(M, A, APL, I, O),
-        xtl_to_pl_dcg(M, B, BPL, I, O)),
-    ((_, (!), (!, I=O), I, O) : !),
-    ((_, [], (I=O), I, O) : !),
-    ((_, [X|XS], append([X|XS], O, I), I, O) : !),
-    ((Module, {G}, (GPL, I=O), I, O) : !,
+    ((M, I, O, (A, B), (APL, BPL), ()) : !,
+        xtl_to_pl_dcg(M, I, IO, A, APL),
+        xtl_to_pl_dcg(M, IO, O, B, BPL)),
+    ((M, I, O, (A; B), (APL; BPL)) : !,
+        xtl_to_pl_dcg(M, I, O, A, APL),
+        xtl_to_pl_dcg(M, I, O, B, BPL)),
+    ((_, I, O, (!), (!, I=O), ()) : !),
+    ((_, I, O, [], (I=O)) : !),
+    ((_, I, O, [X|XS], append([X|XS], O, I)) : !),
+    ((Module, I, O, {G}, (GPL, I=O), ()) : !,
         xtl_to_pl_goal(Module, G, GPL)),
-    ((M, F, C, I, O) : !,
+    ((M, I, O, F, C) : !,
         F := xtl_apply( Name, ArgsXtl),
         N := length(ArgsXtl) + 2,
         ( xtlm_find(M, Name/N/_, Define), !,
             maplist(xtl_to_pl_quoted(M), VarsPL, ArgsXtl, ArgsPLs),
-            Call := xtl_to_pl_dcg_call(Module, Name, Define, VarsPL, I, O)
+            Call := xtl_to_pl_dcg_call(M, Name, Define, VarsPL, I, O),
             append(ArgsPLs, ArgsPL),
             ( ArgsPL = [], !, C = Call
             ; comma_list(PrepPL, ArgsPL),
@@ -232,8 +233,8 @@ pred xtl_to_pl_dcg:
         ; xtlm_find(M, Name/(:= N - 2)/_, _),
             xtl_to_pl_goal(M, F, PL),
             C = (I=O, PL)
-        ; throw(not_found(Name/N)))),
-    ((_,D,_,_,_) :
+        ; throw(not_found(dcg, Name/N)))),
+    ((_,_,_,D,_) :
         throw(error(xtl_to_pl_dcg, D)))
 
 test xtl_to_pl_dcg :
@@ -249,21 +250,52 @@ test xtl_to_pl_dcg :
     xtlm_add(M, prolog(e/2)),
     xtlm_add(M, prolog(i/2)),
 
-    xtl_to_pl_dcg(M, ((f; g), h), ((f(a, b); g(a, b)), h(b, c)), a, c),
-    xtl_to_pl_dcg(M, (e, (f, i; g), h), (e(a, b), (f(b, c), i(c, d); g(b, d)), h(d, e)), a, e),
-    xtl_to_pl_dcg(M, V, PL1, i, o),
+    xtl_to_pl_dcg(M, a, c, ((f; g), h), ((f(a, b); g(a, b)), h(b, c))),
+    xtl_to_pl_dcg(M, a, e, (e, (f, i; g), h), (e(a, b), (f(b, c), i(c, d); g(b, d)), h(d, e))),
+    xtl_to_pl_dcg(M, i, o, V, PL1),
     PL1 == dcg_call(V, i, o),
-    xtl_to_pl_dcg(M, {V}, PL2, i, o),
+    xtl_to_pl_dcg(M, i, o, {V}, PL2),
     PL2 == (call(V), i = o)
 
 pred xtl_to_pl_dcg_call:
-    ((Module, _, define(_, Attributes, Clauses), Args, I, O, PL):
-        member(inline, Attributes),
-        false, % TODO: inline dcg
-        !),
+    ((Module, Name, define(ModName, Attributes, Clauses), ArgsPL, I, O, PL):
+        member(inline, Attributes), !,
+        ( member(dcg, Attributes), !,
+            ClausesCopy := maplist(copy_term, Clauses),
+            maplist(xtl_inline_dcg_clause(ArgsPL), ClausesCopy, HeadsPL, Bodies),
+            maplist(xtl_to_pl_dcg(Module, I, O), Bodies, BodiesPL),
+            maplist(pl_comma, HeadsPL, BodiesPL, ClausesPL),
+            semicolon_list(PL, ClausesPL)
+        ; xtl_to_pl_goal_call(Module, Name, define(ModName, Attributes, Clauses), := append(ArgsPL, [I, O]), PL))),
     ((_, Name, _, Args, I, O, PL):
         append([Name | Args], [I,O], LL),
         PL =... LL)
+
+test xtl_to_pl_dcg_call:
+    Module := xtlm_new(main),
+    xtlm_add(Module, prolog(f/1)),
+    xtlm_add(Module, prolog('='/2)),
+    xtlm_add(Module, prolog(true/0)),
+    xtlm_add(Module, prolog(i/3)),
+
+    Res := xtl_to_pl_dcg_call(Module, g, `define(g, [inline, dcg], [(1 : true), (Y : f(Y))]), [3], i, o),
+    Res = (
+        [1]=[3], i=o, true ;
+        [x]=[3], i=o, f(x) ),
+
+    Res2 := xtl_to_pl_dcg_call(Module, h, `define(h, [inline], [((X, I, O): i(X, I, O))]), [3], i, o),
+    Res2 = ([a, b, c] = [3, i, o], i(a, b, c))
+
+
+pred xtl_inline_dcg_clause: (QuotedArgs, (Head: Body), Match, BodyOut):
+    BodyOut = Body,
+    comma_list(Head, HeadList),
+    Match = (HeadList = QuotedArgs)
+
+test xtl_inline_dcg_clause:
+    xtl_inline_dcg_clause([1, 2], ((A, B): (f(A,B))), H, T),
+    H = ([a, b] = [1, 2]),
+    T = f(a, b)
 
 pred xtl_contract_to_pl:
     ((Module, pred, Name, InnerName, AnnotsState, [DeclsPL]) :
@@ -314,7 +346,7 @@ pred xtl_to_pl_funexpr:
         Functor := xtl_apply( Name, ListFun), !,
         N := length(ListFun) + 1,
         ( xtlm_find(Module, Name/N/_, _), !
-        ; throw(not_found(Name/N))),
+        ; throw(not_found(fun, Name/N))),
         maplist(xtl_to_pl_funexpr(Module), Results, ListFun, DepsPLs),
         append(DepsPLs, DepsPL),
         append(Results, [Result], ArgsPL),
