@@ -48,7 +48,7 @@ pred 'tc': (F:
           undo(t(redo(F))),
           t(exit(F)))
 
-% TODO: inline dcg
+inline
 dcg 'tc': F:
     undo(t(failed(F))),
     t(enter(F)),
@@ -56,7 +56,7 @@ dcg 'tc': F:
     undo(t(redo(F))),
     t(exit(F))
 
-% TODO: inline dcg
+inline
 dcg tc: (F, X):
     undo(t(failed(F))),
     t(enter(F)),
