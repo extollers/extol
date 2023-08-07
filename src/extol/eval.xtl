@@ -121,7 +121,7 @@ pred xtl_eval_call:
         throw(error(not_callable(test(T))))),
     ((Module, define(_, Annotations, Clauses), Arguments):
         copy_term(Clauses, Copy),
-        ( member(dcg, Annotations), !,
+        ( member(dcg2, Annotations), !,
             orlist(xtl_eval_call_dcg(Module, Arguments), Copy)
         ; member(predicate, Annotations), !,
             orlist(xtl_eval_call_pred(Module, Arguments), Copy)

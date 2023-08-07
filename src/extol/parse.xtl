@@ -81,10 +81,15 @@ pred xtl_term_to_declaration:
         comma_list(Head, HeadList)),
     (((pred Name : Clauses), define(Name, [nondet, predicate], ClauseList)):
         comma_list(Clauses, ClauseList)),
-    (((dcg Name : contract(Head, Requires, Ensures), Clauses), define(Name, [dcg, nondet, predicate, parameters(HeadList), requires(Requires), ensures(Ensures)], ClauseList)):
+    (((dcg Name : contract(Head, Requires, Ensures), Clauses), define(Name, [dcg2, nondet, predicate, parameters(HeadList), requires(Requires), ensures(Ensures)], ClauseList)):
         comma_list(Clauses, ClauseList),
         comma_list(Head, HeadList)),
-    (((dcg Name : Clauses), define(Name, [dcg, nondet, predicate], ClauseList)):
+    (((dcg2(Name) : contract(Head, Requires, Ensures), Clauses), define(Name, [dcg2, nondet, predicate, parameters(HeadList), requires(Requires), ensures(Ensures)], ClauseList)):
+        comma_list(Clauses, ClauseList),
+        comma_list(Head, HeadList)),
+    (((dcg Name : Clauses), define(Name, [dcg2, nondet, predicate], ClauseList)):
+        comma_list(Clauses, ClauseList)),
+    (((dcg2(Name) : Clauses), define(Name, [dcg2, nondet, predicate], ClauseList)):
         comma_list(Clauses, ClauseList)),
     (((fun Name : Clauses), define(Name, [nondet], ClauseList)):
         comma_list(Clauses, ClauseList)),
@@ -393,6 +398,7 @@ pred xtl_op:
     ((1200, xfy, ':') : true),
     ((1150, fy, inline) : true),
     ((1150, fy, dcg) : true),
+    ((1150, fy, dcg2) : true),
     ((1150, fy, pred) : true),
     ((1150, fy, include) : true),
     ((1150, fy, fun) : true),

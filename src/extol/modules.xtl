@@ -13,7 +13,7 @@ pred module_key: (Name / N / Attributes):
     maplist(module_attribute, Attributes)
 
 pred module_attribute: Attribute:
-    member(Attribute, [test, pred, dcg, fun, inline])
+    member(Attribute, [test, pred, dcg2, fun, inline])
 
 pred module_declaration:
     (imported(Module, Name): !, name(Module), name(Name)),
@@ -73,8 +73,8 @@ pred xtlm_declaration_key:
     ((define(Name, Annots, Clauses), Key):
         !,
 	Clauses = [(Head : _) | _],
-        ( member(dcg, Annots), !,
-            Key = (Name/(:= 2 + length(comma_list(Head)))/[dcg])
+        ( member(dcg2, Annots), !,
+            Key = (Name/(:= 2 + length(comma_list(Head)))/[dcg2])
         ; member(predicate, Annots), !,
             Key = (Name/(:= length(comma_list(Head)))/[pred])
         ; !,

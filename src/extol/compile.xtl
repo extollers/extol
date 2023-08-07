@@ -30,12 +30,12 @@ pred xtl_to_pl_declaration:
             maplist(xtl_def_to_pl(Module, pred(InnerName)), Defs, InnerDecls),
             xtl_contract_to_pl(Module, pred, Name, InnerName, Contract, OuterDecls),
             append(OuterDecls, InnerDecls, Decls))),
-    ((Module, define(Name, [dcg, nondet, predicate | Contract], Defs), Decls) : !,
+    ((Module, define(Name, [dcg2, nondet, predicate | Contract], Defs), Decls) : !,
         ( (Contract = [], ! ; Contract = ['inline']), !,
-            maplist(xtl_def_to_pl(Module, dcg(Name)), Defs, Decls)
+            maplist(xtl_def_to_pl(Module, dcg2(Name)), Defs, Decls)
         ; atom_concat('__contract_free_', Name, InnerName),
-            maplist(xtl_def_to_pl(Module, dcg(InnerName)), Defs, InnerDecls),
-            xtl_contract_to_pl(Module, dcg, Name, InnerName, Contract, OuterDecls),
+            maplist(xtl_def_to_pl(Module, dcg2(InnerName)), Defs, InnerDecls),
+            xtl_contract_to_pl(Module, dcg2, Name, InnerName, Contract, OuterDecls),
             append(OuterDecls, InnerDecls, Decls))),
     ((Module, define(Name, Annots, Clauses), DeclsPL):
         AnnotsState := maplist(xtl_annot_prepare, Annots),
@@ -76,7 +76,7 @@ test xtl_to_pl_declaration :
            (odd(1) :- true),
            (odd(NN) :- MM is NN - 2, odd(MM))],
 
-    xtl_to_pl_declaration(Module, define(f, [dcg, nondet, predicate], [(x: [x])]), Res2),
+    xtl_to_pl_declaration(Module, define(f, [dcg2, nondet, predicate], [(x: [x])]), Res2),
     Res2 = [(f(x,I,O) :- append([x],O,I))],
 
     xtl_to_pl_declaration(Module, define(f, [nondet, predicate, parameters([A]), requires(b), ensures(c)], [(d: e)]), Res3),
@@ -86,7 +86,7 @@ test xtl_to_pl_declaration :
                  assert(c)),
         ('__contract_free_f'(d) :- e)],
 
-    xtl_to_pl_declaration(Module, define(f, [dcg, nondet, predicate, parameters([_]), requires(b), ensures(c)], [(d: e)]), Res4),
+    xtl_to_pl_declaration(Module, define(f, [dcg2, nondet, predicate, parameters([_]), requires(b), ensures(c)], [(d: e)]), Res4),
     Res4 = [
         (f(V4,A,B) :-
              assert(b),
@@ -117,7 +117,7 @@ test xtl_to_pl_declaration :
 
 pred xtl_def_to_pl:
     ((_, Name, Clause, _): log(compiling_clause(Name, Clause)), fail),
-    ((Module, dcg(Pred), (Head: Body), (HeadPL :- GoalPL)) :
+    ((Module, dcg2(Pred), (Head: Body), (HeadPL :- GoalPL)) :
         copy_term(Head-Body, HeadVars-Goal),
         comma_list(HeadVars, HeadArgs),
         append(HeadArgs, [I,O], HeadIO),
@@ -260,7 +260,7 @@ test xtl_to_pl_dcg :
 pred xtl_to_pl_dcg_call:
     ((Module, Name, define(ModName, Attributes, Clauses), ArgsPL, I, O, PL):
         member(inline, Attributes), !,
-        ( member(dcg, Attributes), !,
+        ( member(dcg2, Attributes), !,
             ClausesCopy := maplist(copy_term, Clauses),
             maplist(xtl_inline_dcg_clause(ArgsPL), ClausesCopy, HeadsPL, Bodies),
             maplist(xtl_to_pl_dcg(Module, I, O), Bodies, BodiesPL),
@@ -278,7 +278,7 @@ test xtl_to_pl_dcg_call:
     xtlm_add(Module, prolog(true/0)),
     xtlm_add(Module, prolog(i/3)),
 
-    Res := xtl_to_pl_dcg_call(Module, g, `define(g, [inline, dcg], [(1 : true), (Y : f(Y))]), [3], i, o),
+    Res := xtl_to_pl_dcg_call(Module, g, `define(g, [inline, dcg2], [(1 : true), (Y : f(Y))]), [3], i, o),
     Res = (
         [1]=[3], i=o, true ;
         [x]=[3], i=o, f(x) ),
@@ -313,7 +313,7 @@ pred xtl_contract_to_pl:
             assert(Ensures)),
         copy_term(Decls, DeclsPL),
         numbervars(DeclsPL)),
-    ((Module, dcg, Name, InnerName, [parameters(ArgsList), requires(Expects), ensures(Ensures) | Other], Result) :
+    ((Module, dcg2, Name, InnerName, [parameters(ArgsList), requires(Expects), ensures(Ensures) | Other], Result) :
         % TODO: Other
         append(ArgsList, [_,_], ArgsListIO),
         xtl_contract_to_pl(Module, pred, Name, InnerName, [parameters(ArgsListIO), requires(Expects), ensures(Ensures)], Result))
@@ -410,7 +410,7 @@ fun xtl_annot_prepare:
 fun xtl_annot_extend_params:
     ((Params, predicate):
         NewParams if append(NewParams, [_], Params)),
-    ((Params, dcg): append(Params, [I, O])),
+    ((Params, dcg2): append(Params, [I, O])),
     ((Params, _): Params)
 
 fun xtl_annot_wrap_maybe:
@@ -437,8 +437,8 @@ fun xtl_annot_wrap:
 % TODO: nondet
 pred xtl_annot_clause_to_pl:
     ((Module, Name, AnnotsState, Clauses, ClausesPL):
-        ( member(dcg, AnnotsState), !,
-            maplist(xtl_def_to_pl(Module, dcg(Name)), Clauses, ClausesPL)
+        ( member(dcg2, AnnotsState), !,
+            maplist(xtl_def_to_pl(Module, dcg2(Name)), Clauses, ClausesPL)
         ; member(predicate, AnnotsState), !,
             maplist(xtl_def_to_pl(Module, pred(Name)), Clauses, ClausesPL)
         ; maplist(xtl_to_pl_fun(Module, Name), Clauses, ClausesPL)))
