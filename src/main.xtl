@@ -2,12 +2,13 @@
 pred builtin_load_builtins: module(_, Decls, _):
     member((('+'/3/pred)-prolog('+'/3)), Decls)
 
-include 'src/base/prolog.xtl'
-include 'src/base/trace.xtl'
-include 'src/base/parsing.xtl'
-include 'src/base/misc.xtl'
-include 'src/base/streams.xtl'
-include 'src/base/getopts.xtl'
+include 'src/runtime/prolog.xtl'
+include 'src/toolkit/trace.xtl'
+include 'src/toolkit/parsing.xtl'
+include 'src/toolkit/misc.xtl'
+include 'src/toolkit/streams.xtl'
+include 'src/toolkit/getopts.xtl'
+% include 'src/toolkit/object.xtl'
 include 'src/extol/ast.xtl'
 include 'src/extol/parse.xtl'
 include 'src/extol/compile.xtl'
