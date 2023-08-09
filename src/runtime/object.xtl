@@ -1,0 +1,32 @@
+
+pred object_match: (Object, Match):
+    object_name(Match, Name),
+    ( Name = 'object'
+    ; object_name(Object, Name)),
+    object_each(object_property(Object), Match)
+
+pred object_name: (Object, Name):
+    Object =.. [Name | _]
+
+pred object_each: (G, Object):
+    Object =.. [_ | Properties],
+    maplist(G, Properties)
+
+pred object_property: (Object, (Key: Value)):
+    Object =.. [_ | Properties],
+    member((Key: Value), Properties), !
+
+test objects:
+    object_name(object(), object),
+    object_name(foo((1:2)), foo),
+
+    not object_property(object(), (x:1)),
+    not object_property(object((y:4)), (x:1)),
+    object_property(object((y:4)), (y:Y)),
+    Y = 4,
+
+    not object_match(object((a:x)), object((b:_))),
+    object_match(object((h:x)), object((h:H))),
+    H = x,
+    object_match(object((h:x), (g:y)), object((h:_))),
+    object_match(object((g:y), (h:x)), object((h:_)))
