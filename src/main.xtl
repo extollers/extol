@@ -1,6 +1,6 @@
 % TODO: for bootstrapping
 pred builtin_load_builtins: module(_, Decls, _):
-    member((('+'/3/pred)-prolog('+'/3)), Decls)
+    true
 
 % TODO: bundle runtime with compiler
 include 'src/runtime/prolog.xtl'
