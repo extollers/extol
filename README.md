@@ -155,44 +155,6 @@ Extol is inspired in part by the following languages:
 
 ---
 
-<details><summary>
-
 ## Roadmap
 
-</summary><figure>
-
-- [x] A Prolog parser in Prolog that can parse itself
-- [x] A Prolog generator for the parsed declarations
-- [x] Improved syntax and semantics
-- [x] Runtime type and contract checking
-- [x] A REPL
-- [x] Emacs mode
-- [x] Include statement
-- [x] Functions and expressions instead of predicates and goals
-- [x] Stack traces
-- [x] Clause transformation by annotation
-- [x] Integration tests
-- [x] Modules
-- [x] Explicit import of external functions
-- [x] Don't use Prolog's eval for the REPL
-- [ ] Interpreter can run the compiler
-- [ ] Namespaces
-- [ ] Indentation-sensitive syntax (get rid of those parentheses)
-- [ ] Proper AST instead of raw terms (to allow better type checking)
-- [ ] `nondet` clause annotations (to improve performance and reasoning)
-- [ ] Replace `,` with `do` blocks
-- [ ] Add `where` clauses
-- [ ] Anonymous functions, lambdas and closures
-- [ ] First-class functions
-- [ ] Improved error messages
-- [ ] Compile-time type checking
-- [ ] Unicode
-- [ ] Open sets
-- [ ] Constraint solving
-- [ ] Termination checking
-- [ ] Theorem proving
-- [ ] Parallelism
-- [ ] Effects
-- [ ] A faster backend
-
-</figure></details>
+[Roadmap](docs/roadmap.md)
