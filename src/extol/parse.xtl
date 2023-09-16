@@ -1,19 +1,21 @@
 %% Extol
 
 % TODO: path relative to source instead of cwd
-pred xtl_include: ((File, Module):
+pred xtl_include: (File, Module):
     log(including(File)),
-    % sf
-    must(xtl_top_level(Module, := read_file(File), [])))
+    xtl_include(File, := read_file(File), Module)
 
-pred xtl_import: ((File, Name, Module):
+pred xtl_include: (File, Contents, Module):
+    must(xtl_top_level(Module, Contents, []))
+
+pred xtl_import: ((Contents, Name, Module):
     log(importing(File, Name)),
     must(Imports := xtlm_imports(Module)),
     % TODO: don't index by name
     ( pmember(Name-Declarations, Imports), !,
         Imported = module(Name, Declarations, Imports)
     ; must(Imported := xtlm_new(Name, Imports)),
-        must(xtl_top_level(Imported, := read_file(File), [])),
+        must(xtl_top_level(Imported, Contents, [])),
         must(xtlm_seal(Imported))),
     must(xtlm_import(Module, Imported, inline)),
     log(imports(Imports)))
@@ -66,7 +68,7 @@ dcg xtl_declaration:
         { DeclV = include(Other), !,
             sf xtl_include(Other, Module)
         ; DeclV = import(Other, Spec), !,
-            sf xtl_import(Other, Spec, Module)
+            sf xtl_import(:= read_file(Other), Spec, Module)
         ; !, sf xtl_makevars(DeclV, DeclP, _), !,
              sf xtl_term_to_declaration(DeclP, Decl), !,
              sf xtlm_add(Module, Decl) })

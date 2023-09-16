@@ -96,8 +96,8 @@ pred eval_test:
     ((Module, Goal): eval_test(Module, (Goal, done)))
 
 pred load_main: (Path, Module):
-    Module := xtlm_new(main), % TODO what to name the default module?
-    % builtin_load_builtins(Module), !,
+    Module := xtlm_new(main),
+    % TODO xtlg_include_prelude(Module), !,
     log('revving'),
     must(xtl_include(Path, Module)),
     must(xtlm_seal(Module)),

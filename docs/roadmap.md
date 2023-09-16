@@ -36,4 +36,4 @@
 - [ ] Parallelism
 - [ ] Effects
 - [ ] A faster backend
-
+- [ ] language server
