@@ -95,10 +95,10 @@ pred pmember:
     ((_, V): var(V), !, false),
     ((_, []): !, false),
     ((X, [X | Xs]): !,
-        log(pmember_found(X)),
+        % log(pmember_found(X)),
         true),
     ((X, [Y | Xs]):
-        log(pmember_not_it(Y)),
+        % log(pmember_not_it(Y)),
         pmember(X, Xs))
 
 pred pinsert:

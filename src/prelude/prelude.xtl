@@ -1,5 +1,3 @@
-pred prolog$: (A, B, C): unify(1,1) % TODO: for booting
-
 fun 'unify': (A: A)
 fun '+': (A, B): C if prolog$([A,B,C], '[A,B,C]', 'C is A + B')
 fun '-': (A, B): C if prolog$([A,B,C], '[A,B,C]', 'C is A - B')

@@ -2,7 +2,6 @@
 :-(set_prolog_flag(singleton_warning,off)).
 :-(discontiguous(/(test,1))).
 :-(initialization(;(main,','(write('error: unexpected failure in main'),','(nl,halt(1)))))).
-:-('prolog$'(A,B,C),unify(1,1)).
 :-(unify(A,A),true).
 :-(+(A,B,C),','(true,','(=('.'(A,'.'(B,'.'(C,[]))),'.'(D,'.'(E,'.'(F,[])))),is(F,+(D,E))))).
 :-(-(A,B,C),','(true,','(=('.'(A,'.'(B,'.'(C,[]))),'.'(D,'.'(E,'.'(F,[])))),is(F,-(D,E))))).

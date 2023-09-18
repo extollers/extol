@@ -67,10 +67,7 @@ dcg xtl_declaration:
         require(xtl_expression(pexpr(DeclV))), !,
         {log(parsed_expression(DeclV))},
         { DeclV = include(Other), !,
-            % log('TODO'('including?', Other)),
-            ( Other = 'src/prelude/prelude.xtl', !,
-                log('TODO'('skip including prelude'))
-            ; sf xtl_include(Other, Module))
+            sf xtl_include(Other, Module)
         ; DeclV = import(Other, Spec), !,
             sf xtl_import(:= read_file(Other), Spec, Module)
         ; !, sf xtl_makevars(DeclV, DeclP, _), !,
