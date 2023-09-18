@@ -1,11 +1,13 @@
 pred xtl_eval_funexpr:
+    contract((Module, Expr, Result), module(Module), true),
     ((Module, Expr, Result):
         ( var(Expr) % TODO: don't use same var in input and result
         ; number(Expr)
         ; atom(Expr)),
         !, Result = Expr),
-    ((Module, (Result if Goal), Result): !,
-        xtl_eval_goal(Module, Goal)),
+    ((Module, (Out if Goal), Result): !,
+        xtl_eval_goal(Module, Goal),
+        Result = Out),
     ((Module, [ X | Xs ], [ Y | Ys ]): !,
         xtl_eval_funexpr(Module, X, Y),
         xtl_eval_funexpr(Module, Xs, Ys)),
@@ -14,26 +16,52 @@ pred xtl_eval_funexpr:
     ((Module, Expr, Result):
         Expr := xtl_apply( Name, Args ),
         N := length(Args) + 1,
-        ( xtlm_find(Module, Name/N/_, Declaration)
+        ( xtlm_find(Module, Name/N/_, Declaration), !
         ; throw(error(not_found(Name/N)))
             ),
         Values := maplist(`xtl_eval_funexpr(Module), Args),
-        xtl_eval_call(Module, Declaration, := append(Values, [Result])))
+        !, xtl_eval_call(Module, Declaration, := append(Values, [Result])))
+
+test xtl_eval_funxepr:
+    M := xtlm_new(eval),
+    xtlm_add(M, prolog(true/0)),
+    xtlm_add(M, prolog(false/0)),
+    xtlm_add(M, prolog('is'/2)),
+    xtlm_seal(M),
+
+    xtl_eval_funexpr(M, 1, 1),
+
+    xtl_eval_funexpr(M, X, Y),
+    var(Y),
+
+    xtl_eval_funexpr(M, (1 if true), 1),
+    not xtl_eval_funexpr(M, (1 if true), 2),
+    not xtl_eval_funexpr(M, (1 if false), 1),
+
+    xtl_eval_funexpr(M, [1, 2], [1, 2]),
+
+    xtl_eval_funexpr(M, is(1), 1),
+    not xtl_eval_funexpr(M, is(1), 2)
 
 pred xtl_eval_goal:
-    ((Module, Goal):
-        var(Goal), !,
-        throw(error(variable_goal(Goal)))),
+    contract((Module, Goal), (not var(Goal), module(Module)), true),
     ((Module, (A, B), ()): !,
         xtl_eval_goal(Module, A),
         xtl_eval_goal(Module, B)),
     ((Module, (A; B)): !,
-        xtl_eval_goal(Module, A) ;
-        xtl_eval_goal(Module, B)),
+        ( xtl_eval_goal(Module, A)
+        ; xtl_eval_goal(Module, B))),
     ((Module, '!'): !,
         throw(not_supported(!))),
     ((Module, (Result := Expr)): !,
         xtl_eval_funexpr(Module, Expr, Result)),
+    ((Module, prolog$(VarsXTL, VarsPL, Prolog)): !,
+        atom_concat(VarsPL, '-(', C1),
+        atom_concat(C1, Prolog, C2),
+        atom_concat(C2 , ').', TermAtom),
+        Vars-Goal := read_from_atom(TermAtom),
+        xtl_eval_quoted(Module, VarsXTL, Vars),
+        Goal),
     ((Module, Goal):
         Goal := xtl_apply(Name, Args),
         N := length(Args),
@@ -43,33 +71,71 @@ pred xtl_eval_goal:
         maplist(xtl_eval_quoted(Module), Args, Values),
         xtl_eval_call(Module, Declaration, Values))
 
+test xtl_eval_goal:
+    M := xtlm_new(eval),
+    xtlm_add(M, prolog(true/0)),
+    xtlm_add(M, prolog(false/0)),
+    xtlm_add(M, prolog(is/2)),
+
+    xtl_eval_goal(M, (true, true)),
+    not xtl_eval_goal(M, (true, false)),
+    not xtl_eval_goal(M, (false, true)),
+
+    xtl_eval_goal(M, (true; true)),
+    xtl_eval_goal(M, (true; false)),
+    xtl_eval_goal(M, (false; true)),
+    not xtl_eval_goal(M, (false; false)),
+
+    xtl_eval_goal(M, (1 := is(1))),
+    not xtl_eval_goal(M, (0 := is(1))),
+
+    xtl_eval_goal(M, (1 is 1)),
+    not xtl_eval_goal(M, (0 is 1)),
+
+    xtl_eval_goal(M, prolog$(1, 'X', 'X=1')),
+    not xtl_eval_goal(M, prolog$(2, 'X', 'X=1'))
+
 pred xtl_eval_quoted:
+    contract((Module, Expr, Value), module(Module), true),
+    ((Module, Expr, Value):
+        ( var(Expr)
+        ; atom(Expr)
+        ; number(Expr)
+            ), !,
+        Value = Expr),
     ((Module, `Expr, Value): !,
         xtl_eval_funexpr(Module, Expr, Value)),
     ((Module, \Expr, Value): !,
         xtl_eval_quoted(Module, Expr, PartialGoal),
         Value = `xtl_eval_lambda(Module, PartialGoal)),
     ((Module, Expr, Value):
-        Expr := xtl_apply( Name, Args),
-        Values := maplist(`xtl_eval_quoted(Module), Args),
-        Value := [Name | Values])
+        xtl_apply(Name, Args, Expr),
+        maplist(xtl_eval_quoted(Module), Args, Values),
+        xtl_apply(Name, Values, Value))
 
-pred xtl_eval_lambda: (Module, PartialGoal, A):
-    PartialGoal =... Xs,
-    Goal =... (:= append(Xs, [A])),
-    xtl_eval_goal(Module, Goal)
+pred xtl_eval_lambda:
+    contract((Module, PartialGoal, A), (module(Module), xtl_callable(PartialGoal)), true),
+    (Module, PartialGoal, A):
+        PartialGoal =... Xs,
+        Goal =... (:= append(Xs, [A])),
+        xtl_eval_goal(Module, Goal)
 
-pred xtl_eval_lambda: (Module, PartialGoal, A, B):
-    PartialGoal =... Xs,
-    Goal =... (:= append(Xs, [A, B])),
-    xtl_eval_goal(Module, Goal)
+pred xtl_eval_lambda:
+    contract((Module, PartialGoal, A, B), (module(Module), xtl_callable(PartialGoal)), true),
+    (Module, PartialGoal, A, B):
+        PartialGoal =... Xs,
+        Goal =... (:= append(Xs, [A, B])),
+        xtl_eval_goal(Module, Goal)
 
-pred xtl_eval_lambda: (Module, PartialGoal, A, B, C):
-    PartialGoal =... Xs,
-    Goal =... (:= append(Xs, [A, B, C])),
-    xtl_eval_goal(Module, Goal)
+pred xtl_eval_lambda:
+    contract((Module, PartialGoal, A, B, C), (module(Module), xtl_callable(PartialGoal)), true),
+    (Module, PartialGoal, A, B, C):
+        PartialGoal =... Xs,
+        Goal =... (:= append(Xs, [A, B, C])),
+        xtl_eval_goal(Module, Goal)
 
 pred xtl_eval_xtlquote:
+    contract((Module, Expr, Result), module(Module), true),
     ((Module, Expr, Result):
         ( var(Expr) % TODO: don't use same var in input and result
         ; number(Expr)
@@ -78,14 +144,13 @@ pred xtl_eval_xtlquote:
     ((Module, (@:= Funexpr), Result):
         xtl_eval_funexpr(Module, Funexpr, Result)),
     ((Module, Expr, Result):
-        Expr := xtl_apply( Fun, Args ),
+        Expr := xtl_apply(Fun, Args),
         ResArgs := maplist(`xtl_eval_xtlquote(Module), Args),
         ResFun := xtl_eval_xtlquote(Module, Fun),
         Result := xtl_apply(ResFun, ResArgs))
 
 pred xtl_eval_dcg:
-    ((Module, Grammar, I, O):
-        var(Grammar), !, throw(error(eval_variable(Grammar)))),
+    contract((Module, Grammar, I, O), (not var(Grammar), module(Module)), true),
     ((Module, (A, B), I, O):
         xtl_eval_dcg(Module, A, I, J),
         xtl_eval_dcg(Module, B, J, O)),
@@ -109,6 +174,7 @@ pred xtl_eval_dcg:
         ; throw(error(not_found(Name/N)))))
 
 pred xtl_eval_call:
+    contract((Module, Declaration, Arguments), (module(Module), module_declaration(Declaration), list(Arguments)), true),
     ((Module, prolog(Name/N), Arguments):
         assert(length(Arguments, N)),
         Goal := xtl_apply(Name, Arguments),
@@ -127,19 +193,41 @@ pred xtl_eval_call:
             orlist(xtl_eval_call_pred(Module, Arguments), Copy)
         ; orlist(xtl_eval_call_fun(Module, Arguments), Copy)))
 
+test xtl_eval_call:
+    M := xtlm_new(eval),
+    xtlm_add(M, prolog(true/0)),
+    xtlm_add(M, prolog(false/0)),
+    xtlm_seal(M),
+
+    xtl_eval_call(M, prolog(is/2), [1,1]),
+    not xtl_eval_call(M, prolog(is/2), [1,2]),
+
+    G = define(g, [predicate], [(1: true), (2: false)]),
+    xtl_eval_call(M, G, [1]),
+    not xtl_eval_call(M, G, [2]),
+
+    F = define(f, [], [(1: 2)]),
+    xtl_eval_call(M, F, [1, 2]),
+    not xtl_eval_call(M, F, [1, 1])
+
+
 pred xtl_eval_call_pred:
-    (Module, Arguments, (Head: Body)):
+    contract((Module, Arguments, Clause), (module(Module), list(Arguments), define_clause(Clause)), true),
+    ((Module, Arguments, (Head: Body)):
         comma_list(Head, Arguments),
-        xtl_eval_goal(Module, Body)
+        xtl_eval_goal(Module, Body))
 
 pred xtl_eval_call_fun:
-    (Module, Arguments, (Head: Body)):
+    contract((Module, Arguments, Clause), (module(Module), list(Arguments), define_clause(Clause)), true),
+    ((Module, Arguments, (Head: Body)):
         append(Parameters, [Result], Arguments),
-        comma_list(Head, Paremeters),
-        xtl_eval_funexpr(Module, Body, Result)
+        comma_list(Head, Parameters),
+        xtl_eval_funexpr(Module, Body, Result))
 
 pred xtl_eval_call_dcg:
-    (Module, Arguments, (Head: Body)):
+    contract((Module, Arguments, Clause), (module(Module), list(Arguments), define_clause(Clause)), true),
+    ((Module, Arguments, (Head: Body)):
         append(Parameters, [I, O], Arguments),
         comma_list(Head, Parameters),
-        xtl_eval_dcg(Module, Body, I, O)
+        xtl_eval_dcg(Module, Body, I, O))
+

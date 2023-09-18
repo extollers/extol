@@ -4,7 +4,7 @@
 % TODO: parse error locations
 
 dcg many:
-% TODO ATN contract((Predicate, List), (callable(Predicate), list_or_partial_list(List)), list(List)),
+% TODO ATN contract((Predicate, List), (xtl_callable(Predicate), list_or_partial_list(List)), list(List)),
 %((P, [X | Xs]): call(P, X), '__contract_free_many'(P, Xs), !),
 ((P, [X | Xs]): call(P, X), many(P, Xs), !),
 ((_, []): [])
@@ -14,7 +14,7 @@ dcg many:
     ((_): { true })
 
 dcg many1:
-contract((Predicate, List), (callable(Predicate), list_or_partial_list(List)), list(List)),
+contract((Predicate, List), (xtl_callable(Predicate), list_or_partial_list(List)), list(List)),
 ((P, [X | Xs]): call(P, X), !, many(P, Xs))
 
 inline

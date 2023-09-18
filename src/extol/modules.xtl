@@ -58,10 +58,10 @@ pred xtlm_find_: (module(_, Declarations, _), Decl):
 
 pred xtlm_add: (Module, Declaration):
     Name/N/Type := xtlm_declaration_key(Declaration),
-    ( xtlm_find(Module, Name/N/K, _),
-        throw(conflicting_declaration(Name/N,K,Declaration))
+    ( xtlm_find(Module, Name/N/K, Existing),
+        throw(conflicting_declaration(existing(Existing), new(Name/N,K,Declaration)))
     ;
-        % log(adding_declaration(Name/N/Type)),
+        log(adding_declaration(Name/N/Type)),
         xtlm_add_(Module, Name/N/Type, Declaration))
 
 pred xtlm_add_: (module(_, Declarations, _), Key, Declaration):
@@ -73,12 +73,20 @@ pred xtlm_declaration_key:
     ((define(Name, Annots, Clauses), Key):
         !,
 	Clauses = [(Head : _) | _],
-        ( member(dcg2, Annots), !,
-            Key = (Name/(:= 2 + length(comma_list(Head)))/[dcg2])
+        ( member('dcg2', Annots), !,
+            comma_list(Head, HeadList),
+            length(HeadList, HeadN),
+            N is 2 + HeadN,
+            Key = (Name/N/['dcg2'])
         ; member(predicate, Annots), !,
-            Key = (Name/(:= length(comma_list(Head)))/[pred])
+            comma_list(Head, HeadList),
+            length(HeadList, N),
+            Key = (Name/N/['pred'])
         ; !,
-            Key = (Name/(:= 1 + length(comma_list(Head)))/[fun]))),
+            comma_list(Head, HeadList),
+            length(HeadList, HeadN),
+            N is 1 + HeadN,
+            Key = (Name/N/['fun']))),
     ((test(Name, _), (Name/'-'/[test])): !),
     ((Other, _): throw(error(unsuported_declaration(Other))))
 
@@ -104,35 +112,24 @@ pred xtlm_add_import_: (Module, Prefix, Import, Key-Declaration):
 pred xtlm_zip_module_: (Module, Decl, ModDecl):
     ModDecl = Module-Decl
 
-pred xtlm_all_declarations_: (Imports, Name-DeclPairs, ModOut):
+pred xtl_want_declaration:
+    ((true, (test _ : _)): !, false),
+    ((_, Decl): xtl_declaration(Decl))
+
+pred xtlm_all_declarations_: (Imports, Slim, Name-DeclPairs, ModOut):
     maplist(snd, DeclPairs, Decls),
-    filterlist(xtl_declaration, Decls, Out),
+    filterlist(xtl_want_declaration(Slim), Decls, Out),
     Module = module(Name, DeclPairs, Imports),
     maplist(xtlm_zip_module_(Module), Out, ModOut)
 
-pred xtlm_all_declarations_recursive: (Module, ModDecls):
+pred xtlm_all_declarations_recursive: (Module, Slim, ModDecls):
     module(_, _, Imports) = Module,
     length(Imports, _),
-    maplist(xtlm_all_declarations_(Imports), Imports, Declss),
-    Builtins := [generate_load_builtins(Module)],
-    append([Builtins|Declss], ModDecls)
+    maplist(xtlm_all_declarations_(Imports, Slim), Imports, Declss),
+    append(Declss, ModDecls)
 
 fun xtlm_imports: module(_, _, Imports): Imports
 
 fun xtlm_find_import: (module(_, _, Imports), Name):
     module(Name, Declarations, Imports)
     if pmember(Imports, Name-Declarations)
-
-pred generate_load_builtins: (Module, Gen):
-    module(_, Declarations, _) = Module,
-    maplist(gen_add_builtin(RuntimeDeclarations), Declarations, List),
-    comma_list(Commas, List),
-    Gen = Module-(
-        define(builtin_load_builtins,
-            [nondet, predicate],
-            [(module(_, RuntimeDeclarations, _):
-                Commas)]))
-
-pred gen_add_builtin: (RuntimeDeclarations, Name/N/_-_, Gen):
-    Gen = (
-        member(((Name/N/pred)-prolog(Name/N)), RuntimeDeclarations), !)

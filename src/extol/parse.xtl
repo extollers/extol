@@ -1,6 +1,6 @@
 %% Extol
 
-% TODO: path relative to source instead of cwd
+% TODO: replace include with import
 pred xtl_include: (File, Module):
     log(including(File)),
     xtl_include(File, := read_file(File), Module)
@@ -8,6 +8,7 @@ pred xtl_include: (File, Module):
 pred xtl_include: (File, Contents, Module):
     must(xtl_top_level(Module, Contents, []))
 
+% TODO: path relative to source instead of cwd
 pred xtl_import: ((Contents, Name, Module):
     log(importing(File, Name)),
     must(Imports := xtlm_imports(Module)),
@@ -21,7 +22,7 @@ pred xtl_import: ((Contents, Name, Module):
     log(imports(Imports)))
 
 dcg xtl_token:
-    contract(N, callable(N), true),
+    contract(N, xtl_callable(N), true),
     (N: N, xtl_skipwhite)
 
 test xtl_token :
@@ -56,17 +57,20 @@ dcg xtl_top_level:
         {log(parsing_top_level)},
         ( "#!", !, xtl_line_comment_; { true }),
         xtl_skipwhite,
-        sf many(xtl_declaration(Module)),
+        many(xtl_declaration(Module)),
         require(eof))
 
 dcg xtl_declaration:
     contract(Module, module(Module), module(Module)),
     ((_): eof, !, {fail}),
     ((Module):
-        sf require(xtl_expression(pexpr(DeclV))), !,
+        require(xtl_expression(pexpr(DeclV))), !,
         {log(parsed_expression(DeclV))},
         { DeclV = include(Other), !,
-            sf xtl_include(Other, Module)
+            % log('TODO'('including?', Other)),
+            ( Other = 'src/prelude/prelude.xtl', !,
+                log('TODO'('skip including prelude'))
+            ; sf xtl_include(Other, Module))
         ; DeclV = import(Other, Spec), !,
             sf xtl_import(:= read_file(Other), Spec, Module)
         ; !, sf xtl_makevars(DeclV, DeclP, _), !,
@@ -419,7 +423,3 @@ pred xtl_op:
 % test parse_self :
 %     read_file('main.xtl', Bytes), !,
 %     xtl_top_level(_Decls, Bytes, [])
-
-fun xtl_slim_declaration:
-(((test _ : _)) : []),
-((Decl) : Decl)

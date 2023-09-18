@@ -5,6 +5,7 @@ BUILD ?= build
 -include $(BUILD)/config.mk
 
 VERBOSE ?= 0
+TRACE ?= # 0 1 2 i unit[1|2] repl[1|2|i] topl[1|2]
 SRC ?= $(CURDIR)
 ONLY ?= 0123i
 DESTDIR ?=
@@ -75,6 +76,8 @@ testi-%: install-if-needed
 	echo [I ] INTEGRATION TESTS $*
 	STAGE=I EXTOL=$(BINDIR)/$(NAME) $(SHELL) $/test/run "$*"
 
+trace = $(foreach x,$(1) all,$(if $(findstring  $(x) , $(TRACE) ),EXTOL_TRACE=1))
+
 define make_stage
 
 ifneq (,$$(findstring $(1),$$(ONLY)))
@@ -88,11 +91,11 @@ endif
 .PHONY: test$(1)
 test$(1): $$(STAGE$(1))
 	echo [$(1) ] INTEGRATION TESTS
-	STAGE=$(1) EXTOL=$$!stage$(1) $$(SHELL) $/test/run
+	$$(call trace,test1 test 1) STAGE=$(1) EXTOL=$$!stage$(1) $$(SHELL) $/test/run
 
 test$(1)-%: $$(STAGE$(1))
 	echo [$(1) ] INTEGRATION TESTS $$*
-	STAGE=$(1) EXTOL=$$!stage$(1) $$(SHELL) $/test/run "$$*"
+	$$(call trace,$$@ test $(1)) STAGE=$(1) EXTOL=$$!stage$(1) $$(SHELL) $/test/run "$$*"
 
 .PHONY: diff$(1)$(2)
 diff$(1)$(2): $!stage$(2).pl $$(STAGE$(1)_PL)
@@ -102,25 +105,25 @@ diff$(1)$(2): $!stage$(2).pl $$(STAGE$(1)_PL)
 .PHONY: unit$(2)
 unit$(2): $!stage$(2)
 	@echo [$(2) ] UNIT $$<
-	$(./)$$< test
+	$$(call trace,$$@ unit $(2)) $(./)$$< test
 
 unit$(2)-%: $!stage$(2)
 	@echo [$(2) ] UNIT $$< $$*
-	$(./)$$< test $$*
+	$$(call trace,unit$(2) unit $(2)) $(./)$$< test $$*
 
 .PHONY: unit$(2)
 eunit$(1): $!stage$(1)
 	@echo [$(1)E] EVAL UNIT $$<
-	$(./)$$< eval-tests $/src/main.xtl
+	$$(call trace,$$@ enuit $(1)) $(./)$$< eval-tests $/src/main.xtl
 
 eunit$(1)-%: $!stage$(1)
 	@echo [$(1)E] UNIT $$< $$*
-	$(./)$$< eval-tests $/src/main.xtl $$*
+	$$(call trace,eunit$(1) eunit $(1)) $(./)$$< eval-tests $/src/main.xtl $$*
 
 $!stage$(2).pl: $$(STAGE$(1)) $(all_sources)
 	@echo [$(2) ] TOPL $$@
 	@rm -f $$@
-	$(./)$!stage$(1) extoltoprolog $/src/main.xtl $$@
+	$$(call trace,topl$(1) topl $(1)) $(./)$!stage$(1) extoltoprolog $/src/main.xtl $$@
 
 $!stage$(1): $!stage$(1).pl
 	@echo [$(1) ] PLC $$@
@@ -132,7 +135,7 @@ $(1): $!stage$(1)
 .PHONY: repl$(1)
 repl$(1): $(1)
 	@echo [$(1) ] REPL
-	$(./)$!stage$(1) repl
+	$$(call trace,$$@ repl $(1)) $(./)$!stage$(1) repl
 
 endef
 
@@ -159,7 +162,7 @@ $(eval $(call make_stage,2,3))
 .PHONY: reboot
 reboot: 2
 	@echo [--] BOOT $/bootstrap/stage0.pl
-	$(./)$!stage2 extoltoprolog $/src/main.xtl $!stage0.pl # --slim
+	$(call trace,reboot topl 2) $(./)$!stage2 extoltoprolog $/src/main.xtl $!stage0.pl --slim
 	cp $!stage0.pl $/bootstrap/stage0.pl
 	@echo [--] REBOOT COMPLETE
 
@@ -174,7 +177,7 @@ repl: repl2
 .PHONY: repli
 repli: install-if-needed
 	@echo [I ] REPL
-	$(BINDIR)/$(NAME) repl
+	$(call trace,repli repl i) $(BINDIR)/$(NAME) repl
 
 unit-%: unit1-% unit2-%
 	@echo [--] UNIT TEST "'$*'" PASSED

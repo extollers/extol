@@ -1,7 +1,7 @@
 %% Extol to Prolog
 
 pred xtl_to_pl_toplevel: (XTL, PL):
-    maplist(must(xtl_to_pl_declaration), XTL, DeclsPL),
+    maplist(xtl_to_pl_declaration, XTL, DeclsPL),
     append(DeclsPL, FlatDeclsPL),
     append([
             (:- set_prolog_flag(singleton_warning, off)),
@@ -10,39 +10,42 @@ pred xtl_to_pl_toplevel: (XTL, PL):
             ], FlatDeclsPL, PL)
 
 pred xtl_to_pl_declaration:
-    (Mod-XTL, PL):
+    contract((ModXTL, PL),
+        (ModXTL = Mod-XTL, module(Mod), module_declaration(XTL)),
+        true),
+    ((Mod-XTL, PL):
         log(compiling(XTL, Mod)),
-        sf xtl_to_pl_declaration(Mod, XTL, PL)
+        sf must(xtl_to_pl_declaration(Mod, XTL, PL)))
 
 pred xtl_to_pl_declaration:
-    contract((Module, XTL, PL), xtl_declaration(XTL), true),
-    ((_, XTL, PL): log(to_pl_declaration(XTL)), false),
+    contract((Module, XTL, PL), (module(Module), xtl_declaration(XTL)), true),
+    ((_, XTL, _): log(to_pl_declaration(XTL)), false),
     ((Module, (test(Name, XTL)), [(test Name :- PL)]) : !,
-        xtl_to_pl_goal(Module, XTL, PL),
+        sf xtl_to_pl_goal(Module, XTL, PL),
         numbervars(PL)),
     ((Module, define(Name, [nondet], Clauses), ClausesPL) : !,
-        maplist(xtl_to_pl_fun(Module, Name), Clauses, ClausesPL),
+        sf maplist(xtl_to_pl_fun(Module, Name), Clauses, ClausesPL),
         numbervars(ClausesPL)),
     ((Module, define(Name, [nondet, predicate | Contract], Defs), Decls) : !,
         ( (Contract = [], ! ; Contract = ['inline']), !,
-            maplist(xtl_def_to_pl(Module, pred(Name)), Defs, Decls)
+            sf maplist(xtl_def_to_pl(Module, pred(Name)), Defs, Decls)
         ; atom_concat('__contract_free_', Name, InnerName),
-            maplist(xtl_def_to_pl(Module, pred(InnerName)), Defs, InnerDecls),
-            xtl_contract_to_pl(Module, pred, Name, InnerName, Contract, OuterDecls),
+            sf maplist(xtl_def_to_pl(Module, pred(InnerName)), Defs, InnerDecls),
+            sf xtl_contract_to_pl(Module, pred, Name, InnerName, Contract, OuterDecls),
             append(OuterDecls, InnerDecls, Decls))),
     ((Module, define(Name, [dcg2, nondet, predicate | Contract], Defs), Decls) : !,
         ( (Contract = [], ! ; Contract = ['inline']), !,
-            maplist(xtl_def_to_pl(Module, dcg2(Name)), Defs, Decls)
+            sf maplist(xtl_def_to_pl(Module, dcg2(Name)), Defs, Decls)
         ; atom_concat('__contract_free_', Name, InnerName),
-            maplist(xtl_def_to_pl(Module, dcg2(InnerName)), Defs, InnerDecls),
-            xtl_contract_to_pl(Module, dcg2, Name, InnerName, Contract, OuterDecls),
+            sf maplist(xtl_def_to_pl(Module, dcg2(InnerName)), Defs, InnerDecls),
+            sf xtl_contract_to_pl(Module, dcg2, Name, InnerName, Contract, OuterDecls),
             append(OuterDecls, InnerDecls, Decls))),
     ((Module, define(Name, Annots, Clauses), DeclsPL):
         AnnotsState := maplist(xtl_annot_prepare, Annots),
-        xtl_define_clauses_to_params(Clauses, Params),
+        sf xtl_define_clauses_to_params(Clauses, Params),
         NewParams := foldl(xtl_annot_extend_params, Params, AnnotsState),
         (WrapperPL, InnerName) := xtl_annot_wrap(Module, Name, NewParams, AnnotsState),
-        maplist(xtl_annot_clause_to_pl(Module, InnerName, AnnotsState), Clauses, ClausesPL),
+        sf maplist(xtl_annot_clause_to_pl(Module, InnerName, AnnotsState), Clauses, ClausesPL),
         DeclsPL := append(WrapperPL, ClausesPL)),
     ((_, prolog(F/N), []): !), % TODO: remove
     ((_, X, _) : !, throw(error(unknown_declaration(X))))
@@ -132,7 +135,7 @@ pred xtl_def_to_pl:
         numbervars(HeadPL-GoalPL))
 
 pred xtl_to_pl_goal:
-    (_, (Var, call(Var)) : % TODO: get rid of extra parenthesis around each clause
+    ((_, Var, call(Var)) : % TODO: get rid of extra parenthesis around each clause
         var(Var), !),
     ((Module, (A, B), (APL, BPL), ()) : !, % TODO: get rid of ", ()"
         xtl_to_pl_goal(Module, A, APL),
@@ -141,6 +144,15 @@ pred xtl_to_pl_goal:
         xtl_to_pl_goal(Module, A, APL),
         xtl_to_pl_goal(Module, B, BPL)),
     ((_, '!', '!') : !),
+    ((Module, prolog$(VarsXTL, VarsPL, Prolog), (ExtraGoals, V=VPL, PL), ()) : !,
+        atom_concat(VarsPL, '-(', C1),
+        atom_concat(C1, Prolog, C2),
+        TermAtom := atom_concat(C2, ').'),
+    VPL-PL := read_from_atom(TermAtom),
+        xtl_to_pl_quoted(Module, V, VarsXTL, ExtraGoalsList),
+        ( comma_list(ExtraGoals, ExtraGoalsList),
+            ExtraGoals \= (), !
+        ; ExtraGoals = true)),
     ((Module, (Var := Fun), Goal) : !,
         xtl_to_pl_funexpr(Module, Var, Fun, List),
         comma_list(Goal, List)),
@@ -273,15 +285,16 @@ pred xtl_to_pl_dcg_call:
 
 test xtl_to_pl_dcg_call:
     Module := xtlm_new(main),
-    xtlm_add(Module, prolog(f/1)),
+    xtlm_add(Module, prolog(f/3)),
     xtlm_add(Module, prolog('='/2)),
     xtlm_add(Module, prolog(true/0)),
     xtlm_add(Module, prolog(i/3)),
+    xtlm_seal(Module),
 
-    Res := xtl_to_pl_dcg_call(Module, g, `define(g, [inline, dcg2], [(1 : true), (Y : f(Y))]), [3], i, o),
+    Res := xtl_to_pl_dcg_call(Module, g, `define(g, [inline, dcg2], [(1 : {true}), (Y : f(Y))]), [3], i, o),
     Res = (
-        [1]=[3], i=o, true ;
-        [x]=[3], i=o, f(x) ),
+        [1]=[3], true, i=o ;
+        [x]=[3], f(x,i,o) ),
 
     Res2 := xtl_to_pl_dcg_call(Module, h, `define(h, [inline], [((X, I, O): i(X, I, O))]), [3], i, o),
     Res2 = ([a, b, c] = [3, i, o], i(a, b, c))
@@ -324,7 +337,7 @@ pred xtl_to_pl_fun:
         Frame =... [Name | ArgsList],
         append(ArgsList, [Result], ArgsPL),
         HeadPL =... [Name | ArgsPL],
-        xtl_to_pl_funexpr(Module, Result, Body, BodyListPL),
+        sf xtl_to_pl_funexpr(Module, Result, Body, BodyListPL),
         ( BodyListPL = [],
           BodyPL = true
         ; comma_list(BodyPL, BodyListPL)))
@@ -332,22 +345,22 @@ pred xtl_to_pl_fun:
 pred xtl_to_pl_funexpr:
     ((_, Var, Var, []): var(Var), !),
     ((Module, Result, (Result if Goal), [PL]):
-        !, xtl_to_pl_goal(Module, Goal, PL)),
+        !, sf xtl_to_pl_goal(Module, Goal, PL)),
     ((_, Number, Number, []): number(Number), !),
     ((_, Atom, Atom, []): atom(Atom), !),
     ((_, [], [], []): true),
     ((Module, [X | Xs], [Y | Ys], PL):
-        PL := append(xtl_to_pl_funexpr(Module, X, Y), xtl_to_pl_funexpr(Module, Xs, Ys))),
+        sf PL := append(xtl_to_pl_funexpr(Module, X, Y), xtl_to_pl_funexpr(Module, Xs, Ys))),
     ((Module, Res, (`Quoted), PL):
-        PL := xtl_to_pl_quoted(Module, Res, Quoted)),
+        sf PL := xtl_to_pl_quoted(Module, Res, Quoted)),
     ((Module, Res, (@` Quoted), PL):
-        PL := xtl_to_pl_xtlquote(Module, Res, Quoted)),
+        sf PL := xtl_to_pl_xtlquote(Module, Res, Quoted)),
     ((Module, Result, Functor, PL):
         Functor := xtl_apply( Name, ListFun), !,
         N := length(ListFun) + 1,
-        ( xtlm_find(Module, Name/N/_, _), !
+        ( sf xtlm_find(Module, Name/N/_, _), !
         ; throw(not_found(fun, Name/N))),
-        maplist(xtl_to_pl_funexpr(Module), Results, ListFun, DepsPLs),
+        sf maplist(xtl_to_pl_funexpr(Module), Results, ListFun, DepsPLs),
         append(DepsPLs, DepsPL),
         append(Results, [Result], ArgsPL),
         FunctorPL =... [Name | ArgsPL],

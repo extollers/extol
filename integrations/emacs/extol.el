@@ -12,8 +12,8 @@
   (list
    (cons (concat "\\(\\<" (regexp-opt '("pred" "dcg" "dcg2" "contract" "test" "fun" "define")) "\\>\\|[!:]\\)") font-lock-keyword-face)
    '("\\(\\<\\(0'\\\\?.\\|[0-9]+\\)\\>\\|'[^']+'\\)" . font-lock-constant-face)
-   '("\\(\\<[a-z][A-Za-z0-9_]*\\>\\)" . font-lock-function-name-face)
-   '("\\<\\([A-Z_][A-Za-z0-9_]*\\)\\>" . font-lock-variable-name-face)
+   '("\\(\\<[a-z][A-Za-z0-9_$]*\\>\\)" . font-lock-function-name-face)
+   '("\\<\\([A-Z_][A-Za-z0-9_$]*\\)\\>" . font-lock-variable-name-face)
    ) "Extol mode highlighting")
 
 (defun extol-indent-line ()

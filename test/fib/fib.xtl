@@ -1,10 +1,6 @@
 prolog(write/1)
-prolog(is/2)
 prolog(halt/0)
 prolog(member/2)
-
-fun '+': (A, B): C if C is A + B
-fun '-': (A, B): C if C is A - B
 
 fun fib:
     (0: 1),

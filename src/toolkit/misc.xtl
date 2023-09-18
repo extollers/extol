@@ -26,7 +26,7 @@ pred assert:
 %% Lists
 
 fun foldl:
-% contract((F, Z, L), (callable(F), list_or_partial_list(L)), list(L)),
+% contract((F, Z, L), (xtl_callable(F), list_or_partial_list(L)), list(L)),
 ((_, R, []): R),
 ((F, Z, [X | Xs]): foldl(F, call(F, Z, X), Xs))
 
@@ -64,12 +64,11 @@ pred error_unless:
     ((_, Error) : throw(error(Error))),
     ((Goal) : error_unless(Goal, goal_failed(Goal)))
 
-pred '=...':
-contract((F, A), ((compound(F); atom(F); A = [G | _], atom(G)), list_or_partial_list(A)), true),
-((F, A) : F =.. A)
+pred xtl_callable: (F): compound(F) ; atom(F)
 
-fun '+': (A, B): C if C is A + B
-fun '-': (A, B): C if C is A - B
+pred '=...':
+contract((F, A), ((xtl_callable(F); A = [G | _], atom(G)), list_or_partial_list(A)), true),
+((F, A) : F =.. A)
 
 fun fib:
   (0 : 1),
@@ -96,10 +95,10 @@ pred pmember:
     ((_, V): var(V), !, false),
     ((_, []): !, false),
     ((X, [X | Xs]): !,
-        % log(pmember_found(X)),
+        log(pmember_found(X)),
         true),
     ((X, [Y | Xs]):
-        % log(pmember_not_it(Y)),
+        log(pmember_not_it(Y)),
         pmember(X, Xs))
 
 pred pinsert:
@@ -125,4 +124,4 @@ pred not: G: G, !, false; true
 
 pred orlist:
     ((Goal, []): false),
-    ((Goal, [X | Xs]): call(Goal, [X]) ; orlist(Goal, Xs))
+    ((Goal, [X | Xs]): call(Goal, X) ; orlist(Goal, Xs))
