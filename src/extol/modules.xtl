@@ -113,7 +113,7 @@ pred xtlm_zip_module_: (Module, Decl, ModDecl):
     ModDecl = Module-Decl
 
 pred xtl_want_declaration:
-    ((true, (test _ : _)): !, false),
+    ((true, (test(X, _))): !, false),
     ((_, Decl): xtl_declaration(Decl))
 
 pred xtlm_all_declarations_: (Imports, Slim, Name-DeclPairs, ModOut):
@@ -126,7 +126,10 @@ pred xtlm_all_declarations_recursive: (Module, Slim, ModDecls):
     module(_, _, Imports) = Module,
     length(Imports, _),
     maplist(xtlm_all_declarations_(Imports, Slim), Imports, Declss),
-    append(Declss, ModDecls)
+    ( Slim = true, !,
+        NoTests = [Module-test(disabled, t(unit_tests_disabled))]
+    ; NoTests = []),
+    append([NoTests|Declss], ModDecls)
 
 fun xtlm_imports: module(_, _, Imports): Imports
 

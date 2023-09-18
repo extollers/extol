@@ -116,6 +116,11 @@ pred filterlist:
         call(P, X), !, filterlist(P, Xs, Zs), Ys = [X | Zs]
     ; filterlist(P, Xs, Ys))
 
+test filterlist:
+    filterlist('='(1), [1,2,3,1], [1,1]),
+    not filterlist('='(1), [1], []),
+    filterlist('='(2), [1], [])
+
 inline
 pred '()': (): true
 

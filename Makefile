@@ -52,6 +52,7 @@ check0: # TODO: eunit0
 check1: unit1 test1 # TODO: eunit1
 check2: unit2 test2 # TODO: eunit2
 eunit: eunit0 eunit1 # TODO: eunit2
+unit: unit1 unit2
 check: check0 check1 check2 diff23 testi
 	@echo [--] ALL TESTS PASSED
 
