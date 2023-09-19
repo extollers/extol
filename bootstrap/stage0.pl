@@ -153,7 +153,7 @@ test(:-(disabled,t(unit_tests_disabled))).
 :-(xtl_makevar(A,B),=...(B,'.'('XTL$VARNAME','.'(A,[])))).
 :-(xtl_include(A,B),','(log(including(A)),','(read_file(A,C),xtl_include(A,C,B)))).
 :-(xtl_include(A,B,C),must(xtl_top_level(C,B,[]))).
-:-(xtl_import(A,B,C),','(log(importing(D,B)),','(must(:=(E,xtlm_imports(C))),','(;(','(pmember(-(B,F),E),','(!,=(G,module(B,F,E)))),','(must(:=(G,xtlm_new(B,E))),','(must(xtl_top_level(G,A,[])),must(xtlm_seal(G))))),','(must(xtlm_import(C,G,inline)),log(imports(E))))))).
+:-(xtl_import(A,B,C),','(log(importing(B)),','(must(:=(D,xtlm_imports(C))),','(;(','(pmember(-(B,E),D),','(!,=(F,module(B,E,D)))),','(must(:=(F,xtlm_new(B,D))),','(must(xtl_top_level(F,A,[])),must(xtlm_seal(F))))),','(must(xtlm_import(C,F,inline)),log(imports(D))))))).
 :-(xtl_token(A,B,C),','(assert(xtl_callable(A)),','('__contract_free_xtl_token'(A,B,C),assert(true)))).
 :-('__contract_free_xtl_token'(A,B,C),','(dcg_call(A,B,D),xtl_skipwhite(D,C))).
 :-(xtl_skipwhite(A,B),','(xtl_white(A,C),','(!,=(C,B)))).
@@ -297,7 +297,7 @@ test(:-(disabled,t(unit_tests_disabled))).
 :-(xtl_to_pl_goal(A,;(B,C),;(D,E)),','(!,','(xtl_to_pl_goal(A,B,D),xtl_to_pl_goal(A,C,E)))).
 :-(xtl_to_pl_goal(A,!,!),!).
 :-(xtl_to_pl_goal(A,'prolog$'(B,C,D),','(E,','(=(F,G),H))),','(!,','(atom_concat(C,'-(',I),','(atom_concat(I,D,J),','(atom_concat(J,').',K),','(read_from_atom(K,-(G,H)),','(xtl_to_pl_quoted(A,F,B,L),;(','(comma_list(E,L),','(\=(E,'()'),!)),=(E,true))))))))).
-:-(xtl_to_pl_goal(A,:=(B,C),D),','(!,','(xtl_to_pl_funexpr(A,B,C,E),comma_list(D,E)))).
+:-(xtl_to_pl_goal(A,:=(B,C),D),','(!,','(xtl_to_pl_quoted(A,E,B,F),','(xtl_to_pl_funexpr(A,E,C,G),','(append(F,G,H),comma_list(D,H)))))).
 :-(xtl_to_pl_goal(A,B,C),','(xtl_apply(D,E,B),','(length(E,F),','(;(','(xtlm_find(A,/(/(D,F),G),H),!),throw(not_found(pred,/(D,F),A))),','(maplist(xtl_to_pl_quoted(A),I,E,J),','(append(J,K),','(comma_list(L,K),','(xtl_to_pl_goal_call(A,D,H,I,M),;(','(=(L,'()'),=(C,M)),=(C,','(L,M))))))))))).
 :-(xtl_to_pl_goal_call(A,B,define(C,D,E),F,G),','(member(inline,D),','(!,','(maplist(copy_term,E,H),','(maplist(xtl_inline_pred_clause(F),H,I,J),','(maplist(xtl_to_pl_goal(A),J,K),','(maplist(pl_comma,I,K,L),semicolon_list(G,L)))))))).
 :-(xtl_to_pl_goal_call(A,B,C,D,E),=...(E,'.'(B,D))).
@@ -365,8 +365,8 @@ test(:-(disabled,t(unit_tests_disabled))).
 :-(module_declaration(A),xtl_declaration(A)).
 :-(name(name(A)),','(maplist(atom,A),','(=('.'(B,[]),'.'(length(A,1),[])),;(','(call(B),','(!,false)),true)))).
 :-(name(A),atom(A)).
-:-(name_list(name(A),A),','(=('.'(B,[]),'.'(=(A,'.'(C,[])),[])),;(','(call(B),','(!,false)),true))).
-:-(name_list(A,'.'(A,[])),atom(A)).
+:-(name_list(name(A),A),','(','(=('.'(B,[]),'.'(not(=(A,'.'(C,[]))),[])),catch(B,D,throw_with_trace(D,B))),!)).
+:-(name_list(A,'.'(A,[])),','(=('.'(B,[]),'.'(atom(A),[])),catch(B,C,throw_with_trace(C,B)))).
 :-(concat_name(A,B,C),','(','(name_list(A,D),','(name_list(B,E),append(D,E,F))),name_list(C,F))).
 :-(xtlm_new(A,B),=(B,module(A,C,'.'(-(A,C),D)))).
 :-(xtlm_new(A,B,C),','(;(','(pmember(-(A,D),B),throw(error(already_imported(A)))),true),','(pinsert(-(A,E),B),=(C,module(A,E,B))))).
@@ -435,7 +435,7 @@ test(:-(disabled,t(unit_tests_disabled))).
 :-(main,catch(','(current_prolog_flag(argv,A),;(','(=(A,'.'(B,'.'(C,D))),','(!,','(command(C,D),halt))),','(command(help,[]),halt(1)))),E,','(write('failed: '),','(print_exception(E),halt(1))))).
 :-(command(help,A),','(!,','(write('extol repl'),','(nl,','(write('    Invoke the interactive REPL'),','(nl,','(write('extol extoltoprolog <in.xtl> <out.pl> [--slim] [--inject <other.xtl>]...'),','(nl,','(write('    Convert the input for to prolog. Use "--slim" to remove tests for bootstrapping'),','(nl,','(write('extol test [test-name]'),','(nl,','(write('    Run all built-in unit tests or, if present, just the named test'),','(nl,','(write('extol eval-tests <in.xtl> [test-name]'),','(nl,','(write('    Eval all tests or, if present, just the named test'),','(nl,','(write('extol eval "expression" [--load <path>]...'),','(nl,','(write('    Load the given files, evaluate the expression and print its result'),nl))))))))))))))))))))).
 :-(command(test,A),','(!,;(','(test(:-(B,C)),','(;(=('.'(B,[]),A),=(A,[])),','(write('[  ] + '),','(write(B),','(write(': '),','(once(run_test(C)),fail)))))),true))).
-:-(command(extoltoprolog,A),','(!,','(getopts(A,'.'(multi('--inject',B),'.'(flag('--slim',C),'.'(argument(D,required),'.'(argument(E,required),[]))))),','(!,','(load_main(D,B,F),','(must(xtlm_all_declarations_recursive(F,C,G)),','(','(length(G,H),log(listed(H))),','(log(decls_new(G)),','(must(xtl_to_pl_toplevel(G,I)),','(','(length(I,J),log(translated(J))),','(must(pl_write_top_level(I,K,[])),','(!,','(must(append('.'(37,'.'(32,'.'(71,'.'(101,'.'(110,'.'(101,'.'(114,'.'(97,'.'(116,'.'(101,'.'(100,'.'(32,'.'(98,'.'(121,'.'(32,'.'(101,'.'(120,'.'(116,'.'(111,'.'(108,'.'(116,'.'(111,'.'(112,'.'(114,'.'(111,'.'(108,'.'(111,'.'(103,'.'(10,[]))))))))))))))))))))))))))))),K,L)),must(write_file(E,L))))))))))))))).
+:-(command(extoltoprolog,A),','(!,','(getopts(A,'.'(multi('--inject',B),'.'(multi('--inject-prolog',C),'.'(flag('--slim',D),'.'(argument(E,required),'.'(argument(F,required),[])))))),','(!,','(load_main(E,B,G),','(must(xtlm_all_declarations_recursive(G,D,H)),','(','(length(H,I),log(listed(I))),','(log(decls_new(H)),','(must(xtl_to_pl_toplevel(H,J)),','(','(length(J,K),log(translated(K))),','(must(pl_write_top_level(J,L,[])),','(!,','(maplist(read_file,C,M),','(must(append('.'('.'(37,'.'(32,'.'(71,'.'(101,'.'(110,'.'(101,'.'(114,'.'(97,'.'(116,'.'(101,'.'(100,'.'(32,'.'(98,'.'(121,'.'(32,'.'(101,'.'(120,'.'(116,'.'(111,'.'(108,'.'(116,'.'(111,'.'(112,'.'(114,'.'(111,'.'(108,'.'(111,'.'(103,'.'(10,[]))))))))))))))))))))))))))))),'.'(L,M)),N)),must(write_file(F,N)))))))))))))))).
 :-(command('eval-tests','.'(A,[])),','(!,','(load_main(A,[],B),','(!,','(must(xtlm_all_declarations_recursive(B,true,C)),','(!,eval_tests(C))))))).
 :-(command(repl,[]),','(!,xtl_repl)).
 :-(command(eval,A),','(!,','(getopts(A,'.'(argument(B,required),'.'(multi('--load',C),[]))),xtl_command_eval(C,B)))).
