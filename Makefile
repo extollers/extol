@@ -35,7 +35,8 @@ ifeq ($!,./)
 ./ = ./
 endif
 
-all_sources = $(shell find $/src -type f -iname '*.xtl')
+extol_sources = $(shell find $/src -type f -iname '*.xtl' | grep -v src/prelude/)
+prelude_sources = $(shell find $/src/prelude -type f -iname '*.xtl')
 
 .PHONY: default
 default: 2
@@ -124,10 +125,10 @@ eunit$(1)-%: $!stage$(1)
 	@echo [$(1)E] UNIT $$< $$*
 	$$(call trace,eunit$(1) eunit $(1)) $(./)$$< eval-tests $/src/main.xtl $$*
 
-$!stage$(2).pl: $$(STAGE$(1)) $(all_sources) $$!embedded-prelude.pl
+$!stage$(2).pl: $$(STAGE$(1)) $$!embedded-prelude.pl
 	@echo [$(2) ] TOPL $$@
 	@rm -f $$@
-	$$(call trace,topl$(1) topl $(1)) $(./)$!stage$(1) extoltoprolog $/src/main.xtl $$@ --inject-prolog $$!embedded-prelude.pl
+	$$(call trace,topl$(1) topl $(1)) $(./)$!stage$(1) extoltoprolog $/src/main.xtl $$@ --inject-prolog $$!embedded-prelude.pl $$(stage$(2)_extra_flags)
 
 $!stage$(1): $!stage$(1).pl
 	@echo [$(1) ] PLC $$@
@@ -142,6 +143,16 @@ repl$(1): $(1)
 	$$(call trace,$$@ repl $(1)) $(./)$!stage$(1) repl
 
 endef
+
+$!stage1.pl: $(prelude_sources)
+
+stage1_extra_flags = # TODO --no-prelude --inject $/src/prelude/prelude.xtl
+stage2_extra_flags =
+stage3_extra_flags =
+
+$(eval $(call make_stage,0,1))
+$(eval $(call make_stage,1,2))
+$(eval $(call make_stage,2,3))
 
 %/.:
 	@echo [--] MKDIR $@
@@ -158,10 +169,6 @@ $!Makefile: | $!.
 $!stage0.pl: $/bootstrap/stage0.pl | $!.
 	@echo [0 ] COPY $@
 	cp $< $@
-
-$(eval $(call make_stage,0,1))
-$(eval $(call make_stage,1,2))
-$(eval $(call make_stage,2,3))
 
 .PHONY: reboot
 reboot: 2
@@ -216,7 +223,7 @@ docker:
 docker-repl: docker
 	docker run --rm --interactive --tty extol
 
-$!generate-embedded-prelude.pl: $/src/generate-embedded-prelude.xtl $!stage0
+$!generate-embedded-prelude.pl: $/src/generate-embedded-prelude.xtl $(prelude_sources) $!stage0
 	@echo '[  ]' TOPL $@
 	$(call trace,topl 0 topl0) $!stage0 extoltoprolog --slim $< $@
 

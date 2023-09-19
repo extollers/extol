@@ -52,10 +52,11 @@ pred command:
                 multi('--inject', Injects),
                 multi('--inject-prolog', InjectsProlog),
                 flag('--slim', Slim),
+                flag('--no-prelude', NoPrelude),
                 argument(In, required),
                 argument(Out, required)
                 ]), !,
-        Module := load_main(In, Injects),
+        Module := load_main(In, Injects, NoPrelude),
         must(xtlm_all_declarations_recursive(Module, Slim, ModDeclsXTL)),
         log(listed(:= length(ModDeclsXTL))),
         log(decls_new(ModDeclsXTL)),
@@ -67,7 +68,7 @@ pred command:
         must(write_file(Out, BytesOut))),
     (('eval-tests', [File]): !,
         % TODO: eval-tests (eunit) doesn't pass
-        Main := load_main(File, []), !,
+        Main := load_main(File, [], false), !,
         must(xtlm_all_declarations_recursive(Main, true, ModDecls)), !,
         eval_tests(ModDecls)),
     ((repl, []): !, xtl_repl),
@@ -102,9 +103,10 @@ pred load_injects:
         must(xtl_include(Path, Module)),
         load_injects(Rest, Module))
 
-pred load_main: (Path, Injects, Module):
+pred load_main: (Path, Injects, NoPrelude, Module):
     Module := xtlm_new(main),
-    xtl_include_prelude(Module), !,
+    ( NoPrelude = true, !
+    ; xtl_include_prelude(Module), !),
     log('revving'),
     load_injects(Injects, Module),
     must(xtl_include(Path, Module)),
