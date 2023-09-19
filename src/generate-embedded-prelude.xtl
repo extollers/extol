@@ -1,0 +1,23 @@
+include 'src/toolkit/prolog.xtl'
+include 'src/toolkit/trace.xtl'
+include 'src/toolkit/parsing.xtl'
+include 'src/toolkit/misc.xtl'
+include 'src/toolkit/streams.xtl'
+include 'src/toolkit/getopts.xtl'
+
+include 'src/extol/ast.xtl'
+include 'src/extol/parse.xtl'
+include 'src/extol/compile.xtl'
+include 'src/extol/modules.xtl'
+include 'src/extol/eval.xtl'
+
+prolog(halt/1)
+
+pred main: ():
+    xtlm_new(prelude, Module),
+    xtl_include('src/prelude/prelude.xtl', Module),
+    module(_, Declarations, _) = Module,
+    write('xtl_include_prelude(module(_, '),
+    write_term(Declarations, [quoted(true), namevars(true), numbervars(true), ignore_ops(true)]),
+    write(', _)).'),
+    halt(0)

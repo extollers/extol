@@ -26,12 +26,19 @@ pred name:
     (A: atom(A))
 
 pred name_list:
-    ((name(Xs), Xs): not (Xs = [_])),
-    ((X, [X]): atom(X))
+    ((name(Xs), Xs): sf not (Xs = [_]), !),
+    ((X, [X]): sf atom(X))
 
 pred concat_name: (A, B, Res):
     Xs := append(name_list(A), name_list(B)),
     name_list(Res, Xs)
+
+test concat_name:
+    concat_name(name([]), b, b),
+    concat_name(a, b, name([a,b])),
+    concat_name(name([a, b]), c, name([a,b,c])),
+    concat_name(a, name([b, c]), name([a,b,c])),
+    concat_name(name([a, b]), name([c, d]), name([a,b,c,d]))
 
 % TODO: store attributes instead of just `/pred'
 
@@ -42,7 +49,7 @@ pred xtlm_new: (Name, Module):
 pred xtlm_new: (Name, Imports, Module):
     %log(new(Name, := plength(Imports))),
     ( pmember(Name-_, Imports),
-	throw(error(already_imported(Name)))
+        throw(error(already_imported(Name)))
     ; true),
     pinsert(Name-Decls, Imports),
     Module = module(Name, Decls, Imports)

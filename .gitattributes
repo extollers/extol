@@ -1,15 +1,12 @@
-bootstrap/* linguist-generated
+bootstrap/* binary linguist-generated
 test/**/expected/** linguist-generated
-*.xtl linguist-language=Cool
 
 [attr]strict-text text eol=lf diff whitespace encoding=utf-8
-*.xtl strict-text
-*.md strict-text
-*.el strict-text
-*.sh strict-text
-test/run strict-text
-test/**/test strict-text
-Makefile strict-text
-NOTICE strict-text
-
-bootstrap/* binary
+*.xtl strict-text linguist-language=Cool
+*.md strict-text linguist-language=Markdown
+*.el strict-text linguist-language=elisp
+*.sh strict-text linguist-language=Shell
+test/run strict-text linguist-language=Shell
+test/**/test strict-text linguist-language=Shell
+Makefile strict-text linguist-language=Makefile
+NOTICE strict-text linguist-language=Text

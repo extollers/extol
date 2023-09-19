@@ -1,0 +1,5 @@
+capture extol extoltoprolog --inject-prolog input/injected.pl input/test-inject-prolog.xtl out/test-inject-prolog.prolog
+cd out
+gplc test-inject-prolog.prolog
+capture ./test-inject-prolog
+rm test-inject-prolog

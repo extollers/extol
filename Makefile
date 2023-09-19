@@ -56,6 +56,9 @@ unit: unit1 unit2
 check: check0 check1 check2 diff23 testi
 	@echo [--] ALL TESTS PASSED
 
+test-%: test1-% test2-%
+	@true
+
 eunit-%: eunit0-% eunit1-% eunit2-%
 	@true
 
@@ -126,7 +129,7 @@ $!stage$(2).pl: $$(STAGE$(1)) $(all_sources)
 	@rm -f $$@
 	$$(call trace,topl$(1) topl $(1)) $(./)$!stage$(1) extoltoprolog $/src/main.xtl $$@
 
-$!stage$(1): $!stage$(1).pl
+$!stage$(1): $!stage$(1).pl $$(if $$(findstring $(1),0),,$$!embedded-prelude.pl)
 	@echo [$(1) ] PLC $$@
 	$(PLC) $(PLC_FLAGS) $$< -o $$@
 
@@ -212,3 +215,16 @@ docker:
 .PHONY: docker-repl
 docker-repl: docker
 	docker run --rm --interactive --tty extol
+
+$!generate-embedded-prelude.pl: $/src/generate-embedded-prelude.xtl $!stage0
+	@echo '[  ]' TOPL $@
+	$(call trace,topl 0 topl0) $!stage0 extoltoprolog --slim $< $@
+
+$!generate-embedded-prelude: $!generate-embedded-prelude.pl
+	@echo '[  ]' PLC $@
+	$(PLC) $(PLC_FLAGS) $< -o $@
+
+$!embedded-prelude.pl: $!generate-embedded-prelude
+	@echo '[  ]' GEN $@
+	unset EXTOL_TRACE; ./$< > $@.out
+	mv $@.out $@

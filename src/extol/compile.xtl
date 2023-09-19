@@ -67,6 +67,8 @@ test xtl_to_pl_declaration :
     xtlm_add(Module, prolog(fib/2)),
     xtlm_add(Module, prolog(f/3)),
     xtlm_add(Module, prolog(call/1)),
+    xtlm_add(Module, prolog(name_list/2)),
+    xtlm_add(Module, prolog(append/3)),
 
     xtl_to_pl_declaration(
         Module,
@@ -116,7 +118,20 @@ test xtl_to_pl_declaration :
     Res7 = [
         (undo(_) :- true),
         (undo(_) :- call(_), false)
-        ]
+        ],
+
+    xtl_to_pl_declaration(Module, define(
+            concat_name,
+            [nondet, predicate],
+            [((CN1, CN2, CN3):
+                CN4 := append(name_list(CN1), name_list(CN2)),
+                name_list(CN3, CN4))]), Res8),
+    Res8 = [(concat_name(CNV1, CNV2, CNV3) :- Body8)],
+    Body8 = (
+        (name_list(CNV1, CNVX1),
+        name_list(CNV2, CNVX2),
+        append(CNVX1, CNVX2, CNV4)),
+        name_list(CNV3, CNV4))
 
 pred xtl_def_to_pl:
     ((_, Name, Clause, _): log(compiling_clause(Name, Clause)), fail),
@@ -144,17 +159,19 @@ pred xtl_to_pl_goal:
         xtl_to_pl_goal(Module, A, APL),
         xtl_to_pl_goal(Module, B, BPL)),
     ((_, '!', '!') : !),
-    ((Module, prolog$(VarsXTL, VarsPL, Prolog), (ExtraGoals, V=VPL, PL), ()) : !,
+    ((Module, prolog$(VarsXTL, VarsPL, Prolog), (ExtraGoals, V=VPL, PL), ()): !,
         atom_concat(VarsPL, '-(', C1),
         atom_concat(C1, Prolog, C2),
         TermAtom := atom_concat(C2, ').'),
-    VPL-PL := read_from_atom(TermAtom),
+        VPL-PL := read_from_atom(TermAtom),
         xtl_to_pl_quoted(Module, V, VarsXTL, ExtraGoalsList),
         ( comma_list(ExtraGoals, ExtraGoalsList),
             ExtraGoals \= (), !
         ; ExtraGoals = true)),
     ((Module, (Var := Fun), Goal) : !,
-        xtl_to_pl_funexpr(Module, Var, Fun, List),
+        xtl_to_pl_quoted(Module, Result, Var, PLQ),
+        xtl_to_pl_funexpr(Module, Result, Fun, PLF),
+        append(PLQ, PLF, List),
         comma_list(Goal, List)),
     ((Module, G, GPL) :
         G := xtl_apply(Name, Args),
@@ -167,6 +184,15 @@ pred xtl_to_pl_goal:
         MainGoalPL := xtl_to_pl_goal_call(Module, Name, Define, QuotedArgs),
         ( ExtraGoals = (), GPL = MainGoalPL
         ; GPL = (ExtraGoals, MainGoalPL)))
+
+test xtl_to_pl_goal:
+    xtlm_new(test, M),
+    xtlm_add(M, prolog(f/2)),
+    xtlm_add(M, prolog(g/2)),
+    xtlm_seal(M),
+
+    xtl_to_pl_goal(M, (a := f(g(1))), PL1),
+    PL1 = (g(1,xx), f(xx, a))
 
 pred xtl_to_pl_goal_call:
     ((Module, _, define(_, Attributes, Clauses), ArgsPL, PL):
