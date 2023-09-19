@@ -124,12 +124,12 @@ eunit$(1)-%: $!stage$(1)
 	@echo [$(1)E] UNIT $$< $$*
 	$$(call trace,eunit$(1) eunit $(1)) $(./)$$< eval-tests $/src/main.xtl $$*
 
-$!stage$(2).pl: $$(STAGE$(1)) $(all_sources)
+$!stage$(2).pl: $$(STAGE$(1)) $(all_sources) $$!embedded-prelude.pl
 	@echo [$(2) ] TOPL $$@
 	@rm -f $$@
-	$$(call trace,topl$(1) topl $(1)) $(./)$!stage$(1) extoltoprolog $/src/main.xtl $$@
+	$$(call trace,topl$(1) topl $(1)) $(./)$!stage$(1) extoltoprolog $/src/main.xtl $$@ --inject-prolog $$!embedded-prelude.pl
 
-$!stage$(1): $!stage$(1).pl $$(if $$(findstring $(1),0),,$$!embedded-prelude.pl)
+$!stage$(1): $!stage$(1).pl
 	@echo [$(1) ] PLC $$@
 	$(PLC) $(PLC_FLAGS) $$< -o $$@
 

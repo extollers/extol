@@ -161,8 +161,4 @@ pred xtl_command_eval: (Files, Expression):
     xtl_eval_funexpr(Module, Exp, Result),
     write(Result), nl
 
-% TODO inject prelude
-pred xtl_include_prelude: (Module):
-    log('TODO including prelude'),
-    xtl_include('/home/atnnn/code/extol/src/prelude/prelude.xtl', Module),
-    log(Module)
+prolog(xtl_include_prelude/1)
