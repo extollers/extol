@@ -15,7 +15,7 @@ BINDIR ?= $(PREFIX)/bin
 DATADIR ?= $(PREFIX)/share
 DOCDIR ?= $(PREFIX)/share/doc/$(NAME)
 PLC ?= gplc
-PLC_FLAGS ?= --global-size 128000 --local-size 32000
+PLC_FLAGS ?= --global-size 128000 --local-size 32000 -C -O2 --fixed-sizes --no-top-level --strip
 
 CONFIG_VARIABLES = VERBOSE ONLY DESTDIR NAME PREFIX BINDIR DATADIR DOCDIR PLC PLC_FLAGS
 

@@ -161,4 +161,5 @@ pred xtl_command_eval: (Files, Expression):
     xtl_eval_funexpr(Module, Exp, Result),
     write(Result), nl
 
+% Injected
 prolog(xtl_include_prelude/1)
