@@ -1,3 +1,6 @@
+prolog(halt/1)
+prolog(halt/0)
+
 fun 'unify': (A: A)
 fun '+': (A, B): C if prolog$([A,B,C], '[A,B,C]', 'C is A + B')
 fun '-': (A, B): C if prolog$([A,B,C], '[A,B,C]', 'C is A - B')

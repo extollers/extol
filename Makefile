@@ -146,7 +146,7 @@ endef
 
 $!stage1.pl: $(prelude_sources)
 
-stage1_extra_flags = # TODO --no-prelude --inject $/src/prelude/prelude.xtl
+stage1_extra_flags = --no-prelude --inject $/src/prelude/prelude.xtl
 stage2_extra_flags =
 stage3_extra_flags =
 

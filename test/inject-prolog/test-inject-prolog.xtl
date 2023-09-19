@@ -1,6 +1,5 @@
 prolog(prolog_predicate/1)
 prolog(write/1)
-prolog(halt/1)
 
 pred main: ():
     prolog_predicate(Answer),

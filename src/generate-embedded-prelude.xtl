@@ -11,8 +11,6 @@ include 'src/extol/compile.xtl'
 include 'src/extol/modules.xtl'
 include 'src/extol/eval.xtl'
 
-prolog(halt/1)
-
 pred main: ():
     xtlm_new(prelude, Module),
     xtl_include('src/prelude/prelude.xtl', Module),
@@ -20,4 +18,4 @@ pred main: ():
     write('xtl_include_prelude(module(_, '),
     write_term(Declarations, [quoted(true), namevars(true), numbervars(true), ignore_ops(true)]),
     write(', _)).'),
-    halt(0)
+    prolog$(x,x,'halt')

@@ -1,5 +1,4 @@
 prolog(write/1)
-prolog(halt/0)
 prolog(member/2)
 
 fun fib:
