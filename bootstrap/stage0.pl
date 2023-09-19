@@ -460,4 +460,4 @@ test(:-(disabled,t(unit_tests_disabled))).
 :-(xtl_repl(A),','(write(end),nl)).
 :-(xtl_command_eval_include(A,B),xtl_include(B,A)).
 :-(xtl_command_eval(A,B),','(xtlm_new(eval,C),','(xtl_include_prelude(C),','(!,','(maplist(xtl_command_eval_include(C),A),','(atom_codes(B,D),','(xtl_expression(pexpr(E),D,[]),','(xtl_makevars(E,F,G),','(xtl_eval_funexpr(C,F,H),','(write(H),nl)))))))))).
-:-(xtl_include_prelude(A),','(log('TODO including prelude'),','(xtl_include('/home/atnnn/code/extol/src/prelude/prelude.xtl',A),log(A)))).
+xtl_include_prelude(module(_, '.'(-(/(/(unify,2),'.'(fun,[])),define(unify,'.'(nondet,[]),'.'(:(_1735,_1735),[]))),'.'(-(/(/(+,3),'.'(fun,[])),define(+,'.'(nondet,[]),'.'(:(','(_5929,_5960),if(_6050,'prolog$'('.'(_5929,'.'(_5960,'.'(_6050,[]))),'[A,B,C]','C is A + B'))),[]))),'.'(-(/(/(-,3),'.'(fun,[])),define(-,'.'(nondet,[]),'.'(:(','(_10400,_10431),if(_10521,'prolog$'('.'(_10400,'.'(_10431,'.'(_10521,[]))),'[A,B,C]','C is A - B'))),[]))),_10841))), _)).

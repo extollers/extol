@@ -166,7 +166,7 @@ $(eval $(call make_stage,2,3))
 .PHONY: reboot
 reboot: 2
 	@echo [--] BOOT $/bootstrap/stage0.pl
-	$(call trace,reboot topl 2) $(./)$!stage2 extoltoprolog $/src/main.xtl $!stage0.pl --slim
+	$(call trace,reboot topl 2) $(./)$!stage2 extoltoprolog $/src/main.xtl $!stage0.pl --slim --inject-prolog $!embedded-prelude.pl
 	cp $!stage0.pl $/bootstrap/stage0.pl
 	@echo [--] REBOOT COMPLETE
 
