@@ -1,6 +1,3 @@
-prolog(write/1)
-prolog(member/2)
-
 fun fib:
     (0: 1),
     (1: 1),

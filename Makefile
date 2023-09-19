@@ -35,8 +35,10 @@ ifeq ($!,./)
 ./ = ./
 endif
 
-extol_sources = $(shell find $/src -type f -iname '*.xtl' | grep -v src/prelude/)
-prelude_sources = $(shell find $/src/prelude -type f -iname '*.xtl')
+toolkit_sources = $(shell find $/src/toolkit -iname '*.xtl')
+extol_sources = $(toolkit_sources) $/src/main.xtl $(shell find $/src/extol -iname '*.xtl')
+prelude_sources = $(shell find $/src/prelude -iname '*.xtl')
+# TODO runtime_sources = $(shell find $/src/runtime -iname '*.pl')
 
 .PHONY: default
 default: 2
@@ -224,14 +226,14 @@ docker-repl: docker
 	docker run --rm --interactive --tty extol
 
 $!generate-embedded-prelude.pl: $/src/generate-embedded-prelude.xtl $(prelude_sources) $!stage0
-	@echo '[  ]' TOPL $@
+	@echo '[0 ]' TOPL $@
 	$(call trace,topl 0 topl0) $!stage0 extoltoprolog --slim $< $@
 
 $!generate-embedded-prelude: $!generate-embedded-prelude.pl
-	@echo '[  ]' PLC $@
+	@echo '[0 ]' PLC $@
 	$(PLC) $(PLC_FLAGS) $< -o $@
 
 $!embedded-prelude.pl: $!generate-embedded-prelude
-	@echo '[  ]' GEN $@
+	@echo '[0 ]' GEN $@
 	unset EXTOL_TRACE; ./$< > $@.out
 	mv $@.out $@

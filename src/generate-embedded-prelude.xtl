@@ -18,4 +18,4 @@ pred main: ():
     write('xtl_include_prelude(module(_, '),
     write_term(Declarations, [quoted(true), namevars(true), numbervars(true), ignore_ops(true)]),
     write(', _)).'),
-    prolog$(x,x,'halt')
+    halt

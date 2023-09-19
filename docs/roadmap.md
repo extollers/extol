@@ -14,6 +14,7 @@
 - [x] Modules
 - [x] Explicit import of external functions
 - [x] Don't use Prolog's eval for the REPL
+- [x] Split prelude library
 - [ ] Relative paths
 - [ ] Namespaces
 - [ ] Split runtime library
@@ -37,3 +38,4 @@
 - [ ] Effects
 - [ ] A faster backend
 - [ ] language server
+- [ ] unused variable warning
