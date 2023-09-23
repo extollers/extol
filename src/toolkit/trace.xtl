@@ -88,7 +88,7 @@ pred ticall: (G, A, B) :
     g_read(tindent, I),
     II is I + 1,
     g_assignb(tindent, II),
-    dcg_call(G, A, B),
+    dcg2_call(G, A, B),
     g_assignb(tindent, I)
 
 inline
@@ -99,7 +99,7 @@ pred ticall: (G, X, A, B) :
     G =... L,
     append(L, [X], LL),
     GX =... LL,
-    dcg_call(GX, A, B),
+    dcg2_call(GX, A, B),
     g_assignb(tindent, I)
 
 pred write_trace_line: X: write('at: '), write_term(X, [numbervars(false), namevars(false), max_depth(6)]), nl

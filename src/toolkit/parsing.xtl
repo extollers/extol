@@ -34,17 +34,17 @@ contract((D), true, number(D)),
     [C],
     { member(C - D, [0'0 - 0, 0'1 - 1, 0'2 - 2, 0'3 - 3, 0'4 - 4, 0'5 - 5, 0'6 - 6, 0'7 - 7, 0'8 - 8, 0'9 - 9]) })
 
-pred dcg_call:
+pred dcg2_call:
     ((Var, _, _) : var(Var), !, fail),
     (([], I, I) : !),
-    (([X | Xs], I, P) : !, I = [X | O], dcg_call(Xs, O, P)),
-    (((A, B), I, P) : !, dcg_call(A, I, O), dcg_call(B, O, P)),
-    (((A ; B), I, O) : !, (dcg_call(A, I, O) ; dcg_call(B, I, O))),
+    (([X | Xs], I, P) : !, I = [X | O], dcg2_call(Xs, O, P)),
+    (((A, B), I, P) : !, dcg2_call(A, I, O), dcg2_call(B, O, P)),
+    (((A ; B), I, O) : !, (dcg2_call(A, I, O) ; dcg2_call(B, I, O))),
     (({A}, I, I) : !, A),
     ((G, I, O) : !, call(G, I, O))
 
 pred require: (N, Xs, Rest) :
-    ( dcg_call(N, Xs, Rest), !
+    ( dcg2_call(N, Xs, Rest), !
     ; pretty_init(Xs, C), throw(parse_failed(N, C)) )
 
 pred must:
@@ -56,7 +56,7 @@ pred must:
 pred must:
 ((G, A, B, C): undo(throw(failed(call(G, A, B, C)))), call(G, A, B, C))
 
-pred try: (N, Xs, Rest) : catch(dcg_call(N, Xs, Rest), parse_failed(_, _), Failed=true), !, Failed=false
+pred try: (N, Xs, Rest) : catch(dcg2_call(N, Xs, Rest), parse_failed(_, _), Failed=true), !, Failed=false
 
 pred add_digit: (N, D, R):
     member(D, [0,1,2,3,4,5,6,7,8,9]),

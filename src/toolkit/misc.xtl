@@ -9,7 +9,7 @@ pred undo:
 % inline
 dcg2 undo:
     ((_) : { true }),
-    ((G) : dcg_call(G), { fail } )
+    ((G) : dcg2_call(G), { fail } )
 
 %% Types
 
