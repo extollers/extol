@@ -3,32 +3,32 @@
 
 % TODO: parse error locations
 
-dcg many:
+dcg2 many:
 % TODO ATN contract((Predicate, List), (xtl_callable(Predicate), list_or_partial_list(List)), list(List)),
 %((P, [X | Xs]): call(P, X), '__contract_free_many'(P, Xs), !),
 ((P, [X | Xs]): call(P, X), many(P, Xs), !),
 ((_, []): [])
 
-dcg many:
+dcg2 many:
     ((P): call(P), many(P), !),
     ((_): { true })
 
-dcg many1:
+dcg2 many1:
 contract((Predicate, List), (xtl_callable(Predicate), list_or_partial_list(List)), list(List)),
 ((P, [X | Xs]): call(P, X), !, many(P, Xs))
 
 inline
-dcg eof: (): peek([])
+dcg2 eof: (): peek([])
 
 pred peek:
 contract((Rest, In, Out), (list_or_partial_list(In), list_or_partial_list(Out), list_or_partial_list(Rest)), true),
 ((Rest, Rest, Rest) : true)
 
-dcg alpha:
+dcg2 alpha:
 contract((C), true, number(C)),
 ((C): [C], { member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ") })
 
-dcg digit:
+dcg2 digit:
 contract((D), true, number(D)),
 ((D):
     [C],

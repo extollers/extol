@@ -21,7 +21,7 @@ pred xtl_import: ((Contents, Name, Module):
     must(xtlm_import(Module, Imported, inline)),
     log(imports(Imports)))
 
-dcg xtl_token:
+dcg2 xtl_token:
     contract(N, xtl_callable(N), true),
     (N: N, xtl_skipwhite)
 
@@ -30,14 +30,14 @@ test xtl_token :
     xtl_token("x", "x % comment", ""),
     xtl_token("x", "x % comment\n  \t", "")
 
-dcg xtl_skipwhite:
+dcg2 xtl_skipwhite:
     ((): xtl_white, !),
     ((): [])
 
 test xtl_skipwhite :
     xtl_skipwhite("", "")
 
-dcg xtl_white:
+dcg2 xtl_white:
     ((): "%", !, xtl_line_comment_, xtl_skipwhite),
     ((): (" "; "\t"; "\r" ; "\n" ), !, xtl_skipwhite)
 
@@ -46,12 +46,12 @@ test xtl_white :
     xtl_white("%", ""),
     xtl_white("% comment \n\t  ", "")
 
-dcg xtl_line_comment_:
+dcg2 xtl_line_comment_:
     ((): ("\n" ; eof), !),
     ((): [_], xtl_line_comment_)
 
 % TODO: now takes a Module
-dcg xtl_top_level:
+dcg2 xtl_top_level:
     contract((Module), module(Module), module(Module)),
     ((Module):
         {log(parsing_top_level)},
@@ -60,7 +60,7 @@ dcg xtl_top_level:
         many(xtl_declaration(Module)),
         require(eof))
 
-dcg xtl_declaration:
+dcg2 xtl_declaration:
     contract(Module, module(Module), module(Module)),
     ((_): eof, !, {fail}),
     ((Module):
@@ -162,13 +162,13 @@ test xtl_makevars:
     atomic(Z),
     Z = 1
 
-dcg xtl_atom_char:
+dcg2 xtl_atom_char:
 contract((Byte), true, number(Byte)),
 (C:
     [C], !,
     { member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789$?") })
 
-dcg xtl_atom:
+dcg2 xtl_atom:
     ((Atom):
         "'",
         xtl_quoted_atom_chars_(Cs),
@@ -193,7 +193,7 @@ test xtl_atom :
     % 'ab.'
     true
 
-dcg xtl_quoted_char:
+dcg2 xtl_quoted_char:
 % contract((Bytes), true, number(Byte)),
 ((C) :
     "\\", !,
@@ -206,7 +206,7 @@ dcg xtl_quoted_char:
                  AsIs - AsIs
     ]) }, !)
 
-dcg xtl_quoted_atom_chars_:
+dcg2 xtl_quoted_atom_chars_:
 (([]) : "'", !),
 (([C | Cs]) :
     xtl_quoted_char(C), !,
@@ -215,12 +215,12 @@ dcg xtl_quoted_atom_chars_:
     [C],
     xtl_quoted_atom_chars_(Cs))
 
-dcg xtl_expression: (Expr) :
+dcg2 xtl_expression: (Expr) :
     xtl_expression(1201, Expr)
 
 fun pexpr: (pexpr(_): true)
 
-dcg xtl_expression:
+dcg2 xtl_expression:
     % contract((Prec, Expr), number(Prec), true),
     ((Prec, Expr):
         xtl_expression(none, Prec, Expr))
@@ -240,7 +240,7 @@ test xtl_expression :
 test comma_expr :
     xtl_expression(pexpr((p :- (a, b))), "p :- a, b", [])
 
-dcg xtl_regular_term:
+dcg2 xtl_regular_term:
 ((Char) : "0'", !, require(xtl_string_char(Char)), xtl_skipwhite),
 ((Integer) :
     many1(digit, Ds), !,
@@ -271,7 +271,7 @@ dcg xtl_regular_term:
                        ( xtl_token("]"), {Tail=[]}
                        ; xtl_token("|"), xtl_expression(pexpr(Tail)), xtl_token("]"))), !)
 
-dcg xtl_string_char:
+dcg2 xtl_string_char:
 contract((Byte), true, byte(Byte)),
 ((_): "\"", !, { false }),
 ((C): xtl_quoted_char(C), !),
@@ -287,17 +287,17 @@ test xtl_regular_term :
     xtl_regular_term([], "[]", ""),
     xtl_regular_term([1,2,3], "[1,2,3]", "")
 
-dcg xtl_comma_separated: (As, Tail, End):
+dcg2 xtl_comma_separated: (As, Tail, End):
     xtl_comma_seperated_first(As, Tail, End)
 
-dcg xtl_comma_seperated_first:
+dcg2 xtl_comma_seperated_first:
 ((Tail, Tail, End) :
     End, !),
 (([A | As], Tail, End) :
     xtl_expression(1000, pexpr(A)), !,
     xtl_comma_separated_next(As, Tail, End))
 
-dcg xtl_comma_separated_next:
+dcg2 xtl_comma_separated_next:
 ((Tail, Tail, End) :
     End, !),
 (([A | As], Tail, End) :
@@ -305,7 +305,7 @@ dcg xtl_comma_separated_next:
     xtl_expression(1000, pexpr(A)), !,
     xtl_comma_separated_next(As, Tail, End))
 
-dcg xtl_op_or_term:
+dcg2 xtl_op_or_term:
 (('!', term) : "!", xtl_skipwhite),
 ((X, Info) :
     xtl_regular_term(X), !,
@@ -320,14 +320,14 @@ dcg xtl_op_or_term:
     ),
     xtl_skipwhite)
 
-dcg xtl_known_op:
+dcg2 xtl_known_op:
     ((Cs, Op, Prec, Assoc) : { atom_codes(Op, Cs), xtl_op(_, _, Op), !, xtl_op(Prec, Assoc, Op) }),
     ((Cs, Op, Prec, Assoc) : { append(Shorter, [C], Cs) }, append([C]), xtl_known_op(Shorter, Op, Prec, Assoc))
 
-dcg xtl_op_char: (C):
+dcg2 xtl_op_char: (C):
     [C], { member(C, "`~!@#%^&*<>/;:-_=+,|\\.") }, !
 
-dcg xtl_expression:
+dcg2 xtl_expression:
 ((none, Prec, pexpr(Term)) :
     xtl_op_or_term(Op, op(OpPrec, Assoc)),
     { member(Assoc-N, [fx-0, fy-1]),

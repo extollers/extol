@@ -4,7 +4,7 @@ pred log: Message:
 
 pred t: (X: write('trace: '), ti, write_term(X, [quoted(true), max_depth(7)]), nl)
 
-dcg t: (X:
+dcg2 t: (X:
         {write('trace: '), ti, write_term(X, [quoted(true), max_depth(7)]), write(', at: ')},
         peek(A), {pretty_init(A, C), write(C),
         nl}, !)
@@ -17,11 +17,11 @@ pred pretty_init: (A, C :
     (N < 10, !, append(Q, "<eof>", QQ) ; QQ = Q),
     atom_codes(C, QQ))
 
-dcg prep_chars:
+dcg2 prep_chars:
 ([]: []),
 ([X | Xs]: prep_char(X), prep_chars(Xs))
 
-dcg prep_char:
+dcg2 prep_char:
 (X: { var(X) }, !, "<?>"),
 (0'\n: !, "<nl>"),
 (0'\r: !, "<cr>"),
@@ -49,7 +49,7 @@ pred 'tc': (F:
           t(exit(F)))
 
 inline
-dcg 'tc': F:
+dcg2 'tc': F:
     undo(t(failed(F))),
     t(enter(F)),
     ticall(F),
@@ -57,7 +57,7 @@ dcg 'tc': F:
     t(exit(F))
 
 inline
-dcg tc: (F, X):
+dcg2 tc: (F, X):
     undo(t(failed(F))),
     t(enter(F)),
     ticall(F, X),
