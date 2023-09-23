@@ -14,7 +14,7 @@
         src = self;
         nativeBuildInputs = [ gprolog ];
         configurePhase = "make configure PREFIX=$out";
-        doCheck = false; # TODO
+        doCheck = true;
       }) {};
 
     packages = each ({pkgs, packages, ...}: {
