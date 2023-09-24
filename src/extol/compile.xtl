@@ -101,7 +101,6 @@ test xtl_to_pl_declaration :
                  assert(c)),
         ('__contract_free_f'(d) :- e)],
 
-    % TODO: dcg
     xtl_to_pl_declaration(Module, define(f, [dcg2, nondet, predicate, parameters([_]), requires(b), ensures(c)], [(d: e)]), Res4),
     Res4 = [
         (f(V4,A,B) :-
@@ -293,37 +292,39 @@ pred xtl_to_pl_dcg2:
     ((_,_,_,D,_) :
         throw(error(xtl_to_pl_dcg2, D)))
 
- % TODO: dcg
 pred xtl_to_pl_dcg:
-    ((_, I, O, Var, dcg_call(Var, I, O)):
+    ((_, Parsing, Var, dcg_call(Var, Parsing)):
         var(Var), !),
-    ((M, I, O, (A, B), (APL, BPL), ()) : !,
-        xtl_to_pl_dcg2(M, I, IO, A, APL),
-        xtl_to_pl_dcg2(M, IO, O, B, BPL)),
-    ((M, I, O, (A; B), (APL; BPL)) : !,
-        xtl_to_pl_dcg2(M, I, O, A, APL),
-        xtl_to_pl_dcg2(M, I, O, B, BPL)),
-    ((_, I, O, (!), (!, I=O), ()) : !),
-    ((_, I, O, [], (I=O)) : !),
-    ((_, I, O, [X|XS], append([X|XS], O, I)) : !),
-    ((Module, I, O, {G}, (GPL, I=O), ()) : !,
+    ((M, Parsing, (A, B), (APL, BPL), ()) : !,
+        split_parsing(Parsing, [P1, P2]),
+        xtl_to_pl_dcg(M, P1, A, APL),
+        xtl_to_pl_dcg(M, P2, B, BPL)),
+    ((M, Parsing, (A; B), (APL; BPL)) : !,
+        xtl_to_pl_dcg(M, Parsing, A, APL),
+        xtl_to_pl_dcg(M, Parsing, B, BPL)),
+    ((_, Parsing, (!), (!, dcg_nop(Parsing)), ()) : !),
+    ((_, Parsing, [], (dcg_nop(Parsing))) : !),
+    ((_, Parsing, [X|XS], PL) : !,
+        PL = (
+            Parsing = parsing(I, O, L, LL),
+            append([X|XS], O, I),
+            N := length([X|XS]),
+            location_add(N, L, LL))),
+    ((Module, Parsing, {G}, (GPL, dcg_nop(Parsing)), ()) : !,
         xtl_to_pl_goal(Module, G, GPL)),
-    ((M, I, O, F, C) : !,
-        F := xtl_apply( Name, ArgsXtl),
-        N := length(ArgsXtl) + 2,
-        ( xtlm_find(M, Name/N/_, Define), !,
-            maplist(xtl_to_pl_quoted(M), VarsPL, ArgsXtl, ArgsPLs),
-            Call := xtl_to_pl_dcg2_call(M, Name, Define, VarsPL, I, O),
-            append(ArgsPLs, ArgsPL),
-            ( ArgsPL = [], !, C = Call
-            ; comma_list(PrepPL, ArgsPL),
-                C = (PrepPL, Call))
-        ; xtlm_find(M, Name/(:= N - 2)/_, _),
-            xtl_to_pl_goal(M, F, PL),
-            C = (I=O, PL)
-        ; throw(not_found(dcg, Name/N)))),
+    ((M, Parsing, F, C): !,
+        F := xtl_apply(Name, ArgsXtl),
+        N := length(ArgsXtl) + 1,
+        xtlm_find(M, Name/N/_, Define), !,
+        maplist(xtl_to_pl_quoted(M), VarsPL, ArgsXtl, ArgsPLs),
+        Call := xtl_to_pl_dcg_call(M, Name, Define, VarsPL, Parsing),
+        append(ArgsPLs, ArgsPL),
+        ( ArgsPL = [], !, C = Call
+        ; comma_list(PrepPL, ArgsPL),
+            C = (PrepPL, Call))
+        ; throw(not_found(dcg, Name/N))),
     ((_,_,_,D,_) :
-        throw(error(xtl_to_pl_dcg2, D)))
+        throw(error(xtl_to_pl_dcg, D)))
 
 test xtl_to_pl_dcg2 :
     M := xtlm_new(main),
@@ -359,6 +360,20 @@ pred xtl_to_pl_dcg2_call:
         append([Name | Args], [I,O], LL),
         PL =... LL)
 
+pred xtl_to_pl_dcg_call:
+    ((Module, Name, define(ModName, Attributes, Clauses), ArgsPL, Parsing, PL):
+        member(inline, Attributes), !,
+        ( member(dcg, Attributes), !,
+            ClausesCopy := maplist(copy_term, Clauses),
+            maplist(xtl_inline_dcg_clause(ArgsPL), ClausesCopy, HeadsPL, Bodies),
+            maplist(xtl_to_pl_dcg(Module, Parsing), Bodies, BodiesPL),
+            maplist(pl_comma, HeadsPL, BodiesPL, ClausesPL),
+            semicolon_list(PL, ClausesPL)
+        ; xtl_to_pl_goal_call(Module, Name, define(ModName, Attributes, Clauses), := append(ArgsPL, [Parsing]), PL))),
+    ((_, Name, _, Args, Parsing, PL):
+        append([Name | Args], [Parsing], LL),
+        PL =... LL)
+
 test xtl_to_pl_dcg2_call:
     Module := xtlm_new(main),
     xtlm_add(Module, prolog(f/3)),
@@ -375,6 +390,10 @@ test xtl_to_pl_dcg2_call:
     Res2 := xtl_to_pl_dcg2_call(Module, h, `define(h, [inline], [((X, I, O): i(X, I, O))]), [3], i, o),
     Res2 = ([a, b, c] = [3, i, o], i(a, b, c))
 
+pred xtl_inline_dcg_clause: (QuotedArgs, (Head: Body), Match, BodyOut):
+    BodyOut = Body,
+    comma_list(Head, HeadList),
+    Match = (HeadList = QuotedArgs)
 
 pred xtl_inline_dcg2_clause: (QuotedArgs, (Head: Body), Match, BodyOut):
     BodyOut = Body,
