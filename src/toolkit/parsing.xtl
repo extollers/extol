@@ -43,6 +43,46 @@ pred dcg2_call:
     (({A}, I, I) : !, A),
     ((G, I, O) : !, call(G, I, O))
 
+pred dcg_nop: parsing(I, I, L, L): true
+
+pred location_add:
+    (N, location(Name, A), location(Name, B)):
+        B := A + N
+
+pred dcg_next: (C, parsing([C|O], O, L, LL)): location_add(1, L, LL)
+
+pred split_parsing:
+    ((Parsing, []): dcp_nop(Parsing)),
+    ((Parsing, [Parsing]): true)
+    ((parsing(I, O, L1, L3), [P|Ps]):
+        P = parsing(I, IO, L1, L2),
+        split_parsing(parsing(IO, O, L2, L3), Ps))
+
+pred dcg_call:
+    ((Var, _) : var(Var), !, fail),
+    (([], Parsing) : !, dcg_nop(Parsing)),
+    (([X | Xs], Parsing) : !,
+        split_parsing(Parsing, [P1, P2]),
+        dcg_next(X, P1), dcg_call(Xs, P2)),
+    (((A, B), Parsing) : !,
+        split_parsing(Parsing, [P1, P2]),
+        dcg_call(A, P1), dcg_call(B, P2)),
+    (((A ; B), Parsing) : !, (dcg_call(A, Parsing) ; dcg_call(B, Parsing))),
+    (({A}, Parsing) : !, dcg_nop(Parsing), A),
+    ((G, Parsing) : !, call(G, Parsing))
+
+pred pretty_location: (location(Name, Offset), C):
+    append([Name, "::", Offest], C)
+
+pred prettty_parsing: (parsing(I, _, L, _), Description):
+    pretty_init(I, C),
+    pretty_location(L, S),
+    append([S, ": \n  ", C], Description)
+
+pred require: (N, Parsing) :
+    ( dcg_call(N, Parsing), !
+    ; pretty_parsing(Parsing, C), throw(parse_failed(N, C)) )
+
 pred require: (N, Xs, Rest) :
     ( dcg2_call(N, Xs, Rest), !
     ; pretty_init(Xs, C), throw(parse_failed(N, C)) )

@@ -293,6 +293,38 @@ pred xtl_to_pl_dcg2:
     ((_,_,_,D,_) :
         throw(error(xtl_to_pl_dcg2, D)))
 
+ % TODO: dcg
+pred xtl_to_pl_dcg:
+    ((_, I, O, Var, dcg_call(Var, I, O)):
+        var(Var), !),
+    ((M, I, O, (A, B), (APL, BPL), ()) : !,
+        xtl_to_pl_dcg2(M, I, IO, A, APL),
+        xtl_to_pl_dcg2(M, IO, O, B, BPL)),
+    ((M, I, O, (A; B), (APL; BPL)) : !,
+        xtl_to_pl_dcg2(M, I, O, A, APL),
+        xtl_to_pl_dcg2(M, I, O, B, BPL)),
+    ((_, I, O, (!), (!, I=O), ()) : !),
+    ((_, I, O, [], (I=O)) : !),
+    ((_, I, O, [X|XS], append([X|XS], O, I)) : !),
+    ((Module, I, O, {G}, (GPL, I=O), ()) : !,
+        xtl_to_pl_goal(Module, G, GPL)),
+    ((M, I, O, F, C) : !,
+        F := xtl_apply( Name, ArgsXtl),
+        N := length(ArgsXtl) + 2,
+        ( xtlm_find(M, Name/N/_, Define), !,
+            maplist(xtl_to_pl_quoted(M), VarsPL, ArgsXtl, ArgsPLs),
+            Call := xtl_to_pl_dcg2_call(M, Name, Define, VarsPL, I, O),
+            append(ArgsPLs, ArgsPL),
+            ( ArgsPL = [], !, C = Call
+            ; comma_list(PrepPL, ArgsPL),
+                C = (PrepPL, Call))
+        ; xtlm_find(M, Name/(:= N - 2)/_, _),
+            xtl_to_pl_goal(M, F, PL),
+            C = (I=O, PL)
+        ; throw(not_found(dcg, Name/N)))),
+    ((_,_,_,D,_) :
+        throw(error(xtl_to_pl_dcg2, D)))
+
 test xtl_to_pl_dcg2 :
     M := xtlm_new(main),
     xtlm_add(M, prolog(f/0)),
