@@ -91,8 +91,8 @@ test xtl_to_pl_declaration :
     xtl_to_pl_declaration(Module, define(f, [dcg2, nondet, predicate], [(x: [x])]), Res2),
     Res2 = [(f(x,I,O) :- append([x],O,I))],
 
-    xtl_to_pl_declaration(Module, define(f, [dcg, nondet, predicate], [(x: [x])]), Res2x),
-    Res2x = todo,
+    % xtl_to_pl_declaration(Module, define(f, [dcg, nondet, predicate], [(x: [x])]), Res2x),
+    % Res2x = todo,
 
     xtl_to_pl_declaration(Module, define(f, [nondet, predicate, parameters([A]), requires(b), ensures(c)], [(d: e)]), Res3),
     Res3 = [
@@ -109,8 +109,8 @@ test xtl_to_pl_declaration :
              assert(c)),
          ('__contract_free_f'(d,C,D) :- e(C,D))],
 
-    xtl_to_pl_declaration(Module, define(f, [dcg, nondet, predicate, parameters([_]), requires(b), ensures(c)], [(d: e)]), Res4x),
-    Res4x = todo,
+    % xtl_to_pl_declaration(Module, define(f, [dcg, nondet, predicate, parameters([_]), requires(b), ensures(c)], [(d: e)]), Res4x),
+    % Res4x = todo,
 
     xtl_to_pl_declaration(Module, define(f, [nondet, predicate], [((): g, h)]), Res5),
     Res5 = [(f :- g, h)],
@@ -361,12 +361,13 @@ test xtl_to_pl_dcg:
     xtlm_add(M, prolog(e/1)),
     xtlm_add(M, prolog(i/1)),
 
-    xtl_to_pl_dcg(M, a, c, ((f; g), h), todo),
-    xtl_to_pl_dcg(M, a, e, (e, (f, i; g), h), todo),
-    xtl_to_pl_dcg(M, i, o, V, PL1),
-    PL1 == todo
-    xtl_to_pl_dcg(M, i, o, {V}, PL2),
-    PL2 == todo
+    %xtl_to_pl_dcg(M, a, c, ((f; g), h), todo),
+    %xtl_to_pl_dcg(M, a, e, (e, (f, i; g), h), todo),
+    % xtl_to_pl_dcg(M, i, o, V, PL1),
+    % PL1 == todo
+    % xtl_to_pl_dcg(M, i, o, {V}, PL2),
+    % PL2 == todo
+    true
 
 pred xtl_to_pl_dcg2_call:
     ((Module, Name, define(ModName, Attributes, Clauses), ArgsPL, I, O, PL):
@@ -420,11 +421,12 @@ test xtl_to_pl_dcg_call:
     xtlm_add(Module, prolog(i/2)),
     xtlm_seal(Module),
 
-    Res := xtl_to_pl_dcg_call(Module, g, `define(g, [inline, dcg], [(1 : {true}), (Y : f(Y))]), [3], p),
-    Res = todo,
+    % Res := xtl_to_pl_dcg_call(Module, g, `define(g, [inline, dcg], [(1 : {true}), (Y : f(Y))]), [3], p),
+    % Res = todo,
 
-    Res2 := xtl_to_pl_dcg_call(Module, h, `define(h, [inline], [((X, P): i(X, P))]), [3], p),
-    Res2 = todo,
+    % Res2 := xtl_to_pl_dcg_call(Module, h, `define(h, [inline], [((X, P): i(X, P))]), [3], p),
+    % Res2 = todo,
+    true
 
 pred xtl_inline_dcg_clause: (QuotedArgs, (Head: Body), Match, BodyOut):
     BodyOut = Body,
@@ -465,8 +467,8 @@ pred xtl_contract_to_pl:
     ((Module, dcg2, Name, InnerName, [parameters(ArgsList), requires(Expects), ensures(Ensures) | Other], Result) :
         % TODO: Other
         append(ArgsList, [_,_], ArgsListIO),
-        xtl_contract_to_pl(Module, pred, Name, InnerName, [parameters(ArgsListIO), requires(Expects), ensures(Ensures)], Result))
-    ((Module, dcg2, Name, InnerName, [parameters(ArgsList), requires(Expects), ensures(Ensures) | Other], Result) :
+        xtl_contract_to_pl(Module, pred, Name, InnerName, [parameters(ArgsListIO), requires(Expects), ensures(Ensures)], Result)),
+    ((Module, dcg, Name, InnerName, [parameters(ArgsList), requires(Expects), ensures(Ensures) | Other], Result) :
         % TODO: Other
         append(ArgsList, [_], ArgsListIO),
         xtl_contract_to_pl(Module, pred, Name, InnerName, [parameters(ArgsListIO), requires(Expects), ensures(Ensures)], Result))

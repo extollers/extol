@@ -43,7 +43,10 @@ pred dcg2_call:
     (({A}, I, I) : !, A),
     ((G, I, O) : !, call(G, I, O))
 
-pred dcg_nop: parsing(I, I, L, L): true
+pred dcg_call: % TODO move to runtime
+    (A, B, C): dcg2_call(A, B, C)
+
+pred dcg_nop: (parsing(I, I, L, L): true)
 
 pred location_add:
     (N, location(Name, A), location(Name, B)):
@@ -52,8 +55,8 @@ pred location_add:
 pred dcg_next: (C, parsing([C|O], O, L, LL)): location_add(1, L, LL)
 
 pred split_parsing:
-    ((Parsing, []): dcp_nop(Parsing)),
-    ((Parsing, [Parsing]): true)
+    ((Parsing, []): dcg_nop(Parsing)),
+    ((Parsing, [Parsing]): true),
     ((parsing(I, O, L1, L3), [P|Ps]):
         P = parsing(I, IO, L1, L2),
         split_parsing(parsing(IO, O, L2, L3), Ps))
@@ -74,7 +77,7 @@ pred dcg_call:
 pred pretty_location: (location(Name, Offset), C):
     append([Name, "::", Offest], C)
 
-pred prettty_parsing: (parsing(I, _, L, _), Description):
+pred pretty_parsing: (parsing(I, _, L, _), Description):
     pretty_init(I, C),
     pretty_location(L, S),
     append([S, ": \n  ", C], Description)

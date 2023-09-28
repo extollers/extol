@@ -127,10 +127,10 @@ eunit$(1)-%: $!stage$(1)
 	@echo [$(1)E] UNIT $$< $$*
 	$$(call trace,eunit$(1) eunit $(1)) $(./)$$< eval-tests $/src/main.xtl $$*
 
-$!stage$(2).pl: $$(STAGE$(1)) $$!embedded-prelude.pl
+$!stage$(2).pl: $$(STAGE$(1)) $$!embedded-prelude-$(2).pl
 	@echo [$(2) ] TOPL $$@
 	@rm -f $$@
-	$$(call trace,topl$(1) topl $(1)) $(./)$!stage$(1) extoltoprolog $/src/main.xtl $$@ --inject-prolog $$!embedded-prelude.pl $$(stage$(2)_extra_flags)
+	$$(call trace,topl$(1) topl $(1)) $(./)$!stage$(1) extoltoprolog $/src/main.xtl $$@ --inject-prolog $$!embedded-prelude-$(2).pl $$(stage$(2)_extra_flags)
 
 $!stage$(1): $!stage$(1).pl
 	@echo [$(1) ] PLC $$@
@@ -143,6 +143,19 @@ $(1): $!stage$(1)
 repl$(1): $(1)
 	@echo [$(1) ] REPL
 	$$(call trace,$$@ repl $(1)) $(./)$!stage$(1) repl
+
+$!generate-embedded-prelude-$(2).pl: $/src/generate-embedded-prelude.xtl $$(prelude_sources) $$(extol_sources) $!stage$(1)
+	@echo '[$(1) ]' TOPL $$@
+	$$(call trace,topl $(1) topl$(1)) $(./)$!stage$(1) extoltoprolog --slim $$< $$@
+
+$!generate-embedded-prelude-$(2): $!generate-embedded-prelude-$(2).pl
+	@echo '[$(1) ]' PLC $$@
+	$(PLC) $(PLC_FLAGS) $$< -o $$@
+
+$!embedded-prelude-$(2).pl: $!generate-embedded-prelude-$(2)
+	@echo '[$(2) ]' GEN $$@
+	unset EXTOL_TRACE; $(./)$$< > $$@.out
+	mv $$@.out $$@
 
 endef
 
@@ -168,14 +181,14 @@ $!Makefile: | $!.
 	@echo [--] CREATE $@
 	echo $$'BUILD=.\nSRC=$(realpath $(SRC))\ninclude $$(SRC)/Makefile' > $@
 
-$!stage0.pl: $/bootstrap/stage0.pl | $!.
+$!stage0.pl: $/bootstrap/stage0.pl | $(./)$!/.
 	@echo [0 ] COPY $@
 	cp $< $@
 
 .PHONY: reboot
-reboot: 2
+reboot: $!stage2 $!embedded-prelude-2.pl
 	@echo [--] BOOT $/bootstrap/stage0.pl
-	$(call trace,reboot topl 2) $(./)$!stage2 extoltoprolog $/src/main.xtl $!stage0.pl --slim --inject-prolog $!embedded-prelude.pl
+	$(call trace,reboot topl 2) $(./)$!stage2 extoltoprolog $/src/main.xtl $!stage0.pl --slim --inject-prolog $!embedded-prelude-2.pl
 	cp $!stage0.pl $/bootstrap/stage0.pl
 	@echo [--] REBOOT COMPLETE
 
@@ -224,16 +237,3 @@ docker:
 .PHONY: docker-repl
 docker-repl: docker
 	docker run --rm --interactive --tty extol
-
-$!generate-embedded-prelude.pl: $/src/generate-embedded-prelude.xtl $(prelude_sources) $!stage0
-	@echo '[0 ]' TOPL $@
-	$(call trace,topl 0 topl0) $!stage0 extoltoprolog --slim $< $@
-
-$!generate-embedded-prelude: $!generate-embedded-prelude.pl
-	@echo '[0 ]' PLC $@
-	$(PLC) $(PLC_FLAGS) $< -o $@
-
-$!embedded-prelude.pl: $!generate-embedded-prelude
-	@echo '[0 ]' GEN $@
-	unset EXTOL_TRACE; ./$< > $@.out
-	mv $@.out $@
