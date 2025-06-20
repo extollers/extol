@@ -250,6 +250,7 @@ test(:-(disabled,t(unit_tests_disabled))).
 :-(xtl_op(1100,xfy,;),true).
 :-(xtl_op(1000,xfy,','),true).
 :-(xtl_op(900,fy,not),true).
+:-(xtl_op(700,xfx,::),true).
 :-(xtl_op(700,xfx,=),true).
 :-(xtl_op(700,xfx,\=),true).
 :-(xtl_op(700,xfx,=..),true).
