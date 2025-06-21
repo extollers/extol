@@ -219,10 +219,22 @@ dcg2 xtl_quoted_atom_chars_:
 dcg2 xtl_expression: (Expr) :
     xtl_expression(1201, Expr)
 
-fun pexpr: (pexpr(_): true)
+pred pexpr:
+    (pexpr(E): pexpr_raw(E)),
+    (variable(V): atom(V)),
+    (name(N): atom(N)),
+    (apply(F, L): pexpr(F), maplist(pexpr, L)),
+    (number(N): number(N))
+
+pred pexpr_raw:
+    (E:
+        number(E)
+    ; atom(E)
+    ; ( (E =.. [F | A]), !, atom(F), maplist(pexpr_raw, A))
+        )
 
 dcg2 xtl_expression:
-    % contract((Prec, Expr), number(Prec), true),
+    contract((Prec, Expr), Prec :: number, Expr :: pexpr),
     ((Prec, Expr):
         xtl_expression(none, Prec, Expr))
 
