@@ -6,8 +6,8 @@ currently being bootstrapped from Prolog.
 The goals of this project are:
 
 - A uniform language for values, function, statements, expressions,
-  types, kinds, macros, patterns, constraints, grammars, tactics and
-  proofs
+  types, kinds, macros, patterns, constraints, grammars, tactics,
+  proofs and effects
 
 - A flexible syntax that allows building incrementally typed
   high-level shell-style scripts, low-level systems code and
@@ -38,11 +38,12 @@ The goals of this project are:
 - Parallel, distributed, heterogenous, symbolic and partial execution
 
 - Built-in cross-platform support for file IO, declarative UI,
-  networking, HTTP, HTML, JSON, IPC, Unicode, math, times and dates,
-  regular expressions, concurrency, string formatting, serialization,
-  cryptography and testing
+  networking, HTTP, HTML, JSON, IPC, Unicode, math, times, dates,
+  regular expressions, concurrency, string formatting, serialization
+  and cryptography
 
-- A module and packaging system for code sharing and re-use
+- Developer tooling for packaging, debugging, repl, tracing, linting,
+  formatting, LSP, source control, literate programming and testing
 
 ## Documentation
 

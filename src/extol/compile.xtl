@@ -11,14 +11,14 @@ pred xtl_to_pl_toplevel: (XTL, PL):
 
 pred xtl_to_pl_declaration:
     contract((ModXTL, PL),
-        (ModXTL = Mod-XTL, module(Mod), module_declaration(XTL)),
+        (ModXTL = Mod-XTL, Mod :: module, XTL :: module_declaration),
         true),
     ((Mod-XTL, PL):
         log(compiling(XTL, Mod)),
         sf must(xtl_to_pl_declaration(Mod, XTL, PL)))
 
 pred xtl_to_pl_declaration:
-    contract((Module, XTL, PL), (module(Module), xtl_declaration(XTL)), true),
+    contract((Module, XTL, PL), (Module :: module, XTL :: xtl_declaration), true),
     ((_, XTL, _): log(to_pl_declaration(XTL)), false),
     ((Module, (test(Name, XTL)), [(test Name :- PL)]) : !,
         sf xtl_to_pl_goal(Module, XTL, PL),

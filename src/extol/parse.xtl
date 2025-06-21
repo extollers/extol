@@ -3,7 +3,8 @@
 % TODO: replace include with import
 pred xtl_include: (File, Module):
     log(including(File)),
-    xtl_include(File, := read_file(File), Module)
+    xtl_include(File, := read_file(File), Module),
+    Module :: module
 
 pred xtl_include: (File, Contents, Module):
     must(xtl_top_level(Module, Contents, []))
@@ -22,7 +23,7 @@ pred xtl_import: ((Contents, Name, Module):
     log(imports(Imports)))
 
 dcg2 xtl_token:
-    contract(N, xtl_callable(N), true),
+    contract(N, N :: xtl_callable, true),
     (N: N, xtl_skipwhite)
 
 test xtl_token :
@@ -52,7 +53,7 @@ dcg2 xtl_line_comment_:
 
 % TODO: now takes a Module
 dcg2 xtl_top_level:
-    contract((Module), module(Module), module(Module)),
+    contract((Module), Module :: module, Module :: module),
     ((Module):
         {log(parsing_top_level)},
         ( "#!", !, xtl_line_comment_; { true }),
@@ -61,7 +62,7 @@ dcg2 xtl_top_level:
         require(eof))
 
 dcg2 xtl_declaration:
-    contract(Module, module(Module), module(Module)),
+    contract(Module, Module :: module, Module :: module),
     ((_): eof, !, {fail}),
     ((Module):
         require(xtl_expression(pexpr(DeclV))), !,
@@ -163,7 +164,7 @@ test xtl_makevars:
     Z = 1
 
 dcg2 xtl_atom_char:
-contract((Byte), true, number(Byte)),
+contract((Byte), true, Byte :: number),
 (C:
     [C], !,
     { member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789$?") })
@@ -272,7 +273,7 @@ dcg2 xtl_regular_term:
                        ; xtl_token("|"), xtl_expression(pexpr(Tail)), xtl_token("]"))), !)
 
 dcg2 xtl_string_char:
-contract((Byte), true, byte(Byte)),
+contract((Byte), true, Byte :: byte),
 ((_): "\"", !, { false }),
 ((C): xtl_quoted_char(C), !),
 ((C): [C])

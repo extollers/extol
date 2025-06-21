@@ -130,3 +130,5 @@ pred not: G: G, !, false; true
 pred orlist:
     ((Goal, []): false),
     ((Goal, [X | Xs]): call(Goal, X) ; orlist(Goal, Xs))
+
+pred '::': (A, T): call(T, A), !; throw(error(A, T))
