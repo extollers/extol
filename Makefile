@@ -16,8 +16,9 @@ DATADIR ?= $(PREFIX)/share
 DOCDIR ?= $(PREFIX)/share/doc/$(NAME)
 PLC ?= gplc
 PLC_FLAGS ?= --global-size 128000 --local-size 32000 -C -O2 --fixed-sizes --no-top-level --strip
+SKIP_PRELUDE ?=
 
-CONFIG_VARIABLES = VERBOSE ONLY DESTDIR NAME PREFIX BINDIR DATADIR DOCDIR PLC PLC_FLAGS
+CONFIG_VARIABLES = VERBOSE ONLY DESTDIR NAME PREFIX BINDIR DATADIR DOCDIR PLC PLC_FLAGS KEEP_PRELUDE
 
 ifneq ($(VERBOSE),1)
 MAKEFLAGS += --silent
@@ -54,9 +55,10 @@ extras: docker
 check0: # TODO: eunit0
 check1: unit1 test1 # TODO: eunit1
 check2: unit2 test2 # TODO: eunit2
+check3: diff23
 eunit: eunit0 eunit1 # TODO: eunit2
 unit: unit1 unit2
-check: check0 check1 check2 diff23 testi
+check: check0 check1 check2 check3 testi
 	@echo [--] ALL TESTS PASSED
 
 test-%: test1-% test2-%
@@ -85,9 +87,15 @@ testi-%: install-if-needed
 
 trace = $(foreach x,$(1) all,$(if $(findstring  $(x) , $(TRACE) ),EXTOL_TRACE=1))
 
+SKIP0 := $(if $(findstring 0,$(ONLY)),,skip)
+SKIP1 := $(if $(findstring 1,$(ONLY)),,skip)
+SKIP2 := $(if $(findstring 2,$(ONLY)),,skip)
+SKIP3 := $(if $(findstring 3,$(ONLY)),,skip)
+SKIPi := $(if $(findstring i,$(ONLY)),,skip)
+
 define make_stage
 
-ifneq (,$$(findstring $(1),$$(ONLY)))
+ifeq (,$$(SKIP$(1)))
 STAGE$(1)_PL := $!stage$(1).pl
 STAGE$(1) := $!stage$(1)
 else
@@ -118,7 +126,7 @@ unit$(2)-%: $!stage$(2)
 	@echo [$(2) ] UNIT $$< $$*
 	$$(call trace,unit$(2) unit $(2)) $(./)$$< test $$*
 
-.PHONY: unit$(2)
+.PHONY: eunit$(2)
 eunit$(1): $!stage$(1)
 	@echo [$(1)E] EVAL UNIT $$<
 	$$(call trace,$$@ enuit $(1)) $(./)$$< eval-tests $/src/main.xtl
@@ -144,6 +152,7 @@ repl$(1): $(1)
 	@echo [$(1) ] REPL
 	$$(call trace,$$@ repl $(1)) $(./)$!stage$(1) repl
 
+ifeq (,$$(SKIP_PRELUDE))
 $!generate-embedded-prelude-$(2).pl: $/src/generate-embedded-prelude.xtl $$(prelude_sources) $$(extol_sources) $!stage$(1)
 	@echo '[$(1) ]' TOPL $$@
 	$$(call trace,topl $(1) topl$(1)) $(./)$!stage$(1) extoltoprolog --slim $$< $$@
@@ -154,8 +163,9 @@ $!generate-embedded-prelude-$(2): $!generate-embedded-prelude-$(2).pl
 
 $!embedded-prelude-$(2).pl: $!generate-embedded-prelude-$(2)
 	@echo '[$(2) ]' GEN $$@
-	unset EXTOL_TRACE; $(./)$$< > $$@.out
+	unset EXTOL_VERBOSE; $(./)$$< > $$@.out
 	mv $$@.out $$@
+endif
 
 endef
 
