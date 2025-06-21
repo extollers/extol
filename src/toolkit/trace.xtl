@@ -1,13 +1,15 @@
 
 pred log: Message:
-    environ('EXTOL_TRACE', _), !, t(Message); true
+    environ('EXTOL_VERBOSE', _), !, t(Message); true
 
-pred t: (X: write('trace: '), ti, write_term(X, [quoted(true), max_depth(7)]), nl)
+pred stderr: (X): current_output(X), set_output(user_error)
+
+pred t: (X: stderr(S), write('trace: '), ti, write_term(X, [quoted(true), max_depth(7)]), nl, set_output(S))
 
 dcg2 t: (X:
-        {write('trace: '), ti, write_term(X, [quoted(true), max_depth(7)]), write(', at: ')},
+        {stderr(S), write('trace: '), ti, write_term(X, [quoted(true), max_depth(7)]), write(', at: ')},
         peek(A), {pretty_init(A, C), write(C),
-        nl}, !)
+        nl, set_output(S)}, !)
 
 pred pretty_init: (A, C):
     copy_term(A, AA),
@@ -73,7 +75,7 @@ pred ti: (():
     length(L, II),
     append(L, _, Pat),
     atom_codes(S, L),
-    write(S))
+    stderr(O), write(S), set_output(O))
 
 inline
 pred ticall: (G) :
@@ -102,7 +104,7 @@ pred ticall: (G, X, A, B) :
     dcg2_call(GX, A, B),
     g_assignb(tindent, I)
 
-pred write_trace_line: X: write('at: '), write_term(X, [numbervars(false), namevars(false), max_depth(6)]), nl
+pred write_trace_line: X: stderr(S), write('at: '), write_term(X, [numbervars(false), namevars(false), max_depth(6)]), nl, set_output(S)
 
 pred throw_with_trace:
     ((traced_exception(Error, Trace), Frame): !, throw(traced_exception(Error, [Frame | Trace]))),
