@@ -6,9 +6,10 @@ test(:-(disabled,t(unit_tests_disabled))).
 :-(unify(A,A),true).
 :-(+(A,B,C),','(true,','(=('.'(A,'.'(B,'.'(C,[]))),'.'(D,'.'(E,'.'(F,[])))),is(F,+(D,E))))).
 :-(-(A,B,C),','(true,','(=('.'(A,'.'(B,'.'(C,[]))),'.'(D,'.'(E,'.'(F,[])))),is(F,-(D,E))))).
-:-(log(A),;(','(environ('EXTOL_TRACE',B),','(!,t(A))),true)).
-:-(t(A),','(write('trace: '),','(ti,','(write_term(A,'.'(quoted(true),'.'(max_depth(7),[]))),nl)))).
-:-(t(A,B,C),','(','(','(write('trace: '),','(ti,','(write_term(A,'.'(quoted(true),'.'(max_depth(7),[]))),write(', at: ')))),=(B,D)),','(peek(E,D,F),','(','(','(pretty_init(E,G),','(write(G),nl)),=(F,H)),','(!,=(H,C)))))).
+:-(log(A),;(','(environ('EXTOL_VERBOSE',B),','(!,t(A))),true)).
+:-(stderr(A),','(current_output(A),set_output(user_error))).
+:-(t(A),','(stderr(B),','(write('trace: '),','(ti,','(write_term(A,'.'(quoted(true),'.'(max_depth(7),[]))),','(nl,set_output(B))))))).
+:-(t(A,B,C),','(','(','(stderr(D),','(write('trace: '),','(ti,','(write_term(A,'.'(quoted(true),'.'(max_depth(7),[]))),write(', at: '))))),=(B,E)),','(peek(F,E,G),','(','(','(pretty_init(F,H),','(write(H),','(nl,set_output(D)))),=(G,I)),','(!,=(I,C)))))).
 :-(pretty_init(A,B),','(copy_term(A,C),','(;(','(length(D,32),append(D,E,C)),=(D,C)),','(!,','(prep_chars(D,F,[]),','(length(F,G),','(;(','(<(G,10),','(!,append(F,'.'(60,'.'(101,'.'(111,'.'(102,'.'(62,[]))))),H))),=(H,F)),atom_codes(B,H)))))))).
 :-(prep_chars([],A,B),=(A,B)).
 :-(prep_chars('.'(A,B),C,D),','(prep_char(A,C,E),prep_chars(B,E,D))).
@@ -23,11 +24,11 @@ test(:-(disabled,t(unit_tests_disabled))).
 :-(tc(A),','(;(','(=('.'(B,[]),'.'(t(failed(A)),[])),true),','(=('.'(C,[]),'.'(t(failed(A)),[])),','(call(C),fail))),','(t(enter(A)),','(','(=('.'(D,[]),'.'(A,[])),','(g_read(tindent,E),','(is(F,+(E,1)),','(g_assignb(tindent,F),','(call(D),g_assignb(tindent,E)))))),','(;(','(=('.'(G,[]),'.'(t(redo(A)),[])),true),','(=('.'(H,[]),'.'(t(redo(A)),[])),','(call(H),fail))),t(exit(A))))))).
 :-(tc(A,B,C),','(undo(t(failed(A)),B,D),','(t(enter(A),D,E),','(','(=('.'(F,'.'(G,'.'(H,[]))),'.'(A,'.'(E,'.'(I,[])))),','(g_read(tindent,J),','(is(K,+(J,1)),','(g_assignb(tindent,K),','(dcg2_call(F,G,H),g_assignb(tindent,J)))))),','(undo(t(redo(A)),I,L),t(exit(A),L,C)))))).
 :-(tc(A,B,C,D),','(undo(t(failed(A)),C,E),','(t(enter(A),E,F),','(','(=('.'(G,'.'(H,'.'(I,'.'(J,[])))),'.'(A,'.'(B,'.'(F,'.'(K,[]))))),','(g_read(tindent,L),','(is(M,+(L,1)),','(g_assignb(tindent,M),','(=...(G,N),','(append(N,'.'(H,[]),O),','(=...(P,O),','(dcg2_call(P,I,J),g_assignb(tindent,L))))))))),','(undo(t(redo(A)),K,Q),t(exit(A),Q,D)))))).
-:-(ti,','(=(A,'.'(124,'.'(32,'.'(46,'.'(32,'.'(46,'.'(32,A))))))),','(g_read(tindent,B),','(is(C,*(B,2)),','(length(D,C),','(append(D,E,A),','(atom_codes(F,D),write(F)))))))).
+:-(ti,','(=(A,'.'(124,'.'(32,'.'(46,'.'(32,'.'(46,'.'(32,A))))))),','(g_read(tindent,B),','(is(C,*(B,2)),','(length(D,C),','(append(D,E,A),','(atom_codes(F,D),','(stderr(G),','(write(F),set_output(G)))))))))).
 :-(ticall(A),','(g_read(tindent,B),','(is(C,+(B,1)),','(g_assignb(tindent,C),','(call(A),g_assignb(tindent,B)))))).
 :-(ticall(A,B,C),','(g_read(tindent,D),','(is(E,+(D,1)),','(g_assignb(tindent,E),','(dcg2_call(A,B,C),g_assignb(tindent,D)))))).
 :-(ticall(A,B,C,D),','(g_read(tindent,E),','(is(F,+(E,1)),','(g_assignb(tindent,F),','(=...(A,G),','(append(G,'.'(B,[]),H),','(=...(I,H),','(dcg2_call(I,C,D),g_assignb(tindent,E))))))))).
-:-(write_trace_line(A),','(write('at: '),','(write_term(A,'.'(numbervars(false),'.'(namevars(false),'.'(max_depth(6),[])))),nl))).
+:-(write_trace_line(A),','(stderr(B),','(write('at: '),','(write_term(A,'.'(numbervars(false),'.'(namevars(false),'.'(max_depth(6),[])))),','(nl,set_output(B)))))).
 :-(throw_with_trace(traced_exception(A,B),C),','(!,throw(traced_exception(A,'.'(C,B))))).
 :-(throw_with_trace(A,B),throw(traced_exception(A,'.'(B,[])))).
 :-(print_exception(traced_exception(A,B)),','(!,','(print_exception(A),','(reverse(B,C),maplist(write_trace_line,C))))).
@@ -130,6 +131,7 @@ test(:-(disabled,t(unit_tests_disabled))).
 :-(not(A),;(','(call(A),','(!,false)),true)).
 :-(orlist(A,[]),false).
 :-(orlist(A,'.'(B,C)),;(call(A,B),orlist(A,C))).
+:-(::(A,B),;(','(call(B,A),!),throw(error(A,B)))).
 :-(read_bytes(A,[]),','(at_end_of_stream(A),!)).
 :-(read_bytes(A,'.'(B,C)),','(get_byte(A,B),read_bytes(A,C))).
 :-(write_bytes(A,[]),true).
@@ -168,10 +170,10 @@ test(:-(disabled,t(unit_tests_disabled))).
 :-(define_clause(:(A,B)),true).
 :-(xtl_apply(A,B,C),;(','(=...(C,'.'('XTL$APPLY','.'(A,'.'(B,[])))),list(A)),','(=...(C,'.'(A,B)),\=(A,'XTL$APPLY')))).
 :-(xtl_makevar(A,B),=...(B,'.'('XTL$VARNAME','.'(A,[])))).
-:-(xtl_include(A,B),','(log(including(A)),','(read_file(A,C),xtl_include(A,C,B)))).
+:-(xtl_include(A,B),','(log(including(A)),','(','(read_file(A,C),xtl_include(A,C,B)),::(B,module)))).
 :-(xtl_include(A,B,C),must(xtl_top_level(C,B,[]))).
 :-(xtl_import(A,B,C),','(log(importing(B)),','(must(:=(D,xtlm_imports(C))),','(;(','(pmember(-(B,E),D),','(!,=(F,module(B,E,D)))),','(must(:=(F,xtlm_new(B,D))),','(must(xtl_top_level(F,A,[])),must(xtlm_seal(F))))),','(must(xtlm_import(C,F,inline)),log(imports(D))))))).
-:-(xtl_token(A,B,C),','(assert(xtl_callable(A)),','('__contract_free_xtl_token'(A,B,C),assert(true)))).
+:-(xtl_token(A,B,C),','(assert(::(A,xtl_callable)),','('__contract_free_xtl_token'(A,B,C),assert(true)))).
 :-('__contract_free_xtl_token'(A,B,C),','(dcg2_call(A,B,D),xtl_skipwhite(D,C))).
 :-(xtl_skipwhite(A,B),','(xtl_white(A,C),','(!,=(C,B)))).
 :-(xtl_skipwhite(A,B),=(A,B)).
@@ -179,9 +181,9 @@ test(:-(disabled,t(unit_tests_disabled))).
 :-(xtl_white(A,B),','(;(append('.'(32,[]),C,A),;(append('.'(9,[]),C,A),;(append('.'(13,[]),C,A),append('.'(10,[]),C,A)))),','(','(!,=(C,D)),xtl_skipwhite(D,B)))).
 :-(xtl_line_comment_(A,B),','(;(append('.'(10,[]),C,A),','(=([],[]),peek([],A,C))),','(!,=(C,B)))).
 :-(xtl_line_comment_(A,B),','(append('.'(C,[]),D,A),xtl_line_comment_(D,B))).
-:-(xtl_top_level(A,B,C),','(assert(module(A)),','('__contract_free_xtl_top_level'(A,B,C),assert(module(A))))).
+:-(xtl_top_level(A,B,C),','(assert(::(A,module)),','('__contract_free_xtl_top_level'(A,B,C),assert(::(A,module))))).
 :-('__contract_free_xtl_top_level'(A,B,C),','(','(log(parsing_top_level),=(B,D)),','(;(','(append('.'(35,'.'(33,[])),E,D),','(','(!,=(E,F)),xtl_line_comment_(F,G))),','(true,=(D,G))),','(xtl_skipwhite(G,H),','(many(xtl_declaration(A),H,I),require(eof,I,C)))))).
-:-(xtl_declaration(A,B,C),','(assert(module(A)),','('__contract_free_xtl_declaration'(A,B,C),assert(module(A))))).
+:-(xtl_declaration(A,B,C),','(assert(::(A,module)),','('__contract_free_xtl_declaration'(A,B,C),assert(::(A,module))))).
 :-('__contract_free_xtl_declaration'(A,B,C),','(','(=([],[]),peek([],B,D)),','(','(!,=(D,E)),','(fail,=(E,C))))).
 :-('__contract_free_xtl_declaration'(A,B,C),','(require(xtl_expression(pexpr(D)),B,E),','(','(!,=(E,F)),','(','(log(parsed_expression(D)),=(F,G)),','(;(','(=(D,include(H)),','(!,','(=('.'(I,[]),'.'(xtl_include(H,A),[])),catch(I,J,throw_with_trace(J,I))))),;(','(=(D,import(H,K)),','(!,','(read_file(H,L),','(=('.'(M,[]),'.'(xtl_import(L,K,A),[])),catch(M,N,throw_with_trace(N,M)))))),','(!,','(','(=('.'(O,[]),'.'(xtl_makevars(D,P,Q),[])),catch(O,R,throw_with_trace(R,O))),','(!,','(','(=('.'(S,[]),'.'(xtl_term_to_declaration(P,T),[])),catch(S,U,throw_with_trace(U,S))),','(!,','(=('.'(V,[]),'.'(xtlm_add(A,T),[])),catch(V,W,throw_with_trace(W,V)))))))))),=(G,C)))))).
 :-(xtl_term_to_declaration(test(:(A,B)),test(A,B)),!).
@@ -204,7 +206,7 @@ test(:-(disabled,t(unit_tests_disabled))).
 :-(xtl_makevars(A,A,B),','(atomic(A),!)).
 :-(xtl_makevars('.'(A,B),'.'(C,D),E),','(!,','(xtl_makevars(A,C,E),xtl_makevars(B,D,E)))).
 :-(xtl_makevars(A,B,C),','(xtl_apply(D,E,A),','(!,','(xtl_makevars(D,F,C),','(xtl_makevars(E,G,C),xtl_apply(F,G,B)))))).
-:-(xtl_atom_char(A,B,C),','(assert(true),','('__contract_free_xtl_atom_char'(A,B,C),assert(number(A))))).
+:-(xtl_atom_char(A,B,C),','(assert(true),','('__contract_free_xtl_atom_char'(A,B,C),assert(::(A,number))))).
 :-('__contract_free_xtl_atom_char'(A,B,C),','(append('.'(A,[]),D,B),','(','(!,=(D,E)),','(member(A,'.'(97,'.'(98,'.'(99,'.'(100,'.'(101,'.'(102,'.'(103,'.'(104,'.'(105,'.'(106,'.'(107,'.'(108,'.'(109,'.'(110,'.'(111,'.'(112,'.'(113,'.'(114,'.'(115,'.'(116,'.'(117,'.'(118,'.'(119,'.'(120,'.'(121,'.'(122,'.'(65,'.'(66,'.'(67,'.'(68,'.'(69,'.'(70,'.'(71,'.'(72,'.'(73,'.'(74,'.'(75,'.'(76,'.'(77,'.'(78,'.'(79,'.'(80,'.'(81,'.'(82,'.'(83,'.'(84,'.'(85,'.'(86,'.'(87,'.'(88,'.'(89,'.'(90,'.'(95,'.'(48,'.'(49,'.'(50,'.'(51,'.'(52,'.'(53,'.'(54,'.'(55,'.'(56,'.'(57,'.'(36,'.'(63,[])))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))),=(E,C))))).
 :-(xtl_atom(A,B,C),','(append('.'(39,[]),D,B),','(xtl_quoted_atom_chars_(E,D,F),','(atom_codes(A,E),=(F,C))))).
 :-(xtl_atom(A,B,C),','(many1(xtl_atom_char,D,B,E),','(','(!,=(E,F)),','(','(atom_codes(G,D),','(=(D,'.'(H,I)),;(','(=(H,95),','(!,xtl_makevar('_',A))),;(','(member(H,'.'(65,'.'(66,'.'(67,'.'(68,'.'(69,'.'(70,'.'(71,'.'(72,'.'(73,'.'(74,'.'(75,'.'(76,'.'(77,'.'(78,'.'(79,'.'(80,'.'(81,'.'(82,'.'(83,'.'(84,'.'(85,'.'(86,'.'(87,'.'(88,'.'(89,'.'(90,[]))))))))))))))))))))))))))),','(!,xtl_makevar(G,A))),=(A,G))))),=(F,C))))).
@@ -223,7 +225,7 @@ test(:-(disabled,t(unit_tests_disabled))).
 :-(xtl_regular_term(A,B,C),','(xtl_token('.'(40,[]),B,D),','(xtl_expression(pexpr(A),D,E),require(xtl_token('.'(41,[])),E,C)))).
 :-(xtl_regular_term({}(A),B,C),','(xtl_token('.'(123,[]),B,D),','(xtl_expression(pexpr(A),D,E),require(xtl_token('.'(125,[])),E,C)))).
 :-(xtl_regular_term(A,B,C),','(xtl_token('.'(91,[]),B,D),','(xtl_comma_separated(A,E,;(','(xtl_token('.'(93,[])),{}(=(E,[]))),','(xtl_token('.'(124,[])),','(xtl_expression(pexpr(E)),xtl_token('.'(93,[]))))),D,F),','(!,=(F,C))))).
-:-(xtl_string_char(A,B,C),','(assert(true),','('__contract_free_xtl_string_char'(A,B,C),assert(byte(A))))).
+:-(xtl_string_char(A,B,C),','(assert(true),','('__contract_free_xtl_string_char'(A,B,C),assert(::(A,byte))))).
 :-('__contract_free_xtl_string_char'(A,B,C),','(append('.'(34,[]),D,B),','(','(!,=(D,E)),','(false,=(E,C))))).
 :-('__contract_free_xtl_string_char'(A,B,C),','(xtl_quoted_char(A,B,D),','(!,=(D,C)))).
 :-('__contract_free_xtl_string_char'(A,B,C),append('.'(A,[]),C,B)).
@@ -296,9 +298,9 @@ test(:-(disabled,t(unit_tests_disabled))).
 :-(xtl_op(700,fx,:=),true).
 :-(xtl_op(50,xfy,'.'),true).
 :-(xtl_to_pl_toplevel(A,B),','(maplist(xtl_to_pl_declaration,A,C),','(append(C,D),append('.'(:-(set_prolog_flag(singleton_warning,off)),'.'(:-(discontiguous(/(test,1))),'.'(:-(initialization(;(main,','(write('error: unexpected failure in main'),','(nl,halt(1)))))),[]))),D,B)))).
-:-(xtl_to_pl_declaration(A,B),','(assert(','(=(A,-(C,D)),','(module(C),module_declaration(D)))),','('__contract_free_xtl_to_pl_declaration'(A,B),assert(true)))).
+:-(xtl_to_pl_declaration(A,B),','(assert(','(=(A,-(C,D)),','(::(C,module),::(D,module_declaration)))),','('__contract_free_xtl_to_pl_declaration'(A,B),assert(true)))).
 :-('__contract_free_xtl_to_pl_declaration'(-(A,B),C),','(log(compiling(B,A)),','(=('.'(D,[]),'.'(must(xtl_to_pl_declaration(A,B,C)),[])),catch(D,E,throw_with_trace(E,D))))).
-:-(xtl_to_pl_declaration(A,B,C),','(assert(','(module(A),xtl_declaration(B))),','('__contract_free_xtl_to_pl_declaration'(A,B,C),assert(true)))).
+:-(xtl_to_pl_declaration(A,B,C),','(assert(','(::(A,module),::(B,xtl_declaration))),','('__contract_free_xtl_to_pl_declaration'(A,B,C),assert(true)))).
 :-('__contract_free_xtl_to_pl_declaration'(A,B,C),','(log(to_pl_declaration(B)),false)).
 :-('__contract_free_xtl_to_pl_declaration'(A,test(B,C),'.'(test(:-(B,D)),[])),','(!,','(','(=('.'(E,[]),'.'(xtl_to_pl_goal(A,C,D),[])),catch(E,F,throw_with_trace(F,E))),numbervars(D)))).
 :-('__contract_free_xtl_to_pl_declaration'(A,define(B,'.'(nondet,[]),C),D),','(!,','(','(=('.'(E,[]),'.'(maplist(xtl_to_pl_fun(A,B),C,D),[])),catch(E,F,throw_with_trace(F,E))),numbervars(D)))).
@@ -494,4 +496,4 @@ test(:-(disabled,t(unit_tests_disabled))).
 :-(xtl_repl(A),','(write(end),nl)).
 :-(xtl_command_eval_include(A,B),xtl_include(B,A)).
 :-(xtl_command_eval(A,B),','(xtlm_new(eval,C),','(xtl_include_prelude(C),','(!,','(maplist(xtl_command_eval_include(C),A),','(atom_codes(B,D),','(xtl_expression(pexpr(E),D,[]),','(xtl_makevars(E,F,G),','(xtl_eval_funexpr(C,F,H),','(write(H),nl)))))))))).
-xtl_include_prelude(module(_, '.'(-(/(/(halt,1),'.'(pred,[])),prolog(/(halt,1))),'.'(-(/(/(halt,0),'.'(pred,[])),prolog(/(halt,0))),'.'(-(/(/(write,1),'.'(pred,[])),prolog(/(write,1))),'.'(-(/(/(nl,0),'.'(pred,[])),prolog(/(nl,0))),'.'(-(/(/(unify,2),'.'(fun,[])),define(unify,'.'(nondet,[]),'.'(:(_9074,_9074),[]))),'.'(-(/(/(+,3),'.'(fun,[])),define(+,'.'(nondet,[]),'.'(:(','(_13268,_13299),if(_13389,'prolog$'('.'(_13268,'.'(_13299,'.'(_13389,[]))),'[A,B,C]','C is A + B'))),[]))),'.'(-(/(/(-,3),'.'(fun,[])),define(-,'.'(nondet,[]),'.'(:(','(_17739,_17770),if(_17860,'prolog$'('.'(_17739,'.'(_17770,'.'(_17860,[]))),'[A,B,C]','C is A - B'))),[]))),_18180))))))), _)).
+xtl_include_prelude(module(_, '.'(-(/(/(halt,1),'.'(pred,[])),prolog(/(halt,1))),'.'(-(/(/(halt,0),'.'(pred,[])),prolog(/(halt,0))),'.'(-(/(/(write,1),'.'(pred,[])),prolog(/(write,1))),'.'(-(/(/(nl,0),'.'(pred,[])),prolog(/(nl,0))),'.'(-(/(/(unify,2),'.'(fun,[])),define(unify,'.'(nondet,[]),'.'(:(_9136,_9136),[]))),'.'(-(/(/(+,3),'.'(fun,[])),define(+,'.'(nondet,[]),'.'(:(','(_13360,_13391),if(_13481,'prolog$'('.'(_13360,'.'(_13391,'.'(_13481,[]))),'[A,B,C]','C is A + B'))),[]))),'.'(-(/(/(-,3),'.'(fun,[])),define(-,'.'(nondet,[]),'.'(:(','(_17859,_17890),if(_17980,'prolog$'('.'(_17859,'.'(_17890,'.'(_17980,[]))),'[A,B,C]','C is A - B'))),[]))),_18300))))))), _)).
