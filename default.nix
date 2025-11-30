@@ -1,0 +1,18 @@
+let
+  locked = import ./lock.nix;
+  pkgs = import locked.nixpkgs {};
+in with pkgs; with pkgs.lib; let
+
+  extol = callPackage ({stdenv, gprolog}:
+    stdenv.mkDerivation {
+      pname = "extol";
+      version = "0.0.5";
+      src = ./.;
+      nativeBuildInputs = [ gprolog ];
+      configurePhase = "make configure PREFIX=$out";
+      doCheck = true;
+    }) {};
+
+in {
+  inherit extol;
+}
