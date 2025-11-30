@@ -7,7 +7,7 @@ in with pkgs; with pkgs.lib; let
     pname = "extol";
     version = "0.0.5";
     src = ./.;
-    nativeBuildInputs = [ gprolog ];
+    nativeBuildInputs = [ gprolog mlton ];
     configurePhase = "make configure PREFIX=$out";
     doCheck = true;
   };

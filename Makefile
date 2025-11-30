@@ -247,3 +247,12 @@ docker:
 .PHONY: docker-repl
 docker-repl: docker
 	docker run --rm --interactive --tty extol
+
+$!stage-ml.sml: 2
+	$!stage2 extol-to-sml $/src/main.xtl $@
+
+$!stage-ml: $!stage-ml.sml
+	mlton $<
+
+.PHONY: ml
+ml: $!stage-ml
