@@ -40,6 +40,7 @@ verify () (
 
 disabled () {
     if [[ -z "${ENABLE_ALL}" ]]; then
+        rmdir out
         echo [$STAGE ] + DISABLED $test
         exit 0
     fi
