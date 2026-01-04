@@ -17,8 +17,9 @@ DOCDIR ?= $(PREFIX)/share/doc/$(NAME)
 PLC ?= gplc
 PLC_FLAGS ?= --global-size 128000 --local-size 32000 -C -O2 --fixed-sizes --no-top-level --strip
 SKIP_PRELUDE ?=
+DEFAULT ?= 2
 
-CONFIG_VARIABLES = VERBOSE ONLY DESTDIR NAME PREFIX BINDIR DATADIR DOCDIR PLC PLC_FLAGS KEEP_PRELUDE
+CONFIG_VARIABLES = VERBOSE ONLY DESTDIR NAME PREFIX BINDIR DATADIR DOCDIR PLC PLC_FLAGS DEFAULT
 
 ifneq ($(VERBOSE),1)
 MAKEFLAGS += --silent
@@ -42,7 +43,7 @@ prelude_sources = $(shell find $/src/prelude -iname '*.xtl')
 # TODO runtime_sources = $(shell find $/src/runtime -iname '*.pl')
 
 .PHONY: default
-default: 2
+default: $(DEFAULT)
 	@true
 
 .PHONY: everything
@@ -249,9 +250,11 @@ docker-repl: docker
 	docker run --rm --interactive --tty extol
 
 $!stage-ml.sml: 2
+	@echo '[M ]' EXTOL-TO-SML $$@
 	$!stage2 extol-to-sml $/src/main.xtl $@
 
 $!stage-ml: $!stage-ml.sml
+	@echo '[M ]' SMLC $$@
 	mlton $<
 
 .PHONY: ml

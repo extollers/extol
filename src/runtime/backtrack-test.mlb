@@ -1,0 +1,12 @@
+$(SML_LIB)/basis/basis.mlb
+$(SML_LIB)/basis/mlton.mlb
+ann
+  "allowSuccessorML true"
+  "nonexhaustiveBind error"
+  "nonexhaustiveMatch error"
+  "redundantBind error"
+  "redundantMatch error"
+  "sequenceNonUnit error"
+in
+  backtrack.sml
+end
