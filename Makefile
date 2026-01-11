@@ -259,3 +259,10 @@ $!stage-ml: $!stage-ml.sml
 
 .PHONY: ml
 ml: $!stage-ml
+
+$!ml-runtime-test: $/src/runtime/runtime-test.mlb $/src/runtime/runtime.sml
+	mlton -codegen native -output $@ $<
+
+.PHONY: ml-runtime-test
+ml-runtime-test: $!ml-runtime-test
+	$!ml-runtime-test

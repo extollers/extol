@@ -8,5 +8,6 @@ ann
   "redundantMatch error"
   "sequenceNonUnit error"
 in
-  backtrack.sml
+  runtime.sml
+  runtime-test.sml
 end
