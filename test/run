@@ -31,6 +31,9 @@ capture () {
 
 verify () (
     cd "$test_root/$test"
+    if [[ -e $run/out/disabled-marker ]]; then
+        return
+    fi
     if [[ -e $run/out ]]; then
         diff --recursive -N --strip-trailing-cr expected $run/out
     else
@@ -41,6 +44,7 @@ verify () (
 disabled () {
     if [[ -z "${ENABLE_ALL}" ]]; then
         echo [$STAGE ] + DISABLED $test
+        touch "$OUT/disabled-marker"
         exit 0
     fi
 }
@@ -65,6 +69,7 @@ for test_file in $tests; do
       cd $run
       ln -s .. input
       mkdir out
+      export OUT="$(cd out; pwd)"
       set -e
       . ../test
     )
