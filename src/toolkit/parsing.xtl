@@ -3,43 +3,43 @@
 
 % TODO: parse error locations
 
-dcg2 many:
+dcg many:
 % TODO ATN contract((Predicate, List), (xtl_callable(Predicate), list_or_partial_list(List)), list(List)),
 %((P, [X | Xs]): call(P, X), '__contract_free_many'(P, Xs), !),
 ((P, [X | Xs]): call(P, X), many(P, Xs), !),
 ((_, []): [])
 
-dcg2 many:
+dcg many:
     ((P): call(P), many(P), !),
     ((_): { true })
 
-dcg2 many1:
+dcg many1:
 contract((Predicate, List), (xtl_callable(Predicate), list_or_partial_list(List)), list(List)),
 ((P, [X | Xs]): call(P, X), !, many(P, Xs))
 
 inline
-dcg2 eof: (): peek([])
+dcg eof: (): peek([])
 
 pred peek:
 contract((Rest, In, Out), (list_or_partial_list(In), list_or_partial_list(Out), list_or_partial_list(Rest)), true),
 ((Rest, Rest, Rest) : true)
 
-dcg2 alpha:
+dcg alpha:
 contract((C), true, number(C)),
 ((C): [C], { member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ") })
 
-dcg2 digit:
+dcg digit:
 contract((D), true, number(D)),
 ((D):
     [C],
     { member(C - D, [0'0 - 0, 0'1 - 1, 0'2 - 2, 0'3 - 3, 0'4 - 4, 0'5 - 5, 0'6 - 6, 0'7 - 7, 0'8 - 8, 0'9 - 9]) })
 
-pred dcg2_call:
+pred dcg_call:
     ((Var, _, _) : var(Var), !, fail),
     (([], I, I) : !),
-    (([X | Xs], I, P) : !, I = [X | O], dcg2_call(Xs, O, P)),
-    (((A, B), I, P) : !, dcg2_call(A, I, O), dcg2_call(B, O, P)),
-    (((A ; B), I, O) : !, (dcg2_call(A, I, O) ; dcg2_call(B, I, O))),
+    (([X | Xs], I, P) : !, I = [X | O], dcg_call(Xs, O, P)),
+    (((A, B), I, P) : !, dcg_call(A, I, O), dcg_call(B, O, P)),
+    (((A ; B), I, O) : !, (dcg_call(A, I, O) ; dcg_call(B, I, O))),
     (({A}, I, I) : !, A),
     ((G, I, O) : !, call(G, I, O))
 
@@ -56,7 +56,7 @@ pred pretty_parsing: (parsing(I, _, L, _), Description):
     append([S, ": \n  ", C], Description)
 
 pred require: (N, Xs, Rest) :
-    ( dcg2_call(N, Xs, Rest), !
+    ( dcg_call(N, Xs, Rest), !
     ; pretty_init(Xs, C), throw(parse_failed(N, C)) )
 
 pred must:
@@ -68,7 +68,7 @@ pred must:
 pred must:
 ((G, A, B, C): undo(throw(failed(call(G, A, B, C)))), call(G, A, B, C))
 
-pred try: (N, Xs, Rest) : catch(dcg2_call(N, Xs, Rest), parse_failed(_, _), Failed=true), !, Failed=false
+pred try: (N, Xs, Rest) : catch(dcg_call(N, Xs, Rest), parse_failed(_, _), Failed=true), !, Failed=false
 
 pred add_digit: (N, D, R):
     member(D, [0,1,2,3,4,5,6,7,8,9]),

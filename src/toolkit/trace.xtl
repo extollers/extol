@@ -6,7 +6,7 @@ pred stderr: (X): current_output(X), set_output(user_error)
 
 pred t: (X: stderr(S), write('trace: '), ti, write_term(X, [quoted(true), max_depth(7)]), nl, set_output(S))
 
-dcg2 t: (X:
+dcg t: (X:
         {stderr(S), write('trace: '), ti, write_term(X, [quoted(true), max_depth(7)]), write(', at: ')},
         peek(A), {pretty_init(A, C), write(C),
         nl, set_output(S)}, !)
@@ -19,11 +19,11 @@ pred pretty_init: (A, C):
     (N < 10, !, append(Q, "<eof>", QQ) ; QQ = Q),
     atom_codes(C, QQ)
 
-dcg2 prep_chars:
+dcg prep_chars:
 ([]: []),
 ([X | Xs]: prep_char(X), prep_chars(Xs))
 
-dcg2 prep_char:
+dcg prep_char:
 (X: { var(X) }, !, "<?>"),
 (0'\n: !, "<nl>"),
 (0'\r: !, "<cr>"),
@@ -51,7 +51,7 @@ pred 'tc': (F:
           t(exit(F)))
 
 inline
-dcg2 'tc': F:
+dcg 'tc': F:
     undo(t(failed(F))),
     t(enter(F)),
     ticall(F),
@@ -59,7 +59,7 @@ dcg2 'tc': F:
     t(exit(F))
 
 inline
-dcg2 tc: (F, X):
+dcg tc: (F, X):
     undo(t(failed(F))),
     t(enter(F)),
     ticall(F, X),
@@ -90,7 +90,7 @@ pred ticall: (G, A, B) :
     g_read(tindent, I),
     II is I + 1,
     g_assignb(tindent, II),
-    dcg2_call(G, A, B),
+    dcg_call(G, A, B),
     g_assignb(tindent, I)
 
 inline
@@ -101,7 +101,7 @@ pred ticall: (G, X, A, B) :
     G =... L,
     append(L, [X], LL),
     GX =... LL,
-    dcg2_call(GX, A, B),
+    dcg_call(GX, A, B),
     g_assignb(tindent, I)
 
 pred write_trace_line: X: stderr(S), write('at: '), write_term(X, [numbervars(false), namevars(false), max_depth(6)]), nl, set_output(S)

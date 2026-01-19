@@ -22,7 +22,7 @@ pred xtl_import: ((Contents, Name, Module):
     must(xtlm_import(Module, Imported, inline)),
     log(imports(Imports)))
 
-dcg2 xtl_token:
+dcg xtl_token:
     contract(N, N :: xtl_callable, true),
     (N: N, xtl_skipwhite)
 
@@ -31,14 +31,14 @@ test xtl_token :
     xtl_token("x", "x % comment", ""),
     xtl_token("x", "x % comment\n  \t", "")
 
-dcg2 xtl_skipwhite:
+dcg xtl_skipwhite:
     ((): xtl_white, !),
     ((): [])
 
 test xtl_skipwhite :
     xtl_skipwhite("", "")
 
-dcg2 xtl_white:
+dcg xtl_white:
     ((): "%", !, xtl_line_comment_, xtl_skipwhite),
     ((): (" "; "\t"; "\r" ; "\n" ), !, xtl_skipwhite)
 
@@ -47,12 +47,12 @@ test xtl_white :
     xtl_white("%", ""),
     xtl_white("% comment \n\t  ", "")
 
-dcg2 xtl_line_comment_:
+dcg xtl_line_comment_:
     ((): ("\n" ; eof), !),
     ((): [_], xtl_line_comment_)
 
 % TODO: now takes a Module
-dcg2 xtl_top_level:
+dcg xtl_top_level:
     contract((Module), Module :: module, Module :: module),
     ((Module):
         {log(parsing_top_level)},
@@ -61,7 +61,7 @@ dcg2 xtl_top_level:
         many(xtl_declaration(Module)),
         require(eof))
 
-dcg2 xtl_declaration:
+dcg xtl_declaration:
     contract(Module, Module :: module, Module :: module),
     ((_): eof, !, {fail}),
     ((Module):
@@ -85,10 +85,10 @@ pred xtl_term_to_declaration:
         comma_list(Head, HeadList)),
     (((pred Name : Clauses), define(Name, [nondet, predicate], ClauseList)):
         comma_list(Clauses, ClauseList)),
-    (((dcg2(Name) : contract(Head, Requires, Ensures), Clauses), define(Name, [dcg2, nondet, predicate, parameters(HeadList), requires(Requires), ensures(Ensures)], ClauseList)):
+    (((dcg(Name) : contract(Head, Requires, Ensures), Clauses), define(Name, [dcg, nondet, predicate, parameters(HeadList), requires(Requires), ensures(Ensures)], ClauseList)):
         comma_list(Clauses, ClauseList),
         comma_list(Head, HeadList)),
-    (((dcg2(Name) : Clauses), define(Name, [dcg2, nondet, predicate], ClauseList)):
+    (((dcg(Name) : Clauses), define(Name, [dcg, nondet, predicate], ClauseList)):
         comma_list(Clauses, ClauseList)),
     (((fun Name : Clauses), define(Name, [nondet], ClauseList)):
         comma_list(Clauses, ClauseList)),
@@ -155,13 +155,13 @@ test xtl_makevars:
     atomic(Z),
     Z = 1
 
-dcg2 xtl_atom_char:
+dcg xtl_atom_char:
 contract((Byte), true, Byte :: number),
 (C:
     [C], !,
     { member(C, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789$?") })
 
-dcg2 xtl_atom:
+dcg xtl_atom:
     ((Atom):
         "'",
         xtl_quoted_atom_chars_(Cs),
@@ -186,7 +186,7 @@ test xtl_atom :
     % 'ab.'
     true
 
-dcg2 xtl_quoted_char:
+dcg xtl_quoted_char:
 % contract((Bytes), true, number(Byte)),
 ((C) :
     "\\", !,
@@ -199,7 +199,7 @@ dcg2 xtl_quoted_char:
                  AsIs - AsIs
     ]) }, !)
 
-dcg2 xtl_quoted_atom_chars_:
+dcg xtl_quoted_atom_chars_:
 (([]) : "'", !),
 (([C | Cs]) :
     xtl_quoted_char(C), !,
@@ -208,7 +208,7 @@ dcg2 xtl_quoted_atom_chars_:
     [C],
     xtl_quoted_atom_chars_(Cs))
 
-dcg2 xtl_expression: (Expr) :
+dcg xtl_expression: (Expr) :
     xtl_expression(1201, Expr)
 
 pred pexpr:
@@ -225,7 +225,7 @@ pred pexpr_raw:
     ; ( (E =.. [F | A]), !, atom(F), maplist(pexpr_raw, A))
         )
 
-dcg2 xtl_expression:
+dcg xtl_expression:
     contract((Prec, Expr), Prec :: number, Expr :: pexpr),
     ((Prec, Expr):
         xtl_expression(none, Prec, Expr))
@@ -245,7 +245,7 @@ test xtl_expression :
 test comma_expr :
     xtl_expression(pexpr((p :- (a, b))), "p :- a, b", [])
 
-dcg2 xtl_regular_term:
+dcg xtl_regular_term:
 ((Char) : "0'", !, require(xtl_string_char(Char)), xtl_skipwhite),
 ((Integer) :
     many1(digit, Ds), !,
@@ -276,7 +276,7 @@ dcg2 xtl_regular_term:
                        ( xtl_token("]"), {Tail=[]}
                        ; xtl_token("|"), xtl_expression(pexpr(Tail)), xtl_token("]"))), !)
 
-dcg2 xtl_string_char:
+dcg xtl_string_char:
 contract((Byte), true, Byte :: byte),
 ((_): "\"", !, { false }),
 ((C): xtl_quoted_char(C), !),
@@ -292,17 +292,17 @@ test xtl_regular_term :
     xtl_regular_term([], "[]", ""),
     xtl_regular_term([1,2,3], "[1,2,3]", "")
 
-dcg2 xtl_comma_separated: (As, Tail, End):
+dcg xtl_comma_separated: (As, Tail, End):
     xtl_comma_seperated_first(As, Tail, End)
 
-dcg2 xtl_comma_seperated_first:
+dcg xtl_comma_seperated_first:
 ((Tail, Tail, End) :
     End, !),
 (([A | As], Tail, End) :
     xtl_expression(1000, pexpr(A)), !,
     xtl_comma_separated_next(As, Tail, End))
 
-dcg2 xtl_comma_separated_next:
+dcg xtl_comma_separated_next:
 ((Tail, Tail, End) :
     End, !),
 (([A | As], Tail, End) :
@@ -310,7 +310,7 @@ dcg2 xtl_comma_separated_next:
     xtl_expression(1000, pexpr(A)), !,
     xtl_comma_separated_next(As, Tail, End))
 
-dcg2 xtl_op_or_term:
+dcg xtl_op_or_term:
 (('!', term) : "!", xtl_skipwhite),
 ((X, Info) :
     xtl_regular_term(X), !,
@@ -325,14 +325,14 @@ dcg2 xtl_op_or_term:
     ),
     xtl_skipwhite)
 
-dcg2 xtl_known_op:
+dcg xtl_known_op:
     ((Cs, Op, Prec, Assoc) : { atom_codes(Op, Cs), xtl_op(_, _, Op), !, xtl_op(Prec, Assoc, Op) }),
     ((Cs, Op, Prec, Assoc) : { append(Shorter, [C], Cs) }, append([C]), xtl_known_op(Shorter, Op, Prec, Assoc))
 
-dcg2 xtl_op_char: (C):
+dcg xtl_op_char: (C):
     [C], { member(C, "`~!@#%^&*<>/;:-_=+,|\\.") }, !
 
-dcg2 xtl_expression:
+dcg xtl_expression:
 ((none, Prec, pexpr(Term)) :
     xtl_op_or_term(Op, op(OpPrec, Assoc)),
     { member(Assoc-N, [fx-0, fy-1]),
@@ -406,7 +406,7 @@ pred xtl_op:
     ((700, xfx, '=...') : true),
     ((1200, xfy, ':') : true),
     ((1150, fy, inline) : true),
-    ((1150, fy, dcg2) : true),
+    ((1150, fy, dcg) : true),
     ((1150, fy, pred) : true),
     ((1150, fy, include) : true),
     ((1150, fy, fun) : true),
