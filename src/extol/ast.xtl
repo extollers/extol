@@ -13,7 +13,6 @@ pred annotation:
     (returns(Var): true),
     (ensures(Pred): xtl_goal(Pred)),
     (requires(Pred): xtl_goal(Pred)),
-    (dcg: true),
     (dcg2: true),
     (parameters(List): maplist(var, List)),
     (inline: true)

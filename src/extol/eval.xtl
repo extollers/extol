@@ -154,7 +154,7 @@ pred xtl_eval_dcg:
     ((Module, (A, B), I, O):
         xtl_eval_dcg(Module, A, I, J),
         xtl_eval_dcg(Module, B, J, O)),
-    ((Module, (A, B), I, O):
+    ((Module, (A; B), I, O):
         xtl_eval_dcg(Module, A, I, O) ;
         xtl_eval_dcg(Module, B, I, O)),
     ((Module, '!', I, O):
