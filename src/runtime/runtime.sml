@@ -102,7 +102,7 @@ fun lookup ({ frame } : Context) (needle: word) (record: Record) =
         )
         end
 
-fun union ({ frame }: Context) (a: Value) (b: Value) =
+fun unify ({ frame }: Context) (a: Value) (b: Value) =
     let
         val Stack.Frame { failed, ... } = frame
 
@@ -174,4 +174,16 @@ fun union ({ frame }: Context) (a: Value) (b: Value) =
     in
         unifyVal (a, b)
     end
+
+fun write_1 ({ frame }: Context) (v: Value) =
+    case v of
+        String s => print s
+      | Integer i => print (Int.toString i)
+      | _ => print "?"
+
+fun nl_0 ({ frame }: Context) = print "\n"
+
+fun true_0 ({ frame }: Context) = ()
+
+fun halt_0 ({ frame }: Context) = OS.Process.exit OS.Process.success
 

@@ -12,6 +12,7 @@ DESTDIR ?=
 NAME ?= extol
 PREFIX ?= $(BUILD)/local
 BINDIR ?= $(PREFIX)/bin
+LIBDIR ?= $(PREFIX)/lib
 DATADIR ?= $(PREFIX)/share
 DOCDIR ?= $(PREFIX)/share/doc/$(NAME)
 PLC ?= gplc
@@ -19,7 +20,7 @@ PLC_FLAGS ?= --global-size 128000 --local-size 32000 -C -O2 --fixed-sizes --no-t
 SKIP_PRELUDE ?=
 DEFAULT ?= 2
 
-CONFIG_VARIABLES = VERBOSE ONLY DESTDIR NAME PREFIX BINDIR DATADIR DOCDIR PLC PLC_FLAGS DEFAULT
+CONFIG_VARIABLES = VERBOSE ONLY DESTDIR NAME PREFIX BINDIR LIBDIR DATADIR DOCDIR PLC PLC_FLAGS DEFAULT
 
 ifneq ($(VERBOSE),1)
 MAKEFLAGS += --silent
@@ -228,6 +229,7 @@ install: $!stage2
 	@echo [I ] INSTALL $(DESTDIR)$(PREFIX)
 	set -o pipefail; ( \
 	  install -Cvm 755 $!stage2 -DT $(DESTDIR)$(BINDIR)/$(NAME) ; \
+	  install -Cvm 644 $/src/runtime/runtime.sml -DT $(DESTDIR)$(LIBDIR)/runtime.sml ; \
 	  install -Cvm 644 $/README.md $/LICENSE.md $/NOTICE -Dt $(DESTDIR)$(DOCDIR) ; \
 	  install -Cvm 644 $/integrations/emacs/extol.el -DT $(DESTDIR)$(DATADIR)/emacs/site-lisp/$(NAME).el ; \
 	) | sed 's/^/[I ] + /'
@@ -249,13 +251,17 @@ docker:
 docker-repl: docker
 	docker run --rm --interactive --tty extol
 
+$!lib/runtime.sml: $/src/runtime/runtime.sml | $!lib/.
+	@echo '[L ]' COPY $@
+	cp $< $@
+
 $!stage-ml.sml: 2
 	@echo '[M ]' EXTOL-TO-SML $$@
 	$!stage2 extol-to-sml $/src/main.xtl $@
 
-$!stage-ml: $!stage-ml.sml
+$!stage-ml: $!stage-ml.sml $!stage2 $!lib/runtime.sml
 	@echo '[M ]' SMLC $$@
-	mlton $<
+	$!stage2 build-sml --extol-prefix $! $<
 
 .PHONY: ml
 ml: $!stage-ml

@@ -1,0 +1,136 @@
+%% Extol to SML
+
+pred xtl_to_sml_toplevel:
+    ((XTL, SML):
+        maplist(xtl_to_sml_declaration, XTL, DeclsSML),
+        append(DeclsSML, FlatDeclsSML),
+        ( member(_-define(main, _, _), XTL), !,
+            MainCall = "val _ = Stack.try NONE (fn frame => main_0 {frame=frame})\n"
+        ; MainCall = ""),
+        append([FlatDeclsSML, MainCall], SML))
+
+pred xtl_to_sml_declaration:
+    contract((ModXTL, SML),
+        (ModXTL = Mod-XTL, Mod :: module, XTL :: module_declaration),
+        true),
+    ((Mod-XTL, SML):
+        log(compiling_sml(XTL, Mod)),
+        sf must(xtl_to_sml_declaration(Mod, XTL, SML))),
+    ((_, define(Name, _, Clauses), SML): !,
+        ( Name = 'unify', !, SML = []
+        ; sml_mangle_name(Name, NameS),
+          Clauses = [(Head1 : _) | _],
+          comma_list(Head1, Head1List),
+          length(Head1List, Arity),
+          sml_write_term(Arity, ArityCodes),
+          append([NameS, "_", ArityCodes], FunName),
+
+          % Generate parameter names: p1, p2, ...
+          length(Params, Arity),
+          maplist(sml_make_param, Params, ParamsSML),
+          append(ParamsSML, ParamsStr),
+
+          maplist(xtl_to_sml_clause(Arity, Params), Clauses, ClausesSML),
+          sml_join_clauses(ClausesSML, BodySML),
+
+          append(["fun ", FunName, " ctx ", ParamsStr, " = (\n", BodySML, ");\n"], SML))),
+    ((_, _, []): !)
+
+pred sml_make_param:
+    ((X, Codes):
+        sml_write_term(X, XC),
+        append(["p", XC, " "], Codes))
+
+pred sml_join_clauses:
+    (([C]), C): !,
+    (([C | Cs], SML)):
+        sml_join_clauses(Cs, Next),
+        append(["if Stack.try (SOME (#frame ctx)) (fn frame => let val ctx = {frame=frame} in (\n", C, ") end)\nthen (\n", Next, ")\nelse ()\n"], SML)
+
+pred xtl_to_sml_clause:
+    ((Arity, Params, (Head : Body), SML):
+        comma_list(Head, HeadList),
+        copy_term((HeadList, Body), (HeadListC, BodyC)),
+        numbervars((HeadListC, BodyC)),
+        maplist(xtl_to_sml_head_match, Params, HeadListC, Matches),
+        append(Matches, MatchesSML),
+        xtl_to_sml_goal(BodyC, BodySML),
+        append([MatchesSML, BodySML], SML))
+
+pred xtl_to_sml_head_match:
+    ((Param, Pattern, SML):
+        sml_write_term(Param, PCodes),
+        xtl_to_sml_expr(Pattern, ExprSML),
+        append(["unify ctx p", PCodes, " ", ExprSML, ";\n"], SML))
+
+pred xtl_to_sml_goal:
+    ((Goal, SML):
+        ( Goal = (A, B), !,
+            xtl_to_sml_goal(A, AS),
+            xtl_to_sml_goal(B, BS),
+            append([AS, ";\n", BS], SML)
+        ; Goal = (A ; B), !,
+            xtl_to_sml_goal(A, AS),
+            xtl_to_sml_goal(B, BS),
+            append(["if Stack.try (SOME (#frame ctx)) (fn frame => let val ctx = {frame=frame} in (\n", AS, ") end)\nthen (\n", BS, ")\nelse ()\n"], SML)
+        ; Goal = true, !, SML = "()"
+        ; Goal = fail, !, SML = "Stack.fail (#frame ctx)"
+        ; Goal = '!", !, SML = "()" % TODO: proper cut
+        ; Goal = (P -> Q ; R), !,
+            xtl_to_sml_goal(P, PS),
+            xtl_to_sml_goal(Q, QS),
+            xtl_to_sml_goal(R, RS),
+            append(["if Stack.try (SOME (#frame ctx)) (fn frame => let val ctx = {frame=frame} in (\n", PS, ") end)\nthen (\n", RS, ")\nelse (\n", QS, ")\n"], SML)
+        ; '=..'(Goal, [Name | Args]),
+            Name \= 'prolog$',
+            Name \= ':-',
+            length(Args, Arity),
+            sml_write_term(Arity, ArityCodes),
+            sml_mangle_name(Name, NameS),
+            append([NameS, "_", ArityCodes], FunName),
+            maplist(xtl_to_sml_expr, Args, ArgsSML),
+            append(ArgsSML, ArgsStr),
+            append([FunName, " ctx ", ArgsStr], SML)))
+
+pred xtl_to_sml_expr:
+    ((Var, SML):
+        compound(Var), Var = '$VAR'(_), !,
+        sml_write_term(Var, Name),
+        append(["var_", Name, " "], SML)),
+    ((Atom, SML): atom(Atom), !,
+        sml_write_term(Atom, Codes),
+        append(["(String \"", Codes, ") "], SML)),
+    ((Num, SML): number(Num), !,
+        sml_write_term(Num, Codes),
+        append(["(Integer ", Codes, ") "], SML)),
+    ((Term, SML):
+        '=..'(Term, [Name | Args]), !,
+        throw(error(unsupported_expr(Term))))
+
+dcg2 sml_write_top_level:
+    (([]): []),
+    (([X | Xs]): [X], sml_write_top_level(Xs))
+
+pred sml_write_term:
+    ((Term, Res):
+        open_output_codes_stream(S),
+        write(S, Term),
+        close_output_codes_stream(S, Res))
+
+pred sml_mangle_name:
+    ((Name, ResCodes):
+        atom_codes(Name, Codes),
+        sml_mangle_list(Codes, ResCodes))
+
+pred sml_mangle_list:
+    (([], []): true),
+    (([C|Cs], Res):
+        sml_mangle_char(C, M),
+        sml_mangle_list(Cs, Ms),
+        append(M, Ms, Res))
+
+pred sml_mangle_char:
+    ((C, [C]): C >= 97, C =< 122, !), % a-z
+    ((C, [C]): C >= 65, C =< 90, !), % A-Z
+    ((C, [C]): C >= 48, C =< 57, !), % 0-9
+    ((_, S): S = "_")

@@ -32,7 +32,7 @@ capture () {
 verify () (
     cd "$test_root/$test"
     if [[ -e $run/out ]]; then
-        diff --recursive -N --strip-trailing-cr expected $run/out
+        diff -U1 --recursive -N --strip-trailing-cr expected $run/out
     else
         test ! -e "expected"
     fi

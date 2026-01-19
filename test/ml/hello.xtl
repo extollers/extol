@@ -1,0 +1,8 @@
+pred count:
+  (1).
+  (2).
+
+pred main: ():
+    ( count(X), write(X), nl, fail
+    ; write('done'), nl
+    ).

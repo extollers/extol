@@ -1,0 +1,5 @@
+ln -s ../../../src src
+capture extol extol-to-sml input/hello.xtl out/hello.sml
+capture extol build-sml out/hello.sml
+capture ./out/hello
+rm out/hello

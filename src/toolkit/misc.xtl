@@ -131,4 +131,16 @@ pred orlist:
     ((Goal, []): false),
     ((Goal, [X | Xs]): call(Goal, X) ; orlist(Goal, Xs))
 
+pred shell_output: (Command, Output):
+
+    atom_concat(Command, ' > .shell.out', FullCommand),
+
+    ( shell(FullCommand), !
+
+    ; throw(error(shell_failed(Command)))),
+
+    read_file('.shell.out', Output)
+
+
+
 pred '::': (A, T): call(T, A), !; throw(error(A, T))
