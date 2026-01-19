@@ -9,8 +9,8 @@ The goals of this project are:
   types, kinds, macros, patterns, constraints, grammars, tactics,
   proofs and effects
 
-- A flexible syntax that allows building incrementally typed
-  high-level shell-style scripts, low-level systems code and
+- Flexible syntax and semantics that allows building incrementally
+  typed high-level shell-style scripts, low-level systems code and
   domain-specific languages
 
 - A type system with small-core verifiable theorem proving,
@@ -153,6 +153,12 @@ Extol is inspired in part by the following languages:
 
 - [Red](https://www.red-lang.org/p/about.html):
   Multi-paradigm, multi-typing, full-stack, human-friendy language. Fun guaranteed.
+
+- [Nix](https://nixos.org/):
+  Declarative, pure and lazy
+
+- [Cue](https://cuelang.org/):
+  Merge the concept of types and values
 
 ---
 
